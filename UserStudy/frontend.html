@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Overcooked User Study</title>
+  <style>
+    :root{
+      --brand:#2563eb; --bg:#f7f7f7; --card:#ffffff; --muted:#6b7280; --ok:#16a34a; --warn:#f59e0b; --danger:#dc2626;
+      --radius:14px;
+    }
+    *{box-sizing:border-box}
+    body{
+      background-color:var(--bg);
+      font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color:#111827; margin:0; padding:24px;
+    }
+    h1,h2{margin:0 0 12px}
+    h3{margin:8px 0}
+    .container{max-width:980px; margin:0 auto}
+    .card{
+      background:var(--card);
+      border-radius:var(--radius);
+      box-shadow:0 10px 24px rgba(0,0,0,0.08);
+      padding:22px; margin:18px 0;
+    }
+    .row{display:flex; gap:16px; flex-wrap:wrap}
+    .col{flex:1 1 260px}
+    .btn{
+      appearance:none; border:0; border-radius:12px; padding:12px 18px; cursor:pointer; font-weight:600;
+      background:var(--brand); color:white; transition:transform .02s ease, box-shadow .2s ease; box-shadow:0 6px 16px rgba(37,99,235,.2)
+    }
+    .btn[disabled]{opacity:.5; cursor:not-allowed; box-shadow:none}
+    .btn.secondary{background:#111827;color:white}
+    .btn.ghost{background:#eef2ff; color:#1e3a8a}
+    .btn.success{background:var(--ok)}
+    .btn.warn{background:var(--warn); color:#1f2937}
+    .btn.danger{background:var(--danger)}
+    .muted{color:var(--muted)}
+    .input, select{
+      width:100%; padding:12px 14px; border:1px solid #e5e7eb; border-radius:12px; background:#fff; outline:none
+    }
+    label{display:block; font-weight:600; margin-bottom:8px}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px; padding:6px 10px; background:#eef2ff; color:#1e3a8a; border-radius:999px; font-size:13px; font-weight:600
+    }
+    .progress{
+      height:10px; width:100%; background:#e5e7eb; border-radius:999px; overflow:hidden
+    }
+    .progress > div{
+      height:100%; width:0%; background:linear-gradient(90deg, #60a5fa, #2563eb); transition:width .3s ease
+    }
+    .roles{display:grid; grid-template-columns:repeat(2,minmax(260px,1fr)); gap:12px}
+    .role-item{
+      border:1px solid #e5e7eb; border-radius:12px; padding:12px; display:flex; align-items:flex-start; gap:10px; background:#fff
+    }
+    .role-item.used{opacity:.45; background:#f9fafb}
+    .role-item input{margin-top:4px}
+    .legend img{height:26px; vertical-align:middle}
+    .inline{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+    canvas#gameCanvas{border:2px solid #111827; display:block; margin:8px auto; max-width:100%; height: auto;}
+    canvas#gameCanvas_practice{border:2px solid #111827; display:block; margin:8px auto; max-width:100%; height: auto;}
+    canvas#gameCanvas_pretask1,
+    canvas#gameCanvas_pretask2{border:2px solid #111827; display:block; margin:8px auto; max-width:100%; height: auto;}
+    
+    #stepCounter{
+      font-weight:700; padding:10px 14px; border:2px solid var(--brand); border-radius:10px; display:inline-block; color:var(--brand); background:#f0f7ff
+    }
+    .question-scale{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    .question-scale label{font-weight:500}
+    .center{text-align:center}
+    .hidden{display:none!important}
+    .hr{height:1px; background:#e5e7eb; margin:14px 0}
+
+    /* Scenario + Task Description styles */
+    #scenarioDescription{
+      background-color:#fff9e6;
+      border-left:6px solid #f0ad4e;
+      border-radius:12px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.08);
+      padding:20px 25px;
+      margin:16px 0;
+      color:#333;
+      line-height:1.6;
+    }
+    #scenarioDescription h2{margin:0 0 8px; color:#b45309}
+    #scenarioDescription ul{margin:8px 0 0 18px}
+
+    #taskDescription{
+      background-color:#f9f9f9;
+      border-radius:12px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.08);
+      padding:20px 25px;
+      margin:16px 0;
+      line-height:1.6;
+    }
+    #taskDescription img#taskIllustration{
+      display:block; margin:14px auto; max-width:100%; border:1px solid #e5e7eb; border-radius:8px;
+    }
+    #agentLegend{ text-align:center; margin-top:8px; color:#444 }
+    #agentLegend img{ width:50px; vertical-align:middle; margin:0 10px }
+
+
+
+
+
+
+
+
+
+
+    
+
+    /* 7 点李克特量表：上面一排 radio，下面一排文字 */
+    .likert-7{
+      display:grid;
+      grid-template-columns:repeat(7, 1fr);
+      grid-auto-rows:auto;
+      gap:6px 12px;              /* 行间距, 列间距 */
+      align-items:center;         /* 纵向居中 radio */
+      justify-items:center;       /* 横向居中每列内容 */
+      margin-top:8px;
+    }
+    .likert-7 input[type="radio"]{
+      margin:0;                   /* 去掉默认外边距，保证光标对齐 */
+    }
+    .likert-7 .scale-label{
+      grid-row:2;                 /* 统一放在第二行 */
+      font-size:12px;
+      color:#666;
+      text-align:center;
+      line-height:1.2;
+    }
+    /* 无障碍：把可视上的 label 隐藏，但仍保留可读性（给每个 radio 也会配一个 aria-label）*/
+    .visually-hidden{
+      position:absolute!important;
+      width:1px;height:1px;
+      margin:-1px;border:0;padding:0;
+      clip:rect(0 0 0 0);overflow:hidden;
+    }
+
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Overcooked User Study</h1>
+
+    <!-- Page 1: Prolific + Demographics -->
+    <section id="page-intro" class="card">
+      <h2>Basic Information</h2>
+      <p class="muted">Please fill in the following, then continue.</p>
+      <div class="row">
+        <div class="col">
+          <label for="prolificId">Prolific ID</label>
+          <input id="prolificId" class="input" placeholder="e.g., 5f9c1d2e..." />
+        </div>
+        <div class="col">
+          <label for="age">Age</label>
+          <input id="age" type="number" min="18" max="99" class="input" placeholder="e.g., 28" />
+        </div>
+        <div class="col">
+          <label for="gender">Gender</label>
+          <select id="gender" class="input">
+            <option value="">Please select</option>
+            <option>Female</option>
+            <option>Male</option>
+            <option>Non-binary</option>
+            <option>Prefer not to say</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="inline" style="margin-top:12px">
+        <button id="to-consent" class="btn" disabled>Next</button>
+      </div>
+    </section>
+
+    <!-- Page 2: Consent -->
+    <section id="page-consent" class="card hidden">
+      <h2>Consent Form</h2>
+      <div style="max-height:240px; overflow:auto; border:1px solid #e5e7eb; border-radius:12px; padding:14px; margin:12px 0">
+        <p>This study is to understand how humans work with an AI agent to finish a collaborative game: Overcooked. </p>
+        <p>The study is organized by researchers from Aalto University in Finland.</p>
+        <p>This study aims to understand behavior and experience in human–AI collaboration. Participation is voluntary and you may withdraw at any time. Data will be stored anonymously and used for research only. There are no known risks; if you feel uncomfortable, you may stop immediately.</p>
+        <p>By checking the box and continuing, you indicate that you have read and agree to participate.</p>
+      </div>
+      <div class="inline">
+        <input type="checkbox" id="consentCheck">
+        <label for="consentCheck" style="margin:0">I have read and agree</label>
+      </div>
+      <div class="inline" style="margin-top:12px">
+        <button id="to-instruction" class="btn" disabled>Continue</button>
+      </div>
+    </section>
+
+
+
+    <!-- Page 3a: Instruction – How to play + Practice -->
+    <section id="page-instruction-1" class="card hidden">
+      <div id="taskDescription">
+        <h2>Welcome to the study!</h2>
+        <p>Thank you for participating in this study!</p>
+        <p>
+          <strong>Your task is to finish a collaborative task:</strong> together with an AI teammate, complete as many dishes as possible within a limited number of steps.<br>
+          The target dish is a simple <em>lettuce salad</em>, with just 4 steps:
+          <ol style="margin:8px 0 0 18px">
+            <li>Pick up a lettuce,</li>
+            <li>Chop it on the cutting board,</li>
+            <li>Place the chopped lettuce onto a plate,</li>
+            <li>Deliver the plate to the serving station.</li>
+          </ol>
+        </p>
+        <img id="taskIllustration" src="static/images/task_illustration.png" alt="Task Illustration">
+        <div id="agentLegend">
+          You are <img src="static/images/agent-blue.png" alt="Agent Blue">
+          &nbsp;&nbsp;&nbsp;&nbsp; Your robot partner is
+          <img id="robotIcon" src="static/images/agent-robot.png" alt="Agent Robot">
+          or 
+          <img id="robotIcon" src="static/images/agent-robot2.png" alt="Agent Robot">
+          or 
+          <img id="robotIcon" src="static/images/agent-robot3.png" alt="Agent Robot">
+          or 
+          <img id="robotIcon" src="static/images/agent-robot4.png" alt="Agent Robot">
+        </div>
+
+        <!-- Kitchen item legend -->
+        <div id="itemLegend" style="margin-top:14px;">
+          <h3 style="margin:8px 0 6px; font-size:18px;">Kitchen Items</h3>
+          <div style="
+            display:grid; grid-template-columns:repeat(2, minmax(0,1fr));
+            gap:10px; align-items:start; font-size:14px; color:#222;">
+            
+            <div style="display:flex; gap:10px; align-items:center;">
+              <img src="static/images/counter.png" alt="Counter" style="width:36px;height:36px;">
+              <div>
+                <strong>Counter</strong><br>
+                A surface to temporarily place items. <em>You can put vegetables or plates on counters.</em>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:10px; align-items:center;">
+              <img src="static/images/FreshLettuce.png" alt="Fresh Lettuce" style="width:36px;height:36px;">
+              <div>
+                <strong>Lettuce</strong><br>
+                Pick it up and chop it before plating.
+              </div>
+            </div>
+
+            <div style="display:flex; gap:10px; align-items:center;">
+              <img src="static/images/BadLettuce.png" alt="Bad (Dirty) Lettuce" style="width:36px;height:36px;">
+              <div>
+                <strong>Dirty/Bad Lettuce</strong><br>
+                If you want to play as a bad chef, feel free to use the bad lettuce.
+              </div>
+            </div>
+
+            <div style="display:flex; gap:10px; align-items:center;">
+              <img src="static/images/plate.png" alt="Plate" style="width:36px;height:36px;">
+              <div>
+                <strong>Plate</strong><br>
+                Place chopped lettuce on a plate; you can set plates on counters.
+              </div>
+            </div>
+
+            <div style="display:flex; gap:10px; align-items:center;">
+              <img src="static/images/cutboard.png" alt="Cutting Board" style="width:36px;height:36px;">
+              <div>
+                <strong>Cutting Board</strong><br>
+                Chop lettuce here to make it ready for plating.
+              </div>
+            </div>
+
+            <div style="display:flex; gap:10px; align-items:center;">
+              <img src="static/images/delivery.png" alt="Delivery Station" style="width:36px;height:36px;">
+              <div>
+                <strong>Delivery Station</strong><br>
+                Deliver the completed plate here to score.
+              </div>
+            </div>
+          </div>
+
+          <p style="margin-top:8px; color:#374151;">
+            Tip: You may temporarily place <strong>vegetables or plates</strong> on any <strong>counter</strong> to organize your workflow.
+          </p>
+        </div>
+
+
+        
+        <p style="text-align: center; margin-top: 15px; font-weight: bold; font-size: 18px; color: #222;">
+          Use your arrow keys to play.
+        </p>
+        <div style="text-align:center; font-size:28px; margin-top:8px;">
+          ⬆️ ⬇️ ⬅️ ➡️
+        </div>
+      </div>
+
+      <div style="margin-top:20px; text-align:center;">
+        <button id="btnTryPractice" class="btn" style="margin-bottom:15px;">
+          Try One Game (In this practice, your teammate won't move)
+        </button>
+        <h3>Please press arrow key one-by-one a little bit slowly. Do not press the key too quickly because it may cause networking delay. </h3>
+        <canvas id="gameCanvas_practice" width="800" height="800"
+                style="border:2px solid #111827; display:block; margin:0 auto; background:white;"></canvas>
+      </div>
+
+      <p id="practiceHint" class="muted center" style="margin-top:8px">
+        Practice score not enough. Finish more lettuce salad to proceed.
+      </p>
+
+      <div style="margin-top:20px; text-align:center;">
+        <button id="to-instruction-2" class="btn" disabled>
+          Proceed to Study Instruction
+        </button>
+      </div>
+    </section>
+
+    <!-- Page 3b: Study Instruction + Attention Check -->
+    <section id="page-instruction-2" class="card hidden">
+      <div id="scenarioDescription">
+        <h2>Study Instruction</h2>
+        <p>
+          You will play with 4 different AI teammates (4 tasks in total). In each task, you will play 2 rounds of the game.
+        </p>
+        <p><strong>Key points:</strong></p>
+        <ul>
+          You are encouraged to vary your behavioral patterns in different rounds. For example, you might:
+          <!-- <li>Take efficient or inefficient routes to your destination</li> -->
+          <li>In one round, choose to pass a lettuce to your teammate.</li>
+          <li>In another round, finish a lettuce salad independently.</li>
+        </ul>
+      </div>
+
+      <div class="card" style="margin-top:20px;">
+        <h3>Attention Check</h3>
+        <p>Please answer the following to show you understood the instructions:</p>
+        <div>
+          <label><input type="radio" name="attentionCheck" value="optimal">
+            A. Always play optimally and try to get the highest score</label><br>
+          <label><input type="radio" name="attentionCheck" value="trustworthiness">
+            B. Vary your behavior in each round, e.g., in round 1, try your best to help the teammate by passing a lettuce to your teammate; in round 2, work independently</label><br>
+          <label><input type="radio" name="attentionCheck" value="nothing">
+            C. Do nothing and let the AI do all the work</label><br>
+          <label><input type="radio" name="attentionCheck" value="sabotage">
+            D. Always sabotage the AI teammate</label>
+        </div>
+        <p id="attentionCheckHint" class="muted" style="margin-top:8px; color:#dc2626; display:none;">
+          Wrong answer. Please try again.
+        </p>
+      </div>
+
+      <div style="margin-top:20px; text-align:center;">
+        <button id="start-task-1" class="btn" disabled>
+          Start Task 1
+        </button>
+      </div>
+    </section>
+
+
+
+
+
+
+    <!-- Page PRE-Task 1: preview the actual layout/model and robot skin -->
+    <section id="page-pretask-1" class="card hidden">
+      <h2>Get ready for Task 1</h2>
+      <p class="muted">This screen shows the AI teammates you'll be working with and the kitchen layout you'll be playing in. Use the arrow keys to move your chef and get familiar with the setup!</p>
+
+      <div class="card" style="margin-top:8px;">
+        <div class="inline" style="align-items:center; gap:12px;">
+          <b>Your AI teammate in Task 1:</b>
+          <img id="pretask1Robot" src="static/images/agent-robot.png" alt="Robot" style="height:42px;">
+        </div>
+      </div>
+
+      <div style="margin-top:16px; text-align:center;">
+        <canvas id="gameCanvas_pretask1" width="800" height="800"
+                style="border:2px solid #111827; display:block; margin:0 auto; background:white;"></canvas>
+      </div>
+
+      <div class="inline" style="margin-top:16px; justify-content:center;">
+        <button id="btnEnterTask1" class="btn">Next: Enter Task 1</button>
+      </div>
+    </section>
+
+    <!-- Page PRE-Task 2: preview the actual layout/model and robot skin -->
+    <section id="page-pretask-2" class="card hidden">
+      <h2>Get ready for Task 2</h2>
+      <p class="muted">This screen shows the AI teammates you'll be working with and the kitchen layout you'll be playing in. Use the arrow keys to move your chef and get familiar with the setup!</p>
+
+      <div class="card" style="margin-top:8px;">
+        <div class="inline" style="align-items:center; gap:12px;">
+          <b>Your AI teammate in Task 2:</b>
+          <img id="pretask2Robot" src="static/images/agent-robot.png" alt="Robot" style="height:42px;">
+        </div>
+      </div>
+
+      <div style="margin-top:16px; text-align:center;">
+        <canvas id="gameCanvas_pretask2" width="800" height="800"
+                style="border:2px solid #111827; display:block; margin:0 auto; background:white;"></canvas>
+      </div>
+
+      <div class="inline" style="margin-top:16px; justify-content:center;">
+        <button id="btnEnterTask2" class="btn">Next: Enter Task 2</button>
+      </div>
+    </section>
+
+    <!-- Page PRE-Task 3: preview the actual layout/model and robot skin -->
+    <section id="page-pretask-3" class="card hidden">
+      <h2>Get ready for Task 3</h2>
+      <p class="muted">This screen shows the AI teammates you'll be working with and the kitchen layout you'll be playing in. Use the arrow keys to move your chef and get familiar with the setup!</p>
+
+      <div class="card" style="margin-top:8px;">
+        <div class="inline" style="align-items:center; gap:12px;">
+          <b>Your AI teammate in Task 3:</b>
+          <img id="pretask3Robot" src="static/images/agent-robot.png" alt="Robot" style="height:42px;">
+        </div>
+      </div>
+
+      <div style="margin-top:16px; text-align:center;">
+        <canvas id="gameCanvas_pretask3" width="800" height="800"
+                style="border:2px solid #111827; display:block; margin:0 auto; background:white;"></canvas>
+      </div>
+
+      <div class="inline" style="margin-top:16px; justify-content:center;">
+        <button id="btnEnterTask3" class="btn">Next: Enter Task 3</button>
+      </div>
+    </section>
+
+
+    <!-- Page PRE-Task 4: preview the actual layout/model and robot skin -->
+    <section id="page-pretask-4" class="card hidden">
+      <h2>Get ready for Task 4</h2>
+      <p class="muted">This screen shows the AI teammates you'll be working with and the kitchen layout you'll be playing in. Use the arrow keys to move your chef and get familiar with the setup!</p>
+
+      <div class="card" style="margin-top:8px;">
+        <div class="inline" style="align-items:center; gap:12px;">
+          <b>Your AI teammate in Task 4:</b>
+          <img id="pretask4Robot" src="static/images/agent-robot.png" alt="Robot" style="height:42px;">
+        </div>
+      </div>
+
+      <div style="margin-top:16px; text-align:center;">
+        <canvas id="gameCanvas_pretask4" width="800" height="800"
+                style="border:2px solid #111827; display:block; margin:0 auto; background:white;"></canvas>
+      </div>
+
+      <div class="inline" style="margin-top:16px; justify-content:center;">
+        <button id="btnEnterTask4" class="btn">Next: Enter Task 4</button>
+      </div>
+    </section>
+
+
+
+
+    <!-- Page 4 / 6: Task Page (reused) -->
+    <section id="page-task" class="card hidden">
+      <div class="inline" style="justify-content:space-between">
+          <div class="inline">
+          <span class="pill" id="taskTag">Task 1</span>
+          <span class="pill"><span id="roundLabel">Round 1 / 3</span></span>
+          </div>
+      </div>
+
+      <div class="hr"></div>
+
+
+        <div class="row" style="flex-direction: column; align-items: center;">
+
+          <!-- Step 1: Persona input -->
+                    
+          <div style="width:100%; max-width:900px;">
+            <h2 style="margin-bottom:10px;">Step 1: Set your persona for this round</h2>
+
+            <!-- Task 1: free text input (shown only in Task 1) -->
+            <div id="personaInputWrap">
+              <input id="personaInput" class="input"
+                style="border:2px solid #facc15; box-shadow:0 0 4px rgba(250,204,21,0.6);"
+                placeholder="e.g., help my teammate by passing a lettuce to the teammate; prefers independent work; uses dirty lettuce..." />
+              <div class="muted" style="margin-top:6px">
+                Please briefly describe how you intend to behave in this round (your “persona”).
+                <br><b>You must enter something to proceed to Step 2.</b>
+              </div>
+            </div>
+
+            <!-- Task 2: select from Task 1 personas (shown only in Task 2) -->
+            <div id="personaSelectWrap" class="hidden">
+              <label for="personaSelect" style="font-weight:600;">Choose one persona you used in Task 1 (no repeats):</label>
+              <select id="personaSelect" class="input" style="margin-top:8px;">
+                <option value="" selected disabled>— Select a persona —</option>
+                <!-- 选项由 JS 动态注入 -->
+              </select>
+              <div class="muted" style="margin-top:6px">
+                You must choose a persona from the persona list (you wrote in Take 1) to proceed. Play these personas again!
+              </div>
+            </div>
+
+            <div class="hr"></div>
+
+            <div>
+              <div class="inline" style="gap:8px; align-items:center;">
+                <b>Previous personas:</b>
+                <span class="muted">(please try to role-play a different persona for each round)</span>
+              </div>
+              <div id="personaHistory" class="inline"
+                  style="flex-wrap:wrap; gap:8px; margin-top:6px;"></div>
+            </div>
+
+            <div class="hr"></div>
+
+            <!-- Step 2: Play -->
+            <h2 style="margin-bottom:10px;">Step 2: Play</h2>
+            <h3 style="margin-bottom:10px;">
+              Please act consistently according to the persona you selected/wrote (i.e., how you intend to behave in this round). 
+              Otherwise, we won't pay you.
+            </h3>
+
+            <!-- ⚠️ STRONGLY HIGHLIGHTED WARNING -->
+            <div style="
+                background:#fff1f1;
+                border:2px solid #dc2626;
+                border-radius:8px;
+                padding:12px 15px;
+                margin:12px 0 16px 0;
+                color:#7f1d1d;
+            ">
+              <strong style="font-size:20px;">⚠ Important Behavior Rules:</strong>
+              <ul style="margin:8px 0 0 18px; line-height:1.6;">
+                <li>You must NOT wander around without doing anything.</li>
+                <li>Within a single round, do not switch between using dirty lettuce and clean lettuce. Stay consistent!</li>
+                <li>Within the same round, do not alternate between helping and not helping. Choose one and stick to it:
+                  <ul>
+                    <li>Either always help (pass vegetables), without making a salad yourself;</li>
+                    <li>Or always work independently without passing vegetables.</li>
+                  </ul>
+                </li>
+                <li>If you choose to help your teammate, you should place the lettuce on the counter closest to your teammate and wait for your teammate to pick it up. When you decide to help your teammate, DO NOT cut and plate lettuce by yourself.</li>
+                <li>Do not repeatedly perform meaningless actions while staying in the same spot.</li>
+              </ul>
+            </div>
+
+            <div class="inline" style="margin-top:12px; gap:10px">
+              <button id="btnPlay" class="btn" disabled>Play</button>
+              <button id="btnRestart" class="btn ghost" disabled>Restart</button>
+            </div>
+
+            <div class="hr"></div>
+
+            <div class="inline">
+              <div id="stepCounter">Steps Left: <span id="stepsLeft">—</span></div>
+              <p style="color: rgb(247, 189, 31);">You need to complete all the steps to finish this round.</p>
+            </div>
+            <h3>Please press arrow key one-by-one a little bit slowly. Do not press the key too quickly because it may cause networking delay. </h3>
+            <div class="progress" style="margin-top:8px">
+              <div id="roundProgress"></div>
+            </div>
+          </div>
+
+          <!-- Bottom: Game area -->
+          <div style="margin-top:20px; text-align:center;">
+            <canvas id="gameCanvas" width="800" height="800"
+                    style="border:2px solid #111827; display:block; margin:0 auto; background:white;"></canvas>
+          </div>
+
+
+
+          <!-- 回合结束面板（默认隐藏），包含自评问题与 Next -->
+          <div id="round-end-panel" class="card hidden" style="margin-top:16px; width:100%; max-width:900px; margin-left:auto; margin-right:auto;">
+            <h3>Round finished</h3>
+            <p class="muted" style="margin-top:4px;">Please answer the question below before proceeding.</p>
+
+            <div class="card" style="margin-top:12px;">
+              <div><b>How well did you act according to your described persona in this round?</b></div>
+              <div class="question-scale" style="margin-top:8px">
+                <label>1<br><span style="font-size:12px;color:#666;">Very poorly</span></label>
+                <input type="radio" name="personaFidelity" value="1">
+                <input type="radio" name="personaFidelity" value="2">
+                <input type="radio" name="personaFidelity" value="3">
+                <input type="radio" name="personaFidelity" value="4">
+                <input type="radio" name="personaFidelity" value="5">
+                <input type="radio" name="personaFidelity" value="6">
+                <input type="radio" name="personaFidelity" value="7">
+                <label>7<br><span style="font-size:12px;color:#666;">Perfectly</span></label>
+              </div>
+            </div>
+
+            <div class="inline" style="margin-top:12px;">
+              <!-- 复用同一个 id: btnNext（移到这里） -->
+              <button id="btnNext" class="btn secondary" disabled>Next</button>
+            </div>
+          </div>
+
+
+
+        </div>
+
+    </section>
+
+    <!-- Page 5 / 7: Questionnaire -->
+    <section id="page-qs" class="card hidden">
+      <h2 id="qsTitle">Task 1 Questionnaire</h2>
+      <p>Please rate your agreement with the following statements (1 = strongly disagree, 7 = strongly agree).</p>
+<!-- 
+      <div class="card">
+        <div><b>"I can easily understand the behavior of the AI teammate."</b></div>
+        <div class="question-scale" style="margin-top:8px">
+          <label>1<br><span style="font-size:12px;color:#666;">Strongly disagree</span></label>
+          <input type="radio" name="q_understandability" value="1">
+          <input type="radio" name="q_understandability" value="2">
+          <input type="radio" name="q_understandability" value="3">
+          <input type="radio" name="q_understandability" value="4">
+          <input type="radio" name="q_understandability" value="5">
+          <input type="radio" name="q_understandability" value="6">
+          <input type="radio" name="q_understandability" value="7">
+          <label>7<br><span style="font-size:12px;color:#666;">Strongly agree</span></label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div><b>"The AI teammate can understand me."</b></div>
+        <div class="question-scale" style="margin-top:8px">
+          <label>1<br><span style="font-size:12px;color:#666;">Strongly disagree</span></label>
+          <input type="radio" name="q_understandability2" value="1">
+          <input type="radio" name="q_understandability2" value="2">
+          <input type="radio" name="q_understandability2" value="3">
+          <input type="radio" name="q_understandability2" value="4">
+          <input type="radio" name="q_understandability2" value="5">
+          <input type="radio" name="q_understandability2" value="6">
+          <input type="radio" name="q_understandability2" value="7">
+          <label>7<br><span style="font-size:12px;color:#666;">Strongly agree</span></label>
+        </div>
+      </div>
+
+
+      <div class="card">
+        <div><b>"The AI teammate adapts well to my behavioral strategy."</b></div>
+        <div class="question-scale" style="margin-top:8px">
+          <label>1<br><span style="font-size:12px;color:#666;">Strongly disagree</span></label>
+          <input type="radio" name="q_adaptivity" value="1">
+          <input type="radio" name="q_adaptivity" value="2">
+          <input type="radio" name="q_adaptivity" value="3">
+          <input type="radio" name="q_adaptivity" value="4">
+          <input type="radio" name="q_adaptivity" value="5">
+          <input type="radio" name="q_adaptivity" value="6">
+          <input type="radio" name="q_adaptivity" value="7">
+          <label>7<br><span style="font-size:12px;color:#666;">Strongly agree</span></label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div><b>"I am willing to collaborate with this AI teammate in the future."</b></div>
+        <div class="question-scale" style="margin-top:8px">
+          <label>1<br><span style="font-size:12px;color:#666;">Strongly disagree</span></label>
+          <input type="radio" name="q_willingness" value="1">
+          <input type="radio" name="q_willingness" value="2">
+          <input type="radio" name="q_willingness" value="3">
+          <input type="radio" name="q_willingness" value="4">
+          <input type="radio" name="q_willingness" value="5">
+          <input type="radio" name="q_willingness" value="6">
+          <input type="radio" name="q_willingness" value="7">
+          <label>7<br><span style="font-size:12px;color:#666;">Strongly agree</span></label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div><b>"I am satisfied with my collaboration experience with the AI teammate."</b></div>
+        <div class="question-scale" style="margin-top:8px">
+          <label>1<br><span style="font-size:12px;color:#666;">Strongly disagree</span></label>
+          <input type="radio" name="q_satisfaction" value="1">
+          <input type="radio" name="q_satisfaction" value="2">
+          <input type="radio" name="q_satisfaction" value="3">
+          <input type="radio" name="q_satisfaction" value="4">
+          <input type="radio" name="q_satisfaction" value="5">
+          <input type="radio" name="q_satisfaction" value="6">
+          <input type="radio" name="q_satisfaction" value="7">
+          <label>7<br><span style="font-size:12px;color:#666;">Strongly agree</span></label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div><b>"The AI teammate can determine whether to trust me and how to do so by observing my actions."</b></div>
+        <div class="question-scale" style="margin-top:8px">
+          <label>1<br><span style="font-size:12px;color:#666;">Strongly disagree</span></label>
+          <input type="radio" name="q_agenttrust" value="1">
+          <input type="radio" name="q_agenttrust" value="2">
+          <input type="radio" name="q_agenttrust" value="3">
+          <input type="radio" name="q_agenttrust" value="4">
+          <input type="radio" name="q_agenttrust" value="5">
+          <input type="radio" name="q_agenttrust" value="6">
+          <input type="radio" name="q_agenttrust" value="7">
+          <label>7<br><span style="font-size:12px;color:#666;">Strongly agree</span></label>
+        </div>
+      </div>
+
+
+      <div class="card">
+        <div><b>"I trust the AI teammate."</b></div>
+        <div class="question-scale" style="margin-top:8px">
+          <label>1<br><span style="font-size:12px;color:#666;">Strongly disagree</span></label>
+          <input type="radio" name="q_trust" value="1">
+          <input type="radio" name="q_trust" value="2">
+          <input type="radio" name="q_trust" value="3">
+          <input type="radio" name="q_trust" value="4">
+          <input type="radio" name="q_trust" value="5">
+          <input type="radio" name="q_trust" value="6">
+          <input type="radio" name="q_trust" value="7">
+          <label>7<br><span style="font-size:12px;color:#666;">Strongly agree</span></label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div><b>"To make sure you are paying attention, please select 4 (the middle one) as your answer for this question."</b></div>
+        <div class="question-scale" style="margin-top:8px">
+          <label>1<br><span style="font-size:12px;color:#666;">Strongly disagree</span></label>
+          <input type="radio" name="q_attention" value="1">
+          <input type="radio" name="q_attention" value="2">
+          <input type="radio" name="q_attention" value="3">
+          <input type="radio" name="q_attention" value="4">
+          <input type="radio" name="q_attention" value="5">
+          <input type="radio" name="q_attention" value="6">
+          <input type="radio" name="q_attention" value="7">
+          <label>7<br><span style="font-size:12px;color:#666;">Strongly agree</span></label>
+        </div>
+      </div> -->
+
+
+      <div class="card">
+        <div><b>"I can easily understand the behavior of the AI teammate."</b></div>
+        <div class="likert-7" role="radiogroup" aria-label="I can easily understand the behavior of the AI teammate.">
+          <!-- radios row -->
+          <input type="radio" id="q_understandability_1" name="q_understandability" value="1" aria-label="Strongly disagree">
+          <input type="radio" id="q_understandability_2" name="q_understandability" value="2" aria-label="Disagree">
+          <input type="radio" id="q_understandability_3" name="q_understandability" value="3" aria-label="Somewhat disagree">
+          <input type="radio" id="q_understandability_4" name="q_understandability" value="4" aria-label="Neutral">
+          <input type="radio" id="q_understandability_5" name="q_understandability" value="5" aria-label="Somewhat agree">
+          <input type="radio" id="q_understandability_6" name="q_understandability" value="6" aria-label="Agree">
+          <input type="radio" id="q_understandability_7" name="q_understandability" value="7" aria-label="Strongly agree">
+          <!-- labels row -->
+          <div class="scale-label">Strongly disagree</div>
+          <div class="scale-label">Disagree</div>
+          <div class="scale-label">Somewhat disagree</div>
+          <div class="scale-label">Neutral</div>
+          <div class="scale-label">Somewhat agree</div>
+          <div class="scale-label">Agree</div>
+          <div class="scale-label">Strongly agree</div>
+        </div>
+      </div>
+
+
+      <div class="card">
+        <div><b>"The AI teammate can understand me."</b></div>
+        <div class="likert-7" role="radiogroup" aria-label="The AI teammate can understand me.">
+          <input type="radio" id="q_understandability2_1" name="q_understandability2" value="1" aria-label="Strongly disagree">
+          <input type="radio" id="q_understandability2_2" name="q_understandability2" value="2" aria-label="Disagree">
+          <input type="radio" id="q_understandability2_3" name="q_understandability2" value="3" aria-label="Somewhat disagree">
+          <input type="radio" id="q_understandability2_4" name="q_understandability2" value="4" aria-label="Neutral">
+          <input type="radio" id="q_understandability2_5" name="q_understandability2" value="5" aria-label="Somewhat agree">
+          <input type="radio" id="q_understandability2_6" name="q_understandability2" value="6" aria-label="Agree">
+          <input type="radio" id="q_understandability2_7" name="q_understandability2" value="7" aria-label="Strongly agree">
+          <div class="scale-label">Strongly disagree</div>
+          <div class="scale-label">Disagree</div>
+          <div class="scale-label">Somewhat disagree</div>
+          <div class="scale-label">Neutral</div>
+          <div class="scale-label">Somewhat agree</div>
+          <div class="scale-label">Agree</div>
+          <div class="scale-label">Strongly agree</div>
+        </div>
+      </div>
+
+
+      <div class="card">
+        <div><b>"The AI teammate adapts well to my behavioral strategy."</b></div>
+        <div class="likert-7" role="radiogroup" aria-label="The AI teammate adapts well to my behavioral strategy.">
+          <input type="radio" id="q_adaptivity_1" name="q_adaptivity" value="1" aria-label="Strongly disagree">
+          <input type="radio" id="q_adaptivity_2" name="q_adaptivity" value="2" aria-label="Disagree">
+          <input type="radio" id="q_adaptivity_3" name="q_adaptivity" value="3" aria-label="Somewhat disagree">
+          <input type="radio" id="q_adaptivity_4" name="q_adaptivity" value="4" aria-label="Neutral">
+          <input type="radio" id="q_adaptivity_5" name="q_adaptivity" value="5" aria-label="Somewhat agree">
+          <input type="radio" id="q_adaptivity_6" name="q_adaptivity" value="6" aria-label="Agree">
+          <input type="radio" id="q_adaptivity_7" name="q_adaptivity" value="7" aria-label="Strongly agree">
+          <div class="scale-label">Strongly disagree</div>
+          <div class="scale-label">Disagree</div>
+          <div class="scale-label">Somewhat disagree</div>
+          <div class="scale-label">Neutral</div>
+          <div class="scale-label">Somewhat agree</div>
+          <div class="scale-label">Agree</div>
+          <div class="scale-label">Strongly agree</div>
+        </div>
+      </div>
+
+
+      <div class="card">
+        <div><b>"I am willing to collaborate with this AI teammate in the future."</b></div>
+        <div class="likert-7" role="radiogroup" aria-label="I am willing to collaborate with this AI teammate in the future.">
+          <input type="radio" id="q_willingness_1" name="q_willingness" value="1" aria-label="Strongly disagree">
+          <input type="radio" id="q_willingness_2" name="q_willingness" value="2" aria-label="Disagree">
+          <input type="radio" id="q_willingness_3" name="q_willingness" value="3" aria-label="Somewhat disagree">
+          <input type="radio" id="q_willingness_4" name="q_willingness" value="4" aria-label="Neutral">
+          <input type="radio" id="q_willingness_5" name="q_willingness" value="5" aria-label="Somewhat agree">
+          <input type="radio" id="q_willingness_6" name="q_willingness" value="6" aria-label="Agree">
+          <input type="radio" id="q_willingness_7" name="q_willingness" value="7" aria-label="Strongly agree">
+          <div class="scale-label">Strongly disagree</div>
+          <div class="scale-label">Disagree</div>
+          <div class="scale-label">Somewhat disagree</div>
+          <div class="scale-label">Neutral</div>
+          <div class="scale-label">Somewhat agree</div>
+          <div class="scale-label">Agree</div>
+          <div class="scale-label">Strongly agree</div>
+        </div>
+      </div>
+
+
+      <div class="card">
+        <div><b>"I am satisfied with my collaboration experience with the AI teammate."</b></div>
+        <div class="likert-7" role="radiogroup" aria-label="I am satisfied with my collaboration experience with the AI teammate.">
+          <input type="radio" id="q_satisfaction_1" name="q_satisfaction" value="1" aria-label="Strongly disagree">
+          <input type="radio" id="q_satisfaction_2" name="q_satisfaction" value="2" aria-label="Disagree">
+          <input type="radio" id="q_satisfaction_3" name="q_satisfaction" value="3" aria-label="Somewhat disagree">
+          <input type="radio" id="q_satisfaction_4" name="q_satisfaction" value="4" aria-label="Neutral">
+          <input type="radio" id="q_satisfaction_5" name="q_satisfaction" value="5" aria-label="Somewhat agree">
+          <input type="radio" id="q_satisfaction_6" name="q_satisfaction" value="6" aria-label="Agree">
+          <input type="radio" id="q_satisfaction_7" name="q_satisfaction" value="7" aria-label="Strongly agree">
+          <div class="scale-label">Strongly disagree</div>
+          <div class="scale-label">Disagree</div>
+          <div class="scale-label">Somewhat disagree</div>
+          <div class="scale-label">Neutral</div>
+          <div class="scale-label">Somewhat agree</div>
+          <div class="scale-label">Agree</div>
+          <div class="scale-label">Strongly agree</div>
+        </div>
+      </div>
+
+
+      <div class="card">
+        <div><b>"The AI teammate can determine whether to trust me and how to do so by observing my actions."</b></div>
+        <div class="likert-7" role="radiogroup" aria-label="The AI teammate can determine whether to trust me and how to do so by observing my actions.">
+          <input type="radio" id="q_agenttrust_1" name="q_agenttrust" value="1" aria-label="Strongly disagree">
+          <input type="radio" id="q_agenttrust_2" name="q_agenttrust" value="2" aria-label="Disagree">
+          <input type="radio" id="q_agenttrust_3" name="q_agenttrust" value="3" aria-label="Somewhat disagree">
+          <input type="radio" id="q_agenttrust_4" name="q_agenttrust" value="4" aria-label="Neutral">
+          <input type="radio" id="q_agenttrust_5" name="q_agenttrust" value="5" aria-label="Somewhat agree">
+          <input type="radio" id="q_agenttrust_6" name="q_agenttrust" value="6" aria-label="Agree">
+          <input type="radio" id="q_agenttrust_7" name="q_agenttrust" value="7" aria-label="Strongly agree">
+          <div class="scale-label">Strongly disagree</div>
+          <div class="scale-label">Disagree</div>
+          <div class="scale-label">Somewhat disagree</div>
+          <div class="scale-label">Neutral</div>
+          <div class="scale-label">Somewhat agree</div>
+          <div class="scale-label">Agree</div>
+          <div class="scale-label">Strongly agree</div>
+        </div>
+      </div>
+
+
+      <div class="card">
+        <div><b>"I trust the AI teammate."</b></div>
+        <div class="likert-7" role="radiogroup" aria-label="I trust the AI teammate.">
+          <input type="radio" id="q_trust_1" name="q_trust" value="1" aria-label="Strongly disagree">
+          <input type="radio" id="q_trust_2" name="q_trust" value="2" aria-label="Disagree">
+          <input type="radio" id="q_trust_3" name="q_trust" value="3" aria-label="Somewhat disagree">
+          <input type="radio" id="q_trust_4" name="q_trust" value="4" aria-label="Neutral">
+          <input type="radio" id="q_trust_5" name="q_trust" value="5" aria-label="Somewhat agree">
+          <input type="radio" id="q_trust_6" name="q_trust" value="6" aria-label="Agree">
+          <input type="radio" id="q_trust_7" name="q_trust" value="7" aria-label="Strongly agree">
+          <div class="scale-label">Strongly disagree</div>
+          <div class="scale-label">Disagree</div>
+          <div class="scale-label">Somewhat disagree</div>
+          <div class="scale-label">Neutral</div>
+          <div class="scale-label">Somewhat agree</div>
+          <div class="scale-label">Agree</div>
+          <div class="scale-label">Strongly agree</div>
+        </div>
+      </div>
+
+
+      <div class="card">
+        <div><b>"To make sure you are paying attention, please select Neutral as your answer for this question."</b></div>
+        <div class="likert-7" role="radiogroup" aria-label="Attention check, please select 4.">
+          <input type="radio" id="q_attention_1" name="q_attention" value="1" aria-label="Strongly disagree">
+          <input type="radio" id="q_attention_2" name="q_attention" value="2" aria-label="Disagree">
+          <input type="radio" id="q_attention_3" name="q_attention" value="3" aria-label="Somewhat disagree">
+          <input type="radio" id="q_attention_4" name="q_attention" value="4" aria-label="Neutral">
+          <input type="radio" id="q_attention_5" name="q_attention" value="5" aria-label="Somewhat agree">
+          <input type="radio" id="q_attention_6" name="q_attention" value="6" aria-label="Agree">
+          <input type="radio" id="q_attention_7" name="q_attention" value="7" aria-label="Strongly agree">
+          <div class="scale-label">Strongly disagree</div>
+          <div class="scale-label">Disagree</div>
+          <div class="scale-label">Somewhat disagree</div>
+          <div class="scale-label">Neutral</div>
+          <div class="scale-label">Somewhat agree</div>
+          <div class="scale-label">Agree</div>
+          <div class="scale-label">Strongly agree</div>
+        </div>
+      </div>
+
+
+      <div class="inline">
+        <button id="qsNext" class="btn success">Submit & Continue</button>
+      </div>
+
+
+      <div id="postTask1Hint" class="card hidden" 
+          style="background-color:#fff9e6; border-left:6px solid #f0ad4e; margin-top:16px;">
+        <p style="margin:0; font-weight:500; color:#b45309;">
+          Next, you will play with the 2nd AI teammate. You have already explored some personas with your previous AI teammate. With the next AI teammate, please replay those same personas.
+        </p>
+        <div class="inline" style="margin-top:12px;">
+          <button id="btnProceedTask2" class="btn">Proceed to Task 2</button>
+        </div>
+      </div>
+
+      
+      <div id="postTask2Hint" class="card hidden"
+          style="background-color:#fff9e6; border-left:6px solid #f0ad4e; margin-top:16px;">
+        <p style="margin:0; font-weight:500; color:#b45309;">
+          Next, you will play with the 3rd AI teammate. You have already explored some personas with your previous AI teammate. With the next AI teammate, please replay those same personas.
+        </p>
+        <div class="inline" style="margin-top:12px;">
+          <button id="btnProceedTask3" class="btn">Proceed to Task 3</button>
+        </div>
+      </div>
+
+
+      <div id="postTask3Hint" class="card hidden"
+          style="background-color:#fff9e6; border-left:6px solid #f0ad4e; margin-top:16px;">
+        <p style="margin:0; font-weight:500; color:#b45309;">
+          Next, you will play with the 4th AI teammate. You have already explored some personas with your previous AI teammate. With the next AI teammate, please replay those same personas.
+        </p>
+        <div class="inline" style="margin-top:12px;">
+          <button id="btnProceedTask4" class="btn">Proceed to Task 4</button>
+        </div>
+      </div>
+
+
+
+    </section>
+
+
+
+    <!-- Page 8: End -->
+    <section id="page-end" class="card hidden center">
+      <h2>All Done</h2>
+      <p>Thank you for participating!</p>
+      <p class="muted" id="completionHint">Click the button below to finalize and get your completion code.</p>
+
+      <!-- REPLACED: 按钮文本与 id -->
+      <button id="btnFinish" class="btn">Finish task &amp; get completion code</button>
+
+      <!-- 可选：显示完成码的容器 -->
+      <p id="completionCode" style="font-weight:700; font-size:18px; margin-top:10px;"></p>
+    </section>
+
+  </div>
+
+  <script src="static/js/userstudy_freeplay_4models_2rounds_samemap.js"></script>
+</body>
+</html>
