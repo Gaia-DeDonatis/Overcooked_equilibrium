@@ -58,6 +58,8 @@ Next, I will introduce our current **Human–AI Equilibrium** project.
 ### `Equilibrium_project/`
 This directory contains the current codebase of the equilibrium project.
 
+### Please go into this directory. Then, you will see the following:
+
 ### `gym_macro_overcooked/`
 This folder contains the environment code.  
 If you would like to modify the layouts or change the number and positions of vegetables, plates, and other items in the environment, you should make the changes here.
