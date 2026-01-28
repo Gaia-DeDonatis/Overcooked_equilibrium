@@ -59,7 +59,7 @@ def calculate_repetition(file_path):
 
 if __name__ == "__main__":
     # REPLACE THIS with your actual csv filename
-    filename = "experiment_log_20260128_144945.csv" 
+    filename = "Pilot3.csv" 
     
     if len(sys.argv) > 1:
         filename = sys.argv[1]
