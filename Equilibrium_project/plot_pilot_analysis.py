@@ -6,7 +6,6 @@ import os
 from collections import Counter
 
 # --- CONFIGURATION ---
-# This grabs ANY csv file starting with "pilot"
 FILE_PATTERN = "pilot*.csv" 
 
 def calculate_metrics_from_csv(filename):
@@ -16,19 +15,14 @@ def calculate_metrics_from_csv(filename):
         print(f"Error reading {filename}: {e}")
         return []
 
-    # 1. HANDLE DIFFERENT COLUMN NAMES
-    # Some files might use 'Score', others 'Score_Count'
     if 'Score' in df.columns and 'Score_Count' not in df.columns:
         df.rename(columns={'Score': 'Score_Count'}, inplace=True)
         
-    # 2. SAFETY CHECK (This fixes the crash!)
-    # We define strictly what columns we NEED to run the math.
-    # If a file (like the summary one) is missing these, we skip it.
     required_columns = ['Round', 'Human_X', 'Human_Y', 'Score_Count']
     missing_cols = [col for col in required_columns if col not in df.columns]
     
     if missing_cols:
-        print(f"   -> SKIPPING {filename} (Not a raw log file. Missing: {missing_cols})")
+        # Silently skip summary files or bad data
         return []
 
     processed_data = []
@@ -36,18 +30,12 @@ def calculate_metrics_from_csv(filename):
 
     for r in rounds:
         round_data = df[df['Round'] == r]
-        
-        # Max score found in this round
         dishes = round_data['Score_Count'].max()
 
-        # Extract movement path
         raw_path = list(zip(round_data['Human_X'], round_data['Human_Y']))
-        
-        # Remove "standing still" moments to count steps
         path = [x for i, x in enumerate(raw_path) if i == 0 or x != raw_path[i-1]]
         steps = len(path)
 
-        # Calculate Repetition %
         repetition_score = 0.0
         if steps >= 5:
             SEQUENCE_LEN = 4
@@ -74,31 +62,47 @@ def main():
     all_files = glob.glob(FILE_PATTERN)
     
     if not all_files:
-        print("ERROR: No files found starting with 'pilot'!")
-        print(f"Current folder: {os.getcwd()}")
+        print("ERROR: No files found!")
         return
-
-    print(f"Found {len(all_files)} files.")
 
     all_round_data = []
-    
+    valid_files_count = 0
+
     for f in all_files:
-        print(f"Processing {f}...")
         pilot_metrics = calculate_metrics_from_csv(f)
-        for row in pilot_metrics:
-            all_round_data.append(row)
+        if pilot_metrics:
+            valid_files_count += 1
+            for row in pilot_metrics:
+                all_round_data.append(row)
 
     if not all_round_data:
-        print("\nERROR: No valid data extracted from any file.")
-        print("Check if your CSVs have 'Round', 'Human_X', 'Human_Y', and 'Score_Count'.")
+        print("ERROR: No valid data extracted.")
         return
 
-    # --- PLOTTING ---
+    print(f"Successfully processed {valid_files_count} pilot files.")
+
+    # --- STATISTICS ---
     df = pd.DataFrame(all_round_data)
     
-    # Group by Round to get Mean and Std Dev
+    # Calculate Mean and Std Dev
     grouped = df.groupby('Round').agg(['mean', 'std'])
 
+    # Round the numbers to 2 decimal places for cleaner reading
+    grouped = grouped.round(2)
+
+    # 1. PRINT TO TERMINAL
+    print("\n" + "="*60)
+    print("       PILOT DATA SUMMARY (MEAN +/- STD DEV)")
+    print("="*60)
+    print(grouped)
+    print("="*60 + "\n")
+
+    # 2. SAVE TO CSV (For Copy-Pasting)
+    csv_filename = "pilot_data_summary_table.csv"
+    grouped.to_csv(csv_filename)
+    print(f"-> Table saved as: {csv_filename}")
+
+    # --- PLOTTING ---
     rounds = grouped.index
     fig, axs = plt.subplots(3, 1, figsize=(10, 12), sharex=True)
     
@@ -109,12 +113,11 @@ def main():
     ]
 
     for i, (metric, title, color) in enumerate(metrics):
-        # We use .get() to safely grab columns even if they are missing
         if metric not in grouped.columns.levels[0]:
             continue
             
         mean_val = grouped[metric]['mean']
-        std_val = grouped[metric]['std'].fillna(0) # If only 1 pilot, std is NaN -> 0
+        std_val = grouped[metric]['std'].fillna(0)
         
         axs[i].plot(rounds, mean_val, marker='o', label=f'Mean {metric}', color=color, linewidth=2)
         axs[i].fill_between(rounds, mean_val - std_val, mean_val + std_val, alpha=0.2, color=color)
@@ -129,9 +132,9 @@ def main():
     axs[2].set_xticks(range(1, 11))
     
     plt.tight_layout()
-    output_filename = 'pilot_results_automatic.png'
-    plt.savefig(output_filename, dpi=300)
-    print(f"\nSUCCESS! Plot saved as: {output_filename}")
+    plot_filename = 'pilot_results_automatic.png'
+    plt.savefig(plot_filename, dpi=300)
+    print(f"-> Plot saved as: {plot_filename}")
 
 if __name__ == "__main__":
     main()
