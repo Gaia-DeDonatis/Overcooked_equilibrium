@@ -125,7 +125,6 @@ def main():
         axs[i].set_ylabel(metric)
         axs[i].set_title(title)
         axs[i].grid(True, linestyle='--', alpha=0.7)
-        axs[i].axvline(x=7, color='black', linestyle='--', linewidth=2, label='Intervention (R7)')
         axs[i].legend(loc='upper left')
 
     axs[2].set_xlabel('Round Number')
