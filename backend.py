@@ -1,6 +1,15 @@
 # -*- coding: utf-8 -*-
 import os
-import os
+
+import sys
+
+# Equilibrium_project" folder
+current_dir = os.path.dirname(os.path.abspath(__file__))
+target_folder = os.path.join(current_dir, 'Equilibrium_project')
+
+# Insert at index 0 so this folder takes priority over everything else
+sys.path.insert(0, target_folder) 
+
 # —— 彻底约束多线程BLAS带来的非确定性
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
@@ -59,6 +68,28 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.save_util import load_from_zip_file
 import random
 import gym_macro_overcooked
+
+from gym.envs.registration import register # <--- Add this import if missing
+
+# ================= MANUAL REGISTRATION START =================
+# Since we are using a local folder, we manually register the environments
+# to ensure Gym knows they exist.
+try:
+    # 1. Register the Single-Agent Environment
+    register(
+        id='Overcooked-v0',
+        entry_point='gym_macro_overcooked.overcooked_equilibrium:Overcooked_equilibrium',
+    )
+    # 2. Register the Multi-Agent Environment
+    register(
+        id='Overcooked-MA-v0',
+        entry_point='gym_macro_overcooked.overcooked_MA_equilibrium:Overcooked_MA_equilibrium',
+    )
+    print("--> SUCCESS: Manually registered Overcooked-v0 and Overcooked-MA-v0")
+except Exception as e:
+    # It might already be registered, which is fine
+    print(f"--> Registration Note: {e}")
+
 from gym_macro_overcooked.items import Tomato, Lettuce, Onion, Plate, Knife, Delivery, Agent, Food, DirtyPlate
 
 # 你的感知模型工具（如未使用可删）
