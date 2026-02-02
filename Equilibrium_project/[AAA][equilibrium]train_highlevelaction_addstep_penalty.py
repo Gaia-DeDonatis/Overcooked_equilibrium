@@ -31,7 +31,8 @@ class SingleAgentWrapper(gym.Wrapper):
         self.observation_space = env.observation_space
         self.action_space = env.action_space
         self.other_agent_model = other_agent_model
-        
+
+
         self.obs = None
 
 
@@ -42,9 +43,11 @@ class SingleAgentWrapper(gym.Wrapper):
 
     def step(self, action):
 
-        moving_reward = 0
+        agent0_moving_reward = 0
+        agent1_moving_reward = 0
 
-        human_agent_previous_location = [self.agent[1].x, self.agent[1].y]
+        agent0_previous_location = [self.agent[0].x, self.agent[0].y]
+        agent1_previous_location = [self.agent[1].x, self.agent[1].y]
         
         actions = [0, 0]
 
@@ -61,23 +64,27 @@ class SingleAgentWrapper(gym.Wrapper):
         self.obs = self.env._get_macro_obs()
 
 
-        human_agent_current_location = [self.agent[1].x, self.agent[1].y]
+        agent0_current_location = [self.agent[0].x, self.agent[0].y]
+        agent1_current_location = [self.agent[1].x, self.agent[1].y]
 
 
 
         if self.agent_index == 0:
-            return self.obs[self.agent_index], rewards[0] + rewards[1], dones, info
+            if agent0_previous_location != agent0_current_location:
+                # print('here')
+                agent0_moving_reward -= 50
+            return self.obs[self.agent_index], rewards[0] + rewards[1] + agent0_moving_reward, dones, info
         
 
         # 营造不喜欢移动的human
         if self.agent_index == 1:
             # 判断是否发生了位置的移动，如果发生了，则多扣一点step moving penalty
             # print(human_agent_previous_location, human_agent_current_location)
-            if human_agent_previous_location != human_agent_current_location:
+            if agent1_previous_location != agent1_current_location:
                 # print('here')
-                moving_reward -= 5
+                agent1_moving_reward -= 50
 
-            return self.obs[self.agent_index], rewards[0] + rewards[1] + moving_reward, dones, info
+            return self.obs[self.agent_index], rewards[0] + rewards[1] + agent1_moving_reward, dones, info
 
 
 
@@ -234,8 +241,46 @@ model_agent_1.set_logger(new_logger)
 
 
 # layout_v1：物品各自在两边
-reward_callback_0 = EpisodeRewardCallback('final_trained_models/[equilibrium]agent0_highlevelaction_step_penalty_layout_v1')
-reward_callback_1 = EpisodeRewardCallback('final_trained_models/[equilibrium]agent1_highlevelaction_step_penalty_layout_v1')
+reward_callback_0 = EpisodeRewardCallback('final_trained_models/[equilibrium]agent0_step_penalty_5_vs_5')
+reward_callback_1 = EpisodeRewardCallback('final_trained_models/[equilibrium]agent1_step_penalty_5_vs_5')
+
+
+# agent0_step_penalty_1_vs_1, agent1_step_penalty_1_vs_1
+# agent0_step_penalty_1_vs_2, agent1_step_penalty_1_vs_2
+# agent0_step_penalty_1_vs_3, agent1_step_penalty_1_vs_3
+# agent0_step_penalty_1_vs_4, agent1_step_penalty_1_vs_4
+# agent0_step_penalty_1_vs_5, agent1_step_penalty_1_vs_5
+
+
+# agent0_step_penalty_2_vs_1, agent1_step_penalty_2_vs_1
+# agent0_step_penalty_2_vs_2, agent1_step_penalty_2_vs_2
+# agent0_step_penalty_2_vs_3, agent1_step_penalty_2_vs_3
+# agent0_step_penalty_2_vs_4, agent1_step_penalty_2_vs_4
+# agent0_step_penalty_2_vs_5, agent1_step_penalty_2_vs_5
+
+
+# agent0_step_penalty_3_vs_1, agent1_step_penalty_3_vs_1
+# agent0_step_penalty_3_vs_2, agent1_step_penalty_3_vs_2
+# agent0_step_penalty_3_vs_3, agent1_step_penalty_3_vs_3
+# agent0_step_penalty_3_vs_4, agent1_step_penalty_3_vs_4
+# agent0_step_penalty_3_vs_5, agent1_step_penalty_3_vs_5
+
+
+# agent0_step_penalty_4_vs_1, agent1_step_penalty_4_vs_1
+# agent0_step_penalty_4_vs_2, agent1_step_penalty_4_vs_2
+# agent0_step_penalty_4_vs_3, agent1_step_penalty_4_vs_3
+# agent0_step_penalty_4_vs_4, agent1_step_penalty_4_vs_4
+# agent0_step_penalty_4_vs_5, agent1_step_penalty_4_vs_5
+
+
+# agent0_step_penalty_5_vs_1, agent1_step_penalty_5_vs_1
+# agent0_step_penalty_5_vs_2, agent1_step_penalty_5_vs_2
+# agent0_step_penalty_5_vs_3, agent1_step_penalty_5_vs_3
+# agent0_step_penalty_5_vs_4, agent1_step_penalty_5_vs_4
+# agent0_step_penalty_5_vs_5, agent1_step_penalty_5_vs_5
+
+
+
 
 
 # Training configuration

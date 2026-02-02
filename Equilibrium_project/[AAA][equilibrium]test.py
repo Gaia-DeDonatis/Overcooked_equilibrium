@@ -31,8 +31,8 @@ class SingleAgentWrapper(gym.Wrapper):
 
     def step(self, action):
 
-        benevolence_reward = 0
-        
+        # human_agent_previous_location = [self.agent[1].x, self.agent[1].y]
+
         actions = [0, 0]
 
         other_agent_action = self.other_agent_model.predict(self.obs[1 - self.agent_index])
@@ -47,7 +47,12 @@ class SingleAgentWrapper(gym.Wrapper):
 
         self.obs = self.env._get_macro_obs()
 
-        
+        # human_agent_current_location = [self.agent[1].x, self.agent[1].y]
+
+
+        # print(human_agent_previous_location, human_agent_current_location)
+
+
         return self.obs[self.agent_index], rewards[2], dones, info
 
 
@@ -117,8 +122,8 @@ env_agent_1 = SingleAgentWrapper(shared_env, agent_index=1)
 
 
 """新的layout但是没有加movivng penalty"""
-model_agent_0 = PPO.load("final_trained_models/[equilibrium]agent0_highlevelaction_layout_v1\model_700000", env=env_agent_0)
-model_agent_1 = PPO.load("final_trained_models/[equilibrium]agent1_highlevelaction_layout_v1\model_700000", env=env_agent_1)
+# model_agent_0 = PPO.load("final_trained_models/[equilibrium]agent0_highlevelaction_layout_v1\model_700000", env=env_agent_0)
+# model_agent_1 = PPO.load("final_trained_models/[equilibrium]agent1_highlevelaction_layout_v1\model_700000", env=env_agent_1)
 
 
 """新的layout而且加上了moving penalty"""
@@ -131,6 +136,86 @@ model_agent_1 = PPO.load("final_trained_models/[equilibrium]agent1_highlevelacti
 # model_agent_1 = PPO.load("final_trained_models/[equilibrium]agent1_highlevelaction_partitial_obs_layout_v1\model_3400000", env=env_agent_1)
 
 
+
+
+
+# model_agent_0 = PPO.load("../final_trained_models/[equilibrium]agent0_step_penalty_1_vs_1/model_300000", env=env_agent_0)
+# model_agent_1 = PPO.load("../final_trained_models/[equilibrium]agent1_step_penalty_1_vs_1/model_300000", env=env_agent_1)
+
+# model_agent_0 = PPO.load("../final_trained_models/[equilibrium]agent0_a0sp_0_a1sp_0/model_500000", env=env_agent_0)
+# model_agent_1 = PPO.load("../final_trained_models/[equilibrium]agent1_a0sp_0_a1sp_0/model_500000", env=env_agent_1)
+
+# model_agent_0 = PPO.load("../final_trained_models/[equilibrium]agent0_step_penalty_5_vs_5/model_500000", env=env_agent_0)
+# model_agent_1 = PPO.load("../final_trained_models/[equilibrium]agent1_step_penalty_5_vs_5/model_500000", env=env_agent_1)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# model_agent_0 = PPO.load("../final_trained_models/[equilibrium]agent0_a0sp_0_a1sp_0/model_500000", env=env_agent_0)
+# model_agent_1 = PPO.load("../final_trained_models/[equilibrium]agent1_a0sp_0_a1sp_0/model_500000", env=env_agent_1)
+
+
+model_agent_0 = PPO.load("../final_trained_models/[equilibrium]agent0_a0sp_0_a1sp_1/model_500000", env=env_agent_0)
+model_agent_1 = PPO.load("../final_trained_models/[equilibrium]agent1_a0sp_0_a1sp_1/model_500000", env=env_agent_1)
+
+
+# model_agent_0 = PPO.load("../final_trained_models/[equilibrium]agent0_a0sp_0_a1sp_10/model_500000", env=env_agent_0)
+# model_agent_1 = PPO.load("../final_trained_models/[equilibrium]agent1_a0sp_0_a1sp_10/model_500000", env=env_agent_1)
+
+
+# model_agent_0 = PPO.load("../final_trained_models/[equilibrium]agent0_a0sp_0_a1sp_20/model_500000", env=env_agent_0)
+# model_agent_1 = PPO.load("../final_trained_models/[equilibrium]agent1_a0sp_0_a1sp_20/model_500000", env=env_agent_1)
+
+
+# model_agent_0 = PPO.load("../final_trained_models/[equilibrium]agent0_a0sp_0_a1sp_50/model_500000", env=env_agent_0)
+# model_agent_1 = PPO.load("../final_trained_models/[equilibrium]agent1_a0sp_0_a1sp_50/model_500000", env=env_agent_1)
+
+
+"""=================================================="""
+
+# model_agent_0 = PPO.load("../final_trained_models/[equilibrium]agent0_a0sp_1_a1sp_0/model_500000", env=env_agent_0)
+# model_agent_1 = PPO.load("../final_trained_models/[equilibrium]agent1_a0sp_1_a1sp_0/model_500000", env=env_agent_1)
+
+
+# model_agent_0 = PPO.load("../final_trained_models/[equilibrium]agent0_a0sp_1_a1sp_1/model_500000", env=env_agent_0)
+# model_agent_1 = PPO.load("../final_trained_models/[equilibrium]agent1_a0sp_1_a1sp_1/model_500000", env=env_agent_1)
+
+
+model_agent_0 = PPO.load("../final_trained_models/[equilibrium]agent0_a0sp_1_a1sp_10/model_500000", env=env_agent_0)
+model_agent_1 = PPO.load("../final_trained_models/[equilibrium]agent1_a0sp_1_a1sp_10/model_500000", env=env_agent_1)
+
+
+# model_agent_0 = PPO.load("../final_trained_models/[equilibrium]agent0_a0sp_1_a1sp_20/model_500000", env=env_agent_0)
+# model_agent_1 = PPO.load("../final_trained_models/[equilibrium]agent1_a0sp_1_a1sp_20/model_500000", env=env_agent_1)
+
+
+# model_agent_0 = PPO.load("../final_trained_models/[equilibrium]agent0_a0sp_1_a1sp_50/model_500000", env=env_agent_0)
+# model_agent_1 = PPO.load("../final_trained_models/[equilibrium]agent1_a0sp_1_a1sp_50/model_500000", env=env_agent_1)
+
+
+
+"""=================================================="""
+
+model_agent_0 = PPO.load("../final_trained_models/[equilibrium]agent0_a0sp_10_a1sp_0/model_500000", env=env_agent_0)
+model_agent_1 = PPO.load("../final_trained_models/[equilibrium]agent1_a0sp_10_a1sp_0/model_500000", env=env_agent_1)
+
+
+# gamma, reward (helping)
 
 
 # Test the trained models
@@ -162,9 +247,13 @@ for step in range(200):
 
     total_action = [action_0, action_1]
 
-    print('agent action: ', shared_env.macroActionName[action_0])
 
-    
+    # print('agent action: ', shared_env.macroActionName[action_0])
+
+
+    human_agent_previous_location = [shared_env.agent[1].x, shared_env.agent[1].y]
+
+
     total_action, real_execute_macro_actions = shared_env._computeLowLevelActions(
         total_action
     )
@@ -175,6 +264,14 @@ for step in range(200):
     print("---------")
     obs = shared_env._get_macro_obs()
 
+
+    human_agent_current_location = [shared_env.agent[1].x, shared_env.agent[1].y]
+
+
+    print(human_agent_previous_location, human_agent_current_location)    
+    
+
+
     frame = shared_env.render(mode="rgb_array")
 
     # 尺寸保护（极少数 env 会抖）
@@ -184,7 +281,7 @@ for step in range(200):
     video_writer.write(cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
 
     print(reward_this)
-    time.sleep(1)
+    time.sleep(0.1)
 
     if isinstance(dones, (list, tuple, np.ndarray)):
         if any(dones):
