@@ -281,6 +281,11 @@ class Overcooked_MA_equilibrium(Overcooked_equilibrium):
 
             # print('目标位置是: ', target_x, target_y)
 
+
+            # if idx == 0:
+            #     print('agent0距离目标: ', self.shortest_path_through_zeros(agent.pomap, agent.x, agent.y, target_x, target_y))
+
+
             if self.shortest_path_through_zeros(agent.pomap, agent.x, agent.y, target_x, target_y) == -1 and self._calDistance(agent.x, agent.y, target_x, target_y) == 2:
                 # print('难道进入这里了？')
                 self.macroAgent[idx].cur_macro_action_done = True
@@ -369,6 +374,9 @@ class Overcooked_MA_equilibrium(Overcooked_equilibrium):
                         primitive_action = ACTIONIDX["stay"]
                     else:
                         primitive_action = self._navigate(agent, target_x, target_y)
+                        # if idx == 0:
+                            
+                        #     print('此时agent 0的primitive action: ', primitive_action)
                         if primitive_action == ACTIONIDX["stay"]:
                             self.macroAgent[idx].cur_macro_action_done = True
 
@@ -591,7 +599,10 @@ class Overcooked_MA_equilibrium(Overcooked_equilibrium):
                     else:
                         init_action = actionIdx[action]
 
-                    if new_name == "space" or new_name == "agent":
+                    # if new_name == "space" or new_name == "agent":
+                    
+                    # 2026年2月1日修改，关于碰撞
+                    if new_name == "space":
                         pass_agent = 0
                         if new_name == "agent":
                             pass_agent = 1

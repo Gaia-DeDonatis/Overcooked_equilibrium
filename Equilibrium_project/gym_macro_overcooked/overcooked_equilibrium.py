@@ -2310,6 +2310,30 @@ class Overcooked_equilibrium(gym.Env):
                             # 如果手中拿的是食物，判断是否切好，未切好不能装盘
                             if isinstance(agent.holding, Food):
                                 if agent.holding.chopped:
+
+                                    plate = self._findItem(target_x, target_y, target_name)
+                                    item = agent.holding
+
+
+                                    # 2026年2月2日新增：盘子里已有食物则不允许再装
+                                    # if plate.containing:   # 非空
+                                    #     self.reward[idx] += self.rewardList[idx]["metatask failed"]
+                                    #     self.reward[2] += self.rewardList[idx]["metatask failed"]
+                                    #     continue  # 或者什么都不做
+
+
+                                    # 2026年2月2日新增：盘子里若已存在同一种 food，则不允许重复装盘（但允许组合）
+                                    if plate.containing:  # 非空
+                                        # 判断盘子里是否已有与当前 item 同类型的食材
+                                        same_food_exists = any(type(f) is type(item) for f in plate.containing)
+                                        # 如果你更想按 rawName 判断（更稳），用下面这行替代上一行：
+                                        # same_food_exists = any(getattr(f, "rawName", None) == getattr(item, "rawName", None) for f in plate.containing)
+
+                                        if same_food_exists:
+                                            self.reward[idx] += self.rewardList[idx]["metatask failed"]
+                                            self.reward[2] += self.rewardList[idx]["metatask failed"]
+                                            continue  # 或者什么都不做
+
                                     if isinstance(agent.holding, BadLettuce):
                                         self.reward[idx] += self.rewardList[idx]["penalize using bad lettuce"]
                                         self.reward[2] += self.rewardList[idx]["penalize using bad lettuce"]
@@ -2325,8 +2349,7 @@ class Overcooked_equilibrium(gym.Env):
                                         """也要减分"""
                                         self.reward[idx] += self.rewardList[idx]["penalize using dirty plate"]
                                         self.reward[2] += self.rewardList[idx]["penalize using dirty plate"]
-                                    plate = self._findItem(target_x, target_y, target_name)
-                                    item = agent.holding
+
                                     # 放下手中的物品，恢复未持物状态
                                     agent.putdown(target_x, target_y)
                                     # 把食物装进盘子里
@@ -2364,6 +2387,25 @@ class Overcooked_equilibrium(gym.Env):
                                 item = knife.holding
                                 if item.chopped:
 
+
+                                    # 2026年2月2日新增：盘子里已有食物则不允许再装
+                                    # if agent.holding.containing:
+                                    #     self.reward[idx] += self.rewardList[idx]["metatask failed"]
+                                    #     self.reward[2] += self.rewardList[idx]["metatask failed"]
+                                    #     continue
+
+
+                                    # 2026年2月2日新增：盘子里若已存在同一种 food，则不允许重复装盘（但允许组合）
+                                    if agent.holding.containing:  # 非空
+                                        same_food_exists = any(type(f) is type(item) for f in agent.holding.containing)
+                                        # 如果你更想按 rawName 判断（更稳），用下面这行替代上一行：
+                                        # same_food_exists = any(getattr(f, "rawName", None) == getattr(item, "rawName", None) for f in agent.holding.containing)
+
+                                        if same_food_exists:
+                                            self.reward[idx] += self.rewardList[idx]["metatask failed"]
+                                            self.reward[2] += self.rewardList[idx]["metatask failed"]
+                                            continue
+
                                     if isinstance(item, BadLettuce):
                                         self.reward[idx] += self.rewardList[idx]["penalize using bad lettuce"]
                                         self.reward[2] += self.rewardList[idx]["penalize using bad lettuce"]
@@ -2377,6 +2419,9 @@ class Overcooked_equilibrium(gym.Env):
                                     else:
                                         self.reward[idx] += self.rewardList[idx]["subtask finished"]
                                         self.reward[2] += self.rewardList[idx]["subtask finished"]
+
+
+
                                     knife.release()
                                     agent.holding.contain(item)
                                 else:
@@ -2392,11 +2437,30 @@ class Overcooked_equilibrium(gym.Env):
                                 plate_item = knife.holding
                                 food_item = agent.holding
                                 if food_item.chopped:
+
+
+                                    # ===== 2026年2月2日新增：盘子里若已存在同一种 food，则不允许重复装盘（但允许组合）=====
+                                    if plate_item.containing:  # 非空
+                                        same_food_exists = any(type(f) is type(food_item) for f in plate_item.containing)
+                                        # 如果你更想按 rawName 判断（更稳），用下面这行替代上一行：
+                                        # same_food_exists = any(getattr(f, "rawName", None) == getattr(food_item, "rawName", None) for f in plate_item.containing)
+
+                                        if same_food_exists:
+                                            self.reward[idx] += self.rewardList[idx]["metatask failed"]
+                                            self.reward[2] += self.rewardList[idx]["metatask failed"]
+                                            continue
+
                                     if isinstance(food_item, BadLettuce):
                                         self.reward[idx] += self.rewardList[idx]["penalize using bad lettuce"]
                                         self.reward[2] += self.rewardList[idx]["penalize using bad lettuce"]
                                     self.reward[idx] += self.rewardList[idx]["subtask finished"]
                                     self.reward[2] += self.rewardList[idx]["subtask finished"]
+
+                                    # 注意：这里装的是 knife 上的盘子，盘子可能是 DirtyPlate
+                                    if isinstance(plate_item, DirtyPlate):
+                                        self.reward[idx] += self.rewardList[idx]["penalize using dirty plate"]
+                                        self.reward[2] += self.rewardList[idx]["penalize using dirty plate"]
+
                                     knife.release()
                                     # a little different
                                     agent.pickup(plate_item)
@@ -2574,11 +2638,57 @@ class Overcooked_equilibrium(gym.Env):
                                 self.map[food.x][food.y] = ITEMIDX[food.rawName]
 
                         # 如果移动目标是食物，则只有（1）agent手中拿着盘子，（2）食物已经切好了，才能执行put down的操作。pickup当然没问题，但是put down只有满足这个条件才能进行
-                        elif target_name in ["tomato", "lettuce", "badlettuce" "onion"]:
+                        elif target_name in ["tomato", "lettuce", "badlettuce", "onion"]:
                             item = self._findItem(target_x, target_y, target_name)
+                            # print(target_x, target_y, target_name, item)
+
+                            if item is None:
+                                # 目标已经不在这格了：宏动作过期/被抢走/状态变化
+                                # 选择一种处理：无操作 or 失败惩罚
+                                self.reward[idx] += self.rewardList[idx]["metatask failed"]
+                                self.reward[2] += self.rewardList[idx]["metatask failed"]
+                                # 同时最好把该 agent 的 macro 标记 done，让它重新选目标
+                                # self.macroAgent[idx].cur_macro_action_done = True
+                                continue  # 或 return / pass
+
                             if item.chopped and (isinstance(agent.holding, Plate) or isinstance(agent.holding, DirtyPlate)):
+
+
+                                # 2026年2月2日新增：盘子里若已存在同一种 food，则不允许重复装盘（但允许组合）
+                                if agent.holding.containing:  # 非空
+                                    same_food_exists = any(type(f) is type(item) for f in agent.holding.containing)
+                                    # 如果你更想按 rawName 判断（更稳），用下面这行替代上一行：
+                                    # same_food_exists = any(getattr(f, "rawName", None) == getattr(item, "rawName", None) for f in agent.holding.containing)
+
+                                    if same_food_exists:
+                                        self.reward[idx] += self.rewardList[idx]["metatask failed"]
+                                        self.reward[2] += self.rewardList[idx]["metatask failed"]
+                                        continue
+
+                                # 通过判重后，才计算成功装盘的奖惩
+                                if isinstance(item, BadLettuce):
+                                    self.reward[idx] += self.rewardList[idx]["penalize using bad lettuce"]
+                                    self.reward[2] += self.rewardList[idx]["penalize using bad lettuce"]
+
+                                    
                                 self.reward[idx] += self.rewardList[idx]["subtask finished"]
                                 self.reward[2] += self.rewardList[idx]["subtask finished"]
+
+
+                                if isinstance(agent.holding, DirtyPlate):
+                                    self.reward[idx] += self.rewardList[idx]["penalize using dirty plate"]
+                                    self.reward[2] += self.rewardList[idx]["penalize using dirty plate"]
+
+                                    
+                                # 2026年2月2日新增：盘子里已有食物则不允许再装
+                                # if agent.holding.containing:
+                                #     self.reward[idx] += self.rewardList[idx]["metatask failed"]
+                                #     self.reward[2] += self.rewardList[idx]["metatask failed"]
+                                #     continue
+
+
+
+                                    
                                 agent.holding.contain(item)
                                 self.map[target_x][target_y] = ITEMIDX["counter"]
                             elif not item.chopped and (isinstance(agent.holding, Plate) or isinstance(agent.holding, DirtyPlate)):
