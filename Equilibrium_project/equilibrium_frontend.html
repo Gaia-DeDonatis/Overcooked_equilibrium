@@ -58,11 +58,36 @@
     .role-item input{margin-top:4px}
     .legend img{height:26px; vertical-align:middle}
     .inline{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
-    canvas#gameCanvas{border:2px solid #111827; display:block; margin:8px auto; max-width:100%; height: auto;}
-    canvas#gameCanvas_practice{border:2px solid #111827; display:block; margin:8px auto; max-width:100%; height: auto;}
+
+    /* --- RESPONSIVE GAME CANVAS STYLES (UPDATED) --- */
+    .game-viewport {
+      width: 100%;              /* Take up full available width on mobile */
+      max-width: 600px;         /* Stop growing at 600px on desktop */
+      aspect-ratio: 1 / 1;      /* Force a perfect square shape (5x5 grid) */
+      margin: 0 auto 20px;      /* Center horizontally */
+      position: relative;
+    }
+
+    canvas#gameCanvas, 
+    canvas#gameCanvas_practice,
     canvas#gameCanvas_pretask1,
-    canvas#gameCanvas_pretask2{border:2px solid #111827; display:block; margin:8px auto; max-width:100%; height: auto;}
-    
+    canvas#gameCanvas_pretask2 {
+      width: 100% !important;   /* Force width to match container */
+      height: 100% !important;  /* Force height to match container */
+      border: 2px solid #111827; 
+      display: block;
+      border-radius: 8px;       
+      object-fit: contain;
+    }
+
+    .game-controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    /* ------------------------------------------------ */
+
     #stepCounter{
       font-weight:700; padding:10px 14px; border:2px solid var(--brand); border-radius:10px; display:inline-block; color:var(--brand); background:#f0f7ff
     }
@@ -100,32 +125,21 @@
     #agentLegend{ text-align:center; margin-top:8px; color:#444 }
     #agentLegend img{ width:50px; vertical-align:middle; margin:0 10px }
 
-
-
-
-
-
-
-
-
-
-    
-
     /* 7 点李克特量表：上面一排 radio，下面一排文字 */
     .likert-7{
       display:grid;
       grid-template-columns:repeat(7, 1fr);
       grid-auto-rows:auto;
       gap:6px 12px;              /* 行间距, 列间距 */
-      align-items:center;         /* 纵向居中 radio */
-      justify-items:center;       /* 横向居中每列内容 */
+      align-items:center;        /* 纵向居中 radio */
+      justify-items:center;      /* 横向居中每列内容 */
       margin-top:8px;
     }
     .likert-7 input[type="radio"]{
-      margin:0;                   /* 去掉默认外边距，保证光标对齐 */
+      margin:0;                  /* 去掉默认外边距，保证光标对齐 */
     }
     .likert-7 .scale-label{
-      grid-row:2;                 /* 统一放在第二行 */
+      grid-row:2;                /* 统一放在第二行 */
       font-size:12px;
       color:#666;
       text-align:center;
@@ -244,11 +258,11 @@
         <img id="taskIllustration" src="static/images/task_illustration.png" alt="Task Illustration">
         <div id="agentLegend">
           You are <img src="static/images/agent-blue.png" alt="Agent Blue">
-          &nbsp;&nbsp;&nbsp;&nbsp; Your robot partners are
+          &nbsp;&nbsp;&nbsp;&nbsp; Your robot partner is
           <img id="robotIcon" src="static/images/agent-robot.png" alt="Agent Robot">
-          and 
-          <img id="robotIcon" src="static/images/agent-robot2.png" alt="Agent Robot">
           <!-- or 
+          <img id="robotIcon" src="static/images/agent-robot2.png" alt="Agent Robot">
+          or 
           <img id="robotIcon" src="static/images/agent-robot3.png" alt="Agent Robot">
           or 
           <img id="robotIcon" src="static/images/agent-robot4.png" alt="Agent Robot">-->
@@ -306,8 +320,6 @@
             Tip: You may temporarily place <strong>vegetables or plates</strong> on any <strong>counter</strong> to organize your workflow.
           </p>
         </div>
-
-
         
         <p style="text-align: center; margin-top: 15px; font-weight: bold; font-size: 18px; color: #222;">
           Use your arrow keys to play.
@@ -318,12 +330,17 @@
       </div>
 
       <div style="margin-top:20px; text-align:center;">
-        <button id="btnTryPractice" class="btn" style="margin-bottom:15px;">
-          Try One Game (In this practice, your teammate won't move)
-        </button>
-        <h3>Please press arrow key one-by-one a little bit slowly. Do not press the key too quickly because it may cause networking delay. </h3>
-        <canvas id="gameCanvas_practice" width="800" height="800"
-                style="border:2px solid #111827; display:block; margin:0 auto; background:white;"></canvas>
+        <div class="game-controls">
+          <button id="btnTryPractice" class="btn">
+            Try One Game (In this practice, your teammate won't move)
+          </button>
+        </div>
+        <h3 style="font-size:14px; color:#555;">
+           Please press arrow keys slowly to avoid network delay.
+        </h3>
+        <div class="game-viewport">
+           <canvas id="gameCanvas_practice" width="600" height="600"></canvas>
+        </div>
       </div>
 
       <p id="practiceHint" class="muted center" style="margin-top:8px">

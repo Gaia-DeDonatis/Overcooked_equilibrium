@@ -140,7 +140,7 @@ LAYOUT_CONFIG = {
         "mac_env_id": "Overcooked-MA-v0",
         "map_type":   "A",
         "model":      "none",         # 练习局：不加载RL模型，AI驻留
-        "grid_dim":   [9, 9],
+        "grid_dim":   [5, 5],
         "n_agent":    2
     },
 
