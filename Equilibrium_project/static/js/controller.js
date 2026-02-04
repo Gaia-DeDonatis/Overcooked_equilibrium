@@ -30,7 +30,8 @@ function assignConditions() {
 function showPage(pageId) {
     const pages = ['page-intro','page-consent','page-instruction-1',
                    'page-instruction-2a','page-instruction-2b','page-instruction-2c',
-                   'page-pretask-1','page-pretask-2','page-task','page-qs','page-end'];
+                   'page-intermission','page-task','page-qs','page-end'];
+    
     pages.forEach(id => {
         const el = document.getElementById(id);
         if(el) el.classList.add('hidden');
@@ -224,21 +225,56 @@ document.getElementById('btnEnterTask1').onclick = () => { STATE.round=1; showPa
 document.getElementById('btnEnterTask2').onclick = () => { STATE.round=1; showPage('page-task'); startMainTask('task2'); };
 
 // Next Round
+// PAGE 2c & START PHASE 1
+if(btnStartTask1) {
+    // Attach listeners
+    [...q3aRadios, ...q3bRadios].forEach(r => r.addEventListener('change', validateQuiz2c));
+
+    // NAVIGATION: Go straight to Game (Skip Pre-task)
+    btnStartTask1.onclick = () => {
+        STATE.round = 1;
+        startMainTask('task1'); 
+    };
+}
+
+// INTERMISSION: START PHASE 2
+const btnStartPhase2 = document.getElementById('btnStartPhase2');
+if(btnStartPhase2) {
+    btnStartPhase2.onclick = () => {
+        STATE.round = 1; // Reset round count for Phase 2
+        startMainTask('task2');
+    };
+}
+
+// NEXT ROUND BUTTON
 document.getElementById('btnNext').onclick = () => {
-    let r = document.querySelector('input[name="personaFidelity"]:checked');
-    if(!r) return alert("Please rate the AI.");
-    
-    LOGS.rounds.push({ phase: STATE.phase, round: STATE.round, config: STATE.configId, steps: currentRoundSteps, rating: r.value });
-    
-    if(STATE.round < CONFIG.TOTAL_ROUNDS) {
+    // 1. Save Data (Rating removed as requested)
+    LOGS.rounds.push({ 
+        phase: STATE.phase, 
+        round: STATE.round, 
+        config: STATE.configId, 
+        steps: currentRoundSteps 
+    });
+
+    // 2. Logic
+    if(STATE.round < 5) {
+        // --- NEXT ROUND ---
         STATE.round++;
-        document.getElementById('roundLabel').innerText = `Round ${STATE.round} / ${CONFIG.TOTAL_ROUNDS}`;
+        document.getElementById('roundLabel').innerText = `Round ${STATE.round} / 5`;
         document.getElementById('round-end-panel').classList.add('hidden');
-        document.querySelectorAll('input[name="personaFidelity"]').forEach(el => el.checked=false);
+        
+        // Restart same phase
         startMainTask(STATE.phase === 1 ? 'task1' : 'task2');
     } else {
-        if(STATE.phase === 1) { showPage('page-pretask-2'); startPreview('preview2'); }
-        else { showPage('page-qs'); }
+        // --- PHASE FINISHED ---
+        if(STATE.phase === 1) {
+            // End of Phase 1 -> Show Intermission
+            document.getElementById('round-end-panel').classList.add('hidden');
+            showPage('page-intermission');
+        } else {
+            // End of Phase 2 -> Show Questionnaire
+            showPage('page-qs');
+        }
     }
 };
 
