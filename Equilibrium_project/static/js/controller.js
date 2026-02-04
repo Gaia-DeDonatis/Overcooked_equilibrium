@@ -177,70 +177,63 @@ function val2c(){
     q3a.forEach(r=>{if(r.checked&&r.value==='correct')a=true});
     q3b.forEach(r=>{if(r.checked&&r.value==='correct')b=true});
     
+    // Validate Button State
     if(btnStart1) btnStart1.disabled = !(a&&b);
+    
+    // Show/Hide Error Text
     if(q3Error) {
        if(a&&b) q3Error.classList.add('hidden');
        else if(document.querySelector('input[name="q3a"]:checked') || document.querySelector('input[name="q3b"]:checked')) 
            q3Error.classList.remove('hidden');
     }
 }
+// Attach listeners safely
 [...q3a,...q3b].forEach(r=>r.addEventListener('change',val2c));
 
+// 1. Start Phase 1 (Go to Placeholder)
 if(btnStart1) {
     btnStart1.onclick = () => { 
-        STATE.round = 1;
-        startMainTask('task1'); 
+        showPage('page-phase-1');
     };
 }
 
-// Start Phase 2 (From Intermission)
-const btnStart2 = document.getElementById('btnStartPhase2');
-if(btnStart2) {
-    btnStart2.onclick = () => {
-        STATE.round = 1;
-        startMainTask('task2');
+// 2. Finish Phase 1 -> Intermission
+const btnFinishPhase1 = document.getElementById('btnFinishPhase1');
+if(btnFinishPhase1) {
+    btnFinishPhase1.onclick = () => {
+        showPage('page-intermission');
     };
 }
 
-// Next Round Logic
-document.getElementById('btnNext').onclick = () => {
-    // Save Data
-    LOGS.rounds.push({ 
-        phase: STATE.phase, 
-        round: STATE.round, 
-        config: STATE.configId, 
-        steps: currentRoundSteps 
-    });
+// 3. Start Phase 2 -> Go to Placeholder
+const btnStartPhase2 = document.getElementById('btnStartPhase2');
+if(btnStartPhase2) {
+    btnStartPhase2.onclick = () => {
+        showPage('page-phase-2');
+    };
+}
 
-    if(STATE.round < 5) {
-        // Next Round
-        STATE.round++;
-        startMainTask(STATE.phase === 1 ? 'task1' : 'task2');
-    } else {
-        // End of Phase
-        if(STATE.phase === 1) {
-            // Phase 1 Done -> Show Intermission
-            showPage('page-intermission');
-        } else {
-            // Phase 2 Done -> Show Questionnaire
-            showPage('page-qs');
-        }
-    }
-};
+// 4. Finish Phase 2 -> Questionnaire
+const btnFinishPhase2 = document.getElementById('btnFinishPhase2');
+if(btnFinishPhase2) {
+    btnFinishPhase2.onclick = () => {
+        showPage('page-qs');
+    };
+}
 
-// Submit
+// ==========================================================
+// === QUESTIONNAIRE & INIT ===
+// ==========================================================
+
 document.getElementById('qsNext').onclick = () => {
     const s = document.getElementById('q_strategy').value;
     const a = document.querySelector('input[name="q_adapt"]:checked');
-    if(!s || !a) return alert("Answer all questions.");
-    LOGS.questionnaire = { strategy: s, adapt: a.value };
-    api('/submit_log', { log: LOGS }).then(res => {
-        document.getElementById('completionCode').innerText = res.completion_code;
-        showPage('page-end');
-    });
+    if(!s || !a) return alert("Please answer all questions.");
+    
+    document.getElementById('completionCode').innerText = "MVP-SUCCESS";
+    showPage('page-end');
 };
 
-// Init
 preloadImages(() => {
     console.log("Images Loaded");
     showPage('page-intro');
