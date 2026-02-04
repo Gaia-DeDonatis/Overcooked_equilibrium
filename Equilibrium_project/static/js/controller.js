@@ -15,13 +15,14 @@ async function api(endpoint, data={}) {
     return await res.json();
 }
 
-// --- 2. NAVIGATION & SETUP ---
+// --- 2. CONFIG & NAVIGATION ---
 function assignConditions() {
     const pid = LOGS.prolificId || "test";
     let h = 0;
     for(let i=0; i<pid.length; i++) h = (h*31 + pid.charCodeAt(i)) >>> 0;
     const layouts = ["layout1", "layout2", "layout3", "layout4"];
     const models = ["model1", "model2", "model3", "model4"];
+    
     STATE.assignment.task1 = `${layouts[h%4]}_${models[h%4]}`;
     STATE.assignment.task2 = `${layouts[h%4]}_${models[(h+1)%4]}`;
     LOGS.assignment = STATE.assignment;
@@ -42,40 +43,59 @@ function showPage(pageId) {
     STATE.isPlaying = false;
 }
 
-// --- 3. MAIN TASK LOGIC (Phase 1 & 2) ---
+// --- 3. MAIN GAME LOGIC (Phase 1 & Phase 2 ONLY) ---
 async function startMainTask(mode) {
-    STATE.phase = (mode === 'task1') ? 1 : 2;
-    STATE.configId = (mode === 'task1') ? STATE.assignment.task1 : STATE.assignment.task2;
+    // 1. Setup Phase State
+    if (mode === 'task1') {
+        STATE.phase = 1;
+        STATE.configId = STATE.assignment.task1;
+        document.getElementById('taskTag').innerText = "Phase 1";
+        document.getElementById('taskTag').style.backgroundColor = "#2563eb"; 
+    } else {
+        STATE.phase = 2;
+        STATE.configId = STATE.assignment.task2;
+        document.getElementById('taskTag').innerText = "Phase 2";
+        document.getElementById('taskTag').style.backgroundColor = "#16a34a"; 
+    }
+
+    // 2. Setup UI
+    showPage('page-task');
+    document.getElementById('roundLabel').innerText = `Round ${STATE.round} / 5`;
+    document.getElementById('round-end-panel').classList.add('hidden');
+    
+    // 3. Reset Server
     STATE.isPlaying = true;
     STATE.gameOver = false;
     currentRoundSteps = [];
 
     const data = await api('/reset', { config_id: STATE.configId });
     drawGame(data.state, 'gameCanvas');
-    document.getElementById('stepsLeft').innerText = data.steps_left || "—";
+    document.getElementById('stepsLeft').innerText = data.steps_left || "45";
 }
 
-async function startPreview(mode) {
-    const cfg = (mode === 'preview1') ? STATE.assignment.task1 : STATE.assignment.task2;
-    const canvas = (mode === 'preview1') ? 'gameCanvas_pretask1' : 'gameCanvas_pretask2';
-    const data = await api('/reset', { config_id: cfg });
-    drawGame(data.state, canvas);
-}
-
-// Main Task Input Handler
+// --- 4. KEYBOARD LISTENER ---
 document.addEventListener('keydown', async (e) => {
+    // Filter Keys
     if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].indexOf(e.key) === -1) return;
+    
+    // Filter State
     if(!STATE.isPlaying || STATE.gameOver) return;
-    if(STATE.phase === 0) return; // IGNORE if in Practice Phase
+    
+    // CRITICAL: Ignore Practice Phase (Let practice.js handle it)
+    if(STATE.phase === 0) return; 
 
     e.preventDefault();
+
+    // Send Key (Phase 1 or 2)
     const data = await api('/key_event', { key: e.key, config_id: STATE.configId });
     
+    // Update Game
     drawGame(data.state, 'gameCanvas');
     document.getElementById('stepsLeft').innerText = data.steps_left;
     
     currentRoundSteps.push({ key:e.key, reward:data.cumulative_reward, steps:data.steps_left });
 
+    // Check End of Round
     if(data.steps_left <= 0) {
         STATE.isPlaying = false;
         STATE.gameOver = true;
@@ -83,9 +103,9 @@ document.addEventListener('keydown', async (e) => {
     }
 });
 
-// --- 4. BUTTON LISTENERS ---
+// --- 5. NAVIGATION & BUTTONS ---
 
-// Intro Validation
+// Intro
 const inputID = document.getElementById('prolificId');
 const inputAge = document.getElementById('age');
 const inputGender = document.getElementById('gender');
@@ -104,8 +124,6 @@ if(inputID) {
         showPage('page-consent');
     };
 }
-
-// Consent
 const check = document.getElementById('consentCheck');
 const btnInst = document.getElementById('to-instruction');
 if(check) {
@@ -113,142 +131,80 @@ if(check) {
     btnInst.onclick = () => showPage('page-instruction-1');
 }
 
-// Navigation (Standard)
+// Navigation
 document.getElementById('to-instruction-2').onclick = () => showPage('page-instruction-2a');
 
-// PAGE 2a
+// Quiz 2a
 const btnNext2a = document.getElementById('btn-next-2a');
-const q1Radios = document.getElementsByName('q1'); // Matches your new HTML
-const q1Error = document.getElementById('q1-error'); // Your error message box
-
+const q1Radios = document.getElementsByName('q1');
+const q1Error = document.getElementById('q1-error');
 if(btnNext2a && q1Radios.length > 0) {
-    // 1. Force Disable Initially
     btnNext2a.disabled = true;
-
-    // 2. Listen for Selection
     q1Radios.forEach(radio => {
         radio.addEventListener('change', (e) => {
             const isCorrect = (e.target.value === 'correct');
-            
-            if (isCorrect) {
-                // CORRECT: Enable button, hide error
-                btnNext2a.disabled = false;
-                if(q1Error) q1Error.classList.add('hidden');
-            } else {
-                // WRONG: Disable button, show error
-                btnNext2a.disabled = true;
-                if(q1Error) q1Error.classList.remove('hidden');
-                
-                // Optional: Uncheck the wrong answer after a split second
-                setTimeout(() => { e.target.checked = false; }, 500);
+            btnNext2a.disabled = !isCorrect;
+            if(q1Error) {
+                if(isCorrect) q1Error.classList.add('hidden');
+                else q1Error.classList.remove('hidden');
             }
         });
     });
-
-    // 3. Navigation to Page 2b
     btnNext2a.onclick = () => showPage('page-instruction-2b');
 }
 
-// PAGE 2b
+// Quiz 2b
 const btnNext2b = document.getElementById('btn-next-2b');
-const q2aRadios = document.getElementsByName('q2a');
-const q2bRadios = document.getElementsByName('q2b');
-
-function validateQuiz2b() {
-    // Check if Q2a correct
-    let q2aCorrect = false;
-    q2aRadios.forEach(r => { if(r.checked && r.value === 'correct') q2aCorrect = true; });
-
-    // Check if Q2b correct
-    let q2bCorrect = false;
-    q2bRadios.forEach(r => { if(r.checked && r.value === 'correct') q2bCorrect = true; });
-
-    // Enable only if BOTH are correct
-    if(btnNext2b) btnNext2b.disabled = !(q2aCorrect && q2bCorrect);
+const q2a = document.getElementsByName('q2a');
+const q2b = document.getElementsByName('q2b');
+function val2b(){ 
+    let a=false, b=false;
+    q2a.forEach(r=>{if(r.checked&&r.value==='correct')a=true});
+    q2b.forEach(r=>{if(r.checked&&r.value==='correct')b=true});
+    if(btnNext2b) btnNext2b.disabled = !(a&&b);
 }
+[...q2a,...q2b].forEach(r=>r.addEventListener('change',val2b));
+if(btnNext2b) btnNext2b.onclick = () => showPage('page-instruction-2c');
 
-if(btnNext2b) {
-    // Attach listeners
-    [...q2aRadios, ...q2bRadios].forEach(r => r.addEventListener('change', validateQuiz2b));
-    
-    // Navigation
-    btnNext2b.onclick = () => showPage('page-instruction-2c');
-}
-
-
-// PAGE 2c
-const btnStartTask1 = document.getElementById('start-task-1');
-const q3aRadios = document.getElementsByName('q3a');
-const q3bRadios = document.getElementsByName('q3b');
+// Quiz 2c -> Start Phase 1
+const btnStart1 = document.getElementById('start-task-1');
+const q3a = document.getElementsByName('q3a');
+const q3b = document.getElementsByName('q3b');
 const q3Error = document.getElementById('q3-error');
 
-function validateQuiz2c() {
-    // Check if Q3a correct
-    let q3aCorrect = false;
-    q3aRadios.forEach(r => { if(r.checked && r.value === 'correct') q3aCorrect = true; });
-
-    // Check if Q3b correct
-    let q3bCorrect = false;
-    q3bRadios.forEach(r => { if(r.checked && r.value === 'correct') q3bCorrect = true; });
-
-    const allCorrect = q3aCorrect && q3bCorrect;
-
-    if(btnStartTask1) btnStartTask1.disabled = !allCorrect;
+function val2c(){
+    let a=false, b=false;
+    q3a.forEach(r=>{if(r.checked&&r.value==='correct')a=true});
+    q3b.forEach(r=>{if(r.checked&&r.value==='correct')b=true});
     
-    // Show/Hide Error Message
+    if(btnStart1) btnStart1.disabled = !(a&&b);
     if(q3Error) {
-        if(allCorrect) q3Error.classList.add('hidden');
-        else if (document.querySelector('input[name="q3a"]:checked') || document.querySelector('input[name="q3b"]:checked')) {
-            // Show error if they started answering but got it wrong/incomplete
-            q3Error.classList.remove('hidden');
-        }
+       if(a&&b) q3Error.classList.add('hidden');
+       else if(document.querySelector('input[name="q3a"]:checked') || document.querySelector('input[name="q3b"]:checked')) 
+           q3Error.classList.remove('hidden');
     }
 }
+[...q3a,...q3b].forEach(r=>r.addEventListener('change',val2c));
 
-if(btnStartTask1) {
-    // Attach listeners
-    [...q3aRadios, ...q3bRadios].forEach(r => r.addEventListener('change', validateQuiz2c));
-
-    // Navigation (Start Phase 1)
-    btnStartTask1.onclick = () => {
-        showPage('page-pretask-1');
-        startPreview('preview1');
-    };
-}
-
-
-// Phase 1
-document.getElementById('start-task-1').onclick = () => { showPage('page-pretask-1'); startPreview('preview1'); };
-document.getElementById('btnEnterTask1').onclick = () => { STATE.round=1; showPage('page-task'); startMainTask('task1'); };
-
-// Phase 2
-document.getElementById('btnEnterTask2').onclick = () => { STATE.round=1; showPage('page-task'); startMainTask('task2'); };
-
-// Next Round
-// PAGE 2c & START PHASE 1
-if(btnStartTask1) {
-    // Attach listeners
-    [...q3aRadios, ...q3bRadios].forEach(r => r.addEventListener('change', validateQuiz2c));
-
-    // NAVIGATION: Go straight to Game (Skip Pre-task)
-    btnStartTask1.onclick = () => {
+if(btnStart1) {
+    btnStart1.onclick = () => { 
         STATE.round = 1;
         startMainTask('task1'); 
     };
 }
 
-// INTERMISSION: START PHASE 2
-const btnStartPhase2 = document.getElementById('btnStartPhase2');
-if(btnStartPhase2) {
-    btnStartPhase2.onclick = () => {
-        STATE.round = 1; // Reset round count for Phase 2
+// Start Phase 2 (From Intermission)
+const btnStart2 = document.getElementById('btnStartPhase2');
+if(btnStart2) {
+    btnStart2.onclick = () => {
+        STATE.round = 1;
         startMainTask('task2');
     };
 }
 
-// NEXT ROUND BUTTON
+// Next Round Logic
 document.getElementById('btnNext').onclick = () => {
-    // 1. Save Data (Rating removed as requested)
+    // Save Data
     LOGS.rounds.push({ 
         phase: STATE.phase, 
         round: STATE.round, 
@@ -256,23 +212,17 @@ document.getElementById('btnNext').onclick = () => {
         steps: currentRoundSteps 
     });
 
-    // 2. Logic
     if(STATE.round < 5) {
-        // --- NEXT ROUND ---
+        // Next Round
         STATE.round++;
-        document.getElementById('roundLabel').innerText = `Round ${STATE.round} / 5`;
-        document.getElementById('round-end-panel').classList.add('hidden');
-        
-        // Restart same phase
         startMainTask(STATE.phase === 1 ? 'task1' : 'task2');
     } else {
-        // --- PHASE FINISHED ---
+        // End of Phase
         if(STATE.phase === 1) {
-            // End of Phase 1 -> Show Intermission
-            document.getElementById('round-end-panel').classList.add('hidden');
+            // Phase 1 Done -> Show Intermission
             showPage('page-intermission');
         } else {
-            // End of Phase 2 -> Show Questionnaire
+            // Phase 2 Done -> Show Questionnaire
             showPage('page-qs');
         }
     }
