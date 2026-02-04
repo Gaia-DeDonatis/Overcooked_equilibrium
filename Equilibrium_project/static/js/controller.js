@@ -117,33 +117,103 @@ document.getElementById('to-instruction-2').onclick = () => showPage('page-instr
 
 // PAGE 2a
 const btnNext2a = document.getElementById('btn-next-2a');
-const goalRadios = document.getElementsByName('goalQuiz'); // Matches HTML name
+const q1Radios = document.getElementsByName('q1'); // Matches your new HTML
+const q1Error = document.getElementById('q1-error'); // Your error message box
 
-if(btnNext2a && goalRadios.length > 0) {
-    // 1. Force Disable Initially (Just in case HTML didn't)
+if(btnNext2a && q1Radios.length > 0) {
+    // 1. Force Disable Initially
     btnNext2a.disabled = true;
 
     // 2. Listen for Selection
-    goalRadios.forEach(radio => {
+    q1Radios.forEach(radio => {
         radio.addEventListener('change', (e) => {
             const isCorrect = (e.target.value === 'correct');
             
-            // Unlock if correct
-            btnNext2a.disabled = !isCorrect;
-
-            if(!isCorrect) {
-                alert("Incorrect. To get a high score, you should coordinate to minimize steps.");
-                e.target.checked = false; // Reset the wrong choice
+            if (isCorrect) {
+                // CORRECT: Enable button, hide error
+                btnNext2a.disabled = false;
+                if(q1Error) q1Error.classList.add('hidden');
+            } else {
+                // WRONG: Disable button, show error
+                btnNext2a.disabled = true;
+                if(q1Error) q1Error.classList.remove('hidden');
+                
+                // Optional: Uncheck the wrong answer after a split second
+                setTimeout(() => { e.target.checked = false; }, 500);
             }
         });
     });
 
-    // 3. Navigation
+    // 3. Navigation to Page 2b
     btnNext2a.onclick = () => showPage('page-instruction-2b');
 }
-// === FIX ENDS HERE ===
 
-document.getElementById('btn-next-2b').onclick = () => showPage('page-instruction-2c');
+// PAGE 2b
+const btnNext2b = document.getElementById('btn-next-2b');
+const q2aRadios = document.getElementsByName('q2a');
+const q2bRadios = document.getElementsByName('q2b');
+
+function validateQuiz2b() {
+    // Check if Q2a correct
+    let q2aCorrect = false;
+    q2aRadios.forEach(r => { if(r.checked && r.value === 'correct') q2aCorrect = true; });
+
+    // Check if Q2b correct
+    let q2bCorrect = false;
+    q2bRadios.forEach(r => { if(r.checked && r.value === 'correct') q2bCorrect = true; });
+
+    // Enable only if BOTH are correct
+    if(btnNext2b) btnNext2b.disabled = !(q2aCorrect && q2bCorrect);
+}
+
+if(btnNext2b) {
+    // Attach listeners
+    [...q2aRadios, ...q2bRadios].forEach(r => r.addEventListener('change', validateQuiz2b));
+    
+    // Navigation
+    btnNext2b.onclick = () => showPage('page-instruction-2c');
+}
+
+
+// PAGE 2c
+const btnStartTask1 = document.getElementById('start-task-1');
+const q3aRadios = document.getElementsByName('q3a');
+const q3bRadios = document.getElementsByName('q3b');
+const q3Error = document.getElementById('q3-error');
+
+function validateQuiz2c() {
+    // Check if Q3a correct
+    let q3aCorrect = false;
+    q3aRadios.forEach(r => { if(r.checked && r.value === 'correct') q3aCorrect = true; });
+
+    // Check if Q3b correct
+    let q3bCorrect = false;
+    q3bRadios.forEach(r => { if(r.checked && r.value === 'correct') q3bCorrect = true; });
+
+    const allCorrect = q3aCorrect && q3bCorrect;
+
+    if(btnStartTask1) btnStartTask1.disabled = !allCorrect;
+    
+    // Show/Hide Error Message
+    if(q3Error) {
+        if(allCorrect) q3Error.classList.add('hidden');
+        else if (document.querySelector('input[name="q3a"]:checked') || document.querySelector('input[name="q3b"]:checked')) {
+            // Show error if they started answering but got it wrong/incomplete
+            q3Error.classList.remove('hidden');
+        }
+    }
+}
+
+if(btnStartTask1) {
+    // Attach listeners
+    [...q3aRadios, ...q3bRadios].forEach(r => r.addEventListener('change', validateQuiz2c));
+
+    // Navigation (Start Phase 1)
+    btnStartTask1.onclick = () => {
+        showPage('page-pretask-1');
+        startPreview('preview1');
+    };
+}
 
 
 // Phase 1
