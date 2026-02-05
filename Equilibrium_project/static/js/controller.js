@@ -122,6 +122,37 @@ if(check) {
     btnInst.onclick = () => showPage('page-instruction-1');
 }
 
+// --- 4. NAVIGATION & BUTTONS ---
+
+// 1. Validation for Quiz 2a
+const btnNext2a = document.getElementById('btn-next-2a');
+const q1Radios = document.getElementsByName('q1');
+if(btnNext2a) {
+    q1Radios.forEach(r => r.addEventListener('change', (e) => {
+        btnNext2a.disabled = (e.target.value !== 'correct');
+    }));
+}
+
+// 2. Validation for Quiz 2b
+const btnNext2b = document.getElementById('btn-next-2b');
+const q2Radios = [...document.getElementsByName('q2a'), ...document.getElementsByName('q2b')];
+function val2b() {
+    const a = document.querySelector('input[name="q2a"]:checked')?.value === 'correct';
+    const b = document.querySelector('input[name="q2b"]:checked')?.value === 'correct';
+    btnNext2b.disabled = !(a && b);
+}
+q2Radios.forEach(r => r.addEventListener('change', val2b));
+
+// 3. Validation for Quiz 2c
+const btnStart1 = document.getElementById('start-task-1');
+const q3Radios = [...document.getElementsByName('q3a'), ...document.getElementsByName('q3b')];
+function val2c() {
+    const a = document.querySelector('input[name="q3a"]:checked')?.value === 'correct';
+    const b = document.querySelector('input[name="q3b"]:checked')?.value === 'correct';
+    btnStart1.disabled = !(a && b);
+}
+q3Radios.forEach(r => r.addEventListener('change', val2c));
+
 // Flow Buttons
 document.getElementById('to-instruction-2').onclick = () => showPage('page-instruction-2a');
 document.getElementById('btn-next-2a').onclick = () => showPage('page-instruction-2b');
