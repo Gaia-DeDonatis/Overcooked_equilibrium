@@ -26,4 +26,4 @@ const LOGS = {
     rounds: [],
     questionnaire: {}
 };
-let stepLogs = []; // Buffer for current round steps
+let currentRoundSteps = []; // Buffer for current round steps

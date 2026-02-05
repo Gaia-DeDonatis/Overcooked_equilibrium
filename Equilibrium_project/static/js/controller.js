@@ -29,83 +29,73 @@ function assignConditions() {
 }
 
 function showPage(pageId) {
-    const pages = ['page-intro','page-consent','page-instruction-1',
-                   'page-instruction-2a','page-instruction-2b','page-instruction-2c',
-                   'page-intermission','page-task','page-qs','page-end'];
+    const pages = [
+        'page-intro', 'page-consent', 'page-instruction-1',
+        'page-instruction-2a','page-instruction-2b','page-instruction-2c',
+        'page-phase-1', 'page-intermission', 'page-phase-2', 
+        'page-qs', 'page-end'
+    ];
     
     pages.forEach(id => {
         const el = document.getElementById(id);
         if(el) el.classList.add('hidden');
     });
+
     const target = document.getElementById(pageId);
     if(target) target.classList.remove('hidden');
     window.scrollTo(0,0);
-    STATE.isPlaying = false;
-}
 
-// --- 3. MAIN GAME LOGIC (Phase 1 & Phase 2 ONLY) ---
-async function startMainTask(mode) {
-    // 1. Setup Phase State
-    if (mode === 'task1') {
-        STATE.phase = 1;
-        STATE.configId = STATE.assignment.task1;
-        document.getElementById('taskTag').innerText = "Phase 1";
-        document.getElementById('taskTag').style.backgroundColor = "#2563eb"; 
-    } else {
-        STATE.phase = 2;
-        STATE.configId = STATE.assignment.task2;
-        document.getElementById('taskTag').innerText = "Phase 2";
-        document.getElementById('taskTag').style.backgroundColor = "#16a34a"; 
+    // CHANGE THIS: Only set isPlaying to false if we aren't going to a game page
+    const gamePages = ['page-phase-1', 'page-phase-2', 'page-task', 'page-instruction-1'];
+    if (!gamePages.includes(pageId)) {
+        STATE.isPlaying = false;
     }
-
-    // 2. Setup UI
-    showPage('page-task');
-    document.getElementById('roundLabel').innerText = `Round ${STATE.round} / 5`;
-    document.getElementById('round-end-panel').classList.add('hidden');
-    
-    // 3. Reset Server
-    STATE.isPlaying = true;
-    STATE.gameOver = false;
-    currentRoundSteps = [];
-
-    const data = await api('/reset', { config_id: STATE.configId });
-    drawGame(data.state, 'gameCanvas');
-    document.getElementById('stepsLeft').innerText = data.steps_left || "45";
 }
 
-// --- 4. KEYBOARD LISTENER ---
+// --- 3. KEYBOARD LISTENER (COMBINED) ---
 document.addEventListener('keydown', async (e) => {
-    // Filter Keys
+    // Standard Filters
     if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].indexOf(e.key) === -1) return;
-    
-    // Filter State
     if(!STATE.isPlaying || STATE.gameOver) return;
     
-    // CRITICAL: Ignore Practice Phase (Let practice.js handle it)
-    if(STATE.phase === 0) return; 
-
     e.preventDefault();
 
-    // Send Key (Phase 1 or 2)
+    // A. PRACTICE LOGIC
+    if(STATE.phase === 0) {
+        const data = await api('/key_event', { key: e.key, config_id: 'layout_practice' });
+        drawGame(data.state, 'gameCanvas_practice');
+        
+        const prevScore = STATE.practiceScore;
+        STATE.practiceScore = data.cumulative_reward || 0;
+
+        if(STATE.practiceScore >= 200 && STATE.practiceScore > prevScore) {
+            STATE.isPlaying = false;
+            STATE.gameOver = true;
+            document.getElementById('practiceHint').innerText = "Great job! Click 'Next' to continue.";
+            document.getElementById('to-instruction-2').disabled = false;
+            alert("Practice Complete! You delivered the salad.");
+        }
+    } 
+    // B. MAIN TASK LOGIC (Phase 1 or 2)
+    else {
     const data = await api('/key_event', { key: e.key, config_id: STATE.configId });
-    
-    // Update Game
     drawGame(data.state, 'gameCanvas');
     document.getElementById('stepsLeft').innerText = data.steps_left;
     
+    // Make sure this variable name matches your config.js
     currentRoundSteps.push({ key:e.key, reward:data.cumulative_reward, steps:data.steps_left });
 
-    // Check End of Round
     if(data.steps_left <= 0) {
         STATE.isPlaying = false;
         STATE.gameOver = true;
         document.getElementById('round-end-panel').classList.remove('hidden');
     }
+    }
 });
 
-// --- 5. NAVIGATION & BUTTONS ---
+// --- 4. NAVIGATION & BUTTONS ---
 
-// Intro
+// Intro Validation
 const inputID = document.getElementById('prolificId');
 const inputAge = document.getElementById('age');
 const inputGender = document.getElementById('gender');
@@ -124,6 +114,7 @@ if(inputID) {
         showPage('page-consent');
     };
 }
+
 const check = document.getElementById('consentCheck');
 const btnInst = document.getElementById('to-instruction');
 if(check) {
@@ -131,110 +122,43 @@ if(check) {
     btnInst.onclick = () => showPage('page-instruction-1');
 }
 
-// Navigation
+// Flow Buttons
 document.getElementById('to-instruction-2').onclick = () => showPage('page-instruction-2a');
+document.getElementById('btn-next-2a').onclick = () => showPage('page-instruction-2b');
+document.getElementById('btn-next-2b').onclick = () => showPage('page-instruction-2c');
 
-// Quiz 2a
-const btnNext2a = document.getElementById('btn-next-2a');
-const q1Radios = document.getElementsByName('q1');
-const q1Error = document.getElementById('q1-error');
-if(btnNext2a && q1Radios.length > 0) {
-    btnNext2a.disabled = true;
-    q1Radios.forEach(radio => {
-        radio.addEventListener('change', (e) => {
-            const isCorrect = (e.target.value === 'correct');
-            btnNext2a.disabled = !isCorrect;
-            if(q1Error) {
-                if(isCorrect) q1Error.classList.add('hidden');
-                else q1Error.classList.remove('hidden');
-            }
-        });
-    });
-    btnNext2a.onclick = () => showPage('page-instruction-2b');
-}
+document.getElementById('start-task-1').onclick = () => showPage('page-phase-1');
+document.getElementById('btnFinishPhase1').onclick = () => showPage('page-intermission');
+document.getElementById('btnStartPhase2').onclick = () => showPage('page-phase-2');
+document.getElementById('btnFinishPhase2').onclick = () => showPage('page-qs');
 
-// Quiz 2b
-const btnNext2b = document.getElementById('btn-next-2b');
-const q2a = document.getElementsByName('q2a');
-const q2b = document.getElementsByName('q2b');
-function val2b(){ 
-    let a=false, b=false;
-    q2a.forEach(r=>{if(r.checked&&r.value==='correct')a=true});
-    q2b.forEach(r=>{if(r.checked&&r.value==='correct')b=true});
-    if(btnNext2b) btnNext2b.disabled = !(a&&b);
-}
-[...q2a,...q2b].forEach(r=>r.addEventListener('change',val2b));
-if(btnNext2b) btnNext2b.onclick = () => showPage('page-instruction-2c');
-
-// Quiz 2c -> Start Phase 1
-const btnStart1 = document.getElementById('start-task-1');
-const q3a = document.getElementsByName('q3a');
-const q3b = document.getElementsByName('q3b');
-const q3Error = document.getElementById('q3-error');
-
-function val2c(){
-    let a=false, b=false;
-    q3a.forEach(r=>{if(r.checked&&r.value==='correct')a=true});
-    q3b.forEach(r=>{if(r.checked&&r.value==='correct')b=true});
-    
-    // Validate Button State
-    if(btnStart1) btnStart1.disabled = !(a&&b);
-    
-    // Show/Hide Error Text
-    if(q3Error) {
-       if(a&&b) q3Error.classList.add('hidden');
-       else if(document.querySelector('input[name="q3a"]:checked') || document.querySelector('input[name="q3b"]:checked')) 
-           q3Error.classList.remove('hidden');
-    }
-}
-// Attach listeners safely
-[...q3a,...q3b].forEach(r=>r.addEventListener('change',val2c));
-
-// 1. Start Phase 1 (Go to Placeholder)
-if(btnStart1) {
-    btnStart1.onclick = () => { 
-        showPage('page-phase-1');
-    };
-}
-
-// 2. Finish Phase 1 -> Intermission
-const btnFinishPhase1 = document.getElementById('btnFinishPhase1');
-if(btnFinishPhase1) {
-    btnFinishPhase1.onclick = () => {
-        showPage('page-intermission');
-    };
-}
-
-// 3. Start Phase 2 -> Go to Placeholder
-const btnStartPhase2 = document.getElementById('btnStartPhase2');
-if(btnStartPhase2) {
-    btnStartPhase2.onclick = () => {
-        showPage('page-phase-2');
-    };
-}
-
-// 4. Finish Phase 2 -> Questionnaire
-const btnFinishPhase2 = document.getElementById('btnFinishPhase2');
-if(btnFinishPhase2) {
-    btnFinishPhase2.onclick = () => {
-        showPage('page-qs');
-    };
-}
-
-// ==========================================================
-// === QUESTIONNAIRE & INIT ===
-// ==========================================================
-
+// --- 5. FINAL SUBMISSION ---
 document.getElementById('qsNext').onclick = () => {
-    const s = document.getElementById('q_strategy').value;
-    const a = document.querySelector('input[name="q_adapt"]:checked');
-    if(!s || !a) return alert("Please answer all questions.");
-    
-    document.getElementById('completionCode').innerText = "MVP-SUCCESS";
+    const strategy = document.getElementById('q_strategy').value;
+    const adaptation = document.getElementById('q_adaptation').value;
+    const workflow = document.getElementById('q_workflow').value;
+    const trust = document.getElementById('q_trust').value;
+    const experience = document.querySelector('input[name="q_experience"]:checked');
+
+    if(strategy.length < 5 || adaptation.length < 5 || workflow.length < 5 || trust.length < 5 || !experience) {
+        return alert("Please provide an answer for all questions.");
+    }
+
+    LOGS.questionnaire = {
+        strategy_text: strategy, adaptation_text: adaptation,
+        workflow_text: workflow, trust_reliance: trust,
+        played_overcooked_before: experience.value
+    };
+
     showPage('page-end');
+    document.getElementById('completionCodeWrap').classList.remove('hidden');
+    document.getElementById('completionCode').innerText = "C15-協同-2026";
+    document.getElementById('completionHint').classList.add('hidden');
+    document.getElementById('btnFinish').classList.add('hidden');
 };
 
-preloadImages(() => {
-    console.log("Images Loaded");
-    showPage('page-intro');
-});
+window.onload = () => {
+    preloadImages(() => {
+        console.log("Images loaded and game is ready.");
+    });
+};

@@ -517,15 +517,14 @@
     </p>
     
     <div style="margin-top: 40px; padding: 20px; border: 2px dashed #ccc;">
-        <p><em>For MVP testing, click below to skip to the Intermission.</em></p>
+        <p><em>Placeholder, click below to skip to the Intermission.</em></p>
         <button id="btnFinishPhase1" class="btn secondary">
-            [DEV] Simulate Phase 1 Completion
+            Click here to go to Phase 2
         </button>
     </div>
   </section>
 
   <section id="page-intermission" class="card hidden" style="text-align:center; padding:40px;">
-    <div style="font-size:60px; margin-bottom:10px;">🔄</div>
     <h1 style="color:#15803d; margin-top:0;">Phase 1 Complete</h1>
     
     <div style="background-color:#f0fdf4; border:2px solid #22c55e; border-radius:10px; padding:20px; max-width:600px; margin:20px auto;">
@@ -548,85 +547,83 @@
     </p>
     
     <div style="margin-top: 40px; padding: 20px; border: 2px dashed #ccc;">
-        <p><em>For MVP testing, click below to skip to the Questionnaire.</em></p>
+        <p><em>Placeholder, click below to go to the Questionnaire.</em></p>
         <button id="btnFinishPhase2" class="btn secondary">
-            [DEV] Simulate Phase 2 Completion
+             Click here to go to the Questionnaire
         </button>
     </div>
   </section>
 
+  <!-- Questionnair post-game-->
+  <section id="page-qs" class="card hidden" style="max-width: 800px; margin: 40px auto;">
+    
+    <h2 style="color:#2563eb; margin-top:0; font-size: 26px;">Post-Game Feedback</h2>
+    <p class="muted">Please answer the following questions based on your experience with the AI teammate.</p>
+    <div class="hr"></div>
 
-    <section id="page-qs" class="card hidden">
-      <h2 id="qsTitle">Final Debrief</h2>
-      <p>You have completed both phases. Please answer a few questions about your strategy.</p>
-
-      <div class="card" style="border-left: 4px solid #2563eb;">
-        <label for="q_strategy" style="font-weight:bold; font-size:16px; display:block; margin-bottom:8px;">
-          1. Describe your strategy. Did you change how you played in Phase 2 compared to Phase 1?
-        </label>
-        <textarea id="q_strategy" class="input" rows="4" style="width:100%;" placeholder="I noticed the AI started doing... so I decided to..."></textarea>
-      </div>
-
-      <div class="card" style="margin-top:15px;">
-        <div style="font-weight:bold; margin-bottom:8px;">2. "I felt like the AI in Phase 2 understood my intentions better than Phase 1."</div>
-        <div class="likert-7" role="radiogroup">
-          <input type="radio" name="q_adapt" value="1">
-          <input type="radio" name="q_adapt" value="2">
-          <input type="radio" name="q_adapt" value="3">
-          <input type="radio" name="q_adapt" value="4">
-          <input type="radio" name="q_adapt" value="5">
-          <input type="radio" name="q_adapt" value="6">
-          <input type="radio" name="q_adapt" value="7">
-          <div class="scale-label">Strongly disagree</div>
-          <div class="scale-label"></div><div class="scale-label"></div>
-          <div class="scale-label">Neutral</div>
-          <div class="scale-label"></div><div class="scale-label"></div>
-          <div class="scale-label">Strongly agree</div>
-        </div>
-      </div>
-
-      <div class="center" style="margin-top:20px;">
-        <button id="qsNext" class="btn success">Submit & Finish</button>
-      </div>
-    </section>
-
-
-    <section id="page-end" class="card hidden center">
-      <h2>All Done!</h2>
-      <div style="font-size:48px;">🎉</div>
-      <p>Thank you for participating in our study.</p>
-      
-      <p class="muted" id="completionHint">Click the button below to upload your data and generate your code.</p>
-      <button id="btnFinish" class="btn">Upload Data & Get Code</button>
-      
-      <div id="completionCodeWrap" class="hidden" style="margin-top:20px; padding:15px; background:#f0fdf4; border:1px solid #22c55e; border-radius:8px;">
-        <p style="margin:0; color:#15803d;">Your Completion Code:</p>
-        <p id="completionCode" style="font-weight:700; font-size:24px; margin:5px 0 0 0; letter-spacing:1px;"></p>
-      </div>
-    </section>
-
-    <div style="display:none;">
-       <button id="btnProceedTask2"></button>
-       <button id="btnProceedTask3"></button>
-       <button id="btnProceedTask4"></button>
-       <button id="btnEnterTask3"></button>
-       <button id="btnEnterTask4"></button>
-       <canvas id="gameCanvas_pretask3"></canvas>
-       <canvas id="gameCanvas_pretask4"></canvas>
-       <div id="postTask1Hint"></div> <div id="postTask2Hint"></div>
-       <div id="postTask3Hint"></div>
-       <div id="personaInputWrap"></div> <div id="personaSelectWrap"></div>
-       <input id="personaInput">
-       <select id="personaSelect"></select>
-       <div id="personaHistory"></div>
+    <div style="margin-bottom: 25px;">
+        <p style="font-weight:bold; margin-bottom:8px;">1. Describe your strategy during the game. Specifically, how did your approach change between Phase 1 and Phase 2?</p>
+        <textarea id="q_strategy" rows="3" style="width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:6px;"></textarea>
     </div>
 
+    <div style="margin-bottom: 25px;">
+        <p style="font-weight:bold; margin-bottom:8px;">2. Did you notice any specific changes in the AI's behavior during Phase 2? If so, please describe them.</p>
+        <textarea id="q_adaptation" rows="3" style="width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:6px;"></textarea>
+    </div>
+
+    <div style="margin-bottom: 25px;">
+        <p style="font-weight:bold; margin-bottom:8px;">3. Did you feel the rounds were long enough to establish a good rhythm with your partner? Please explain why or why not.</p>
+        <textarea id="q_workflow" rows="3" style="width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:6px;"></textarea>
+    </div>
+
+    <div style="margin-bottom: 25px;">
+        <p style="font-weight:bold; margin-bottom:8px;">4. To what extent did you feel you could rely on the AI to handle its own tasks?</p>
+        <textarea id="q_trust" rows="3" style="width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:6px;" placeholder="Did you feel comfortable focusing on your own goals, or did you feel the need to watch the AI?"></textarea>
+    </div>
+
+    <div class="hr"></div>
+
+    <div style="margin-bottom: 30px;">
+        <p style="font-weight:bold; margin-bottom:10px;">5. Have you played the video game 'Overcooked!' before today?</p>
+        <div style="display:flex; gap: 30px;">
+            <label style="cursor:pointer;"><input type="radio" name="q_experience" value="yes"> Yes</label>
+            <label style="cursor:pointer;"><input type="radio" name="q_experience" value="no"> No</label>
+        </div>
+    </div>
+
+    <div class="center" style="margin-top:40px;">
+        <button id="qsNext" class="btn success" style="font-size:20px; padding:12px 40px;">Submit & Finish</button>
+    </div>
+  </section>
+
+
+  <section id="page-end" class="card hidden center" style="padding: 60px 20px;">
+    <div style="font-size:64px; margin-bottom: 20px;">🎉</div>
+    <h2 style="color:#16a34a; font-size: 32px; margin-top:0;">Experiment Complete!</h2>
+    <p style="font-size: 18px; color: #4b5563; max-width: 500px; margin: 0 auto 30px auto;">
+        Thank you for your participation. Your data has been successfully recorded for our study on Human-AI Collaboration.
+    </p>
+    
+    <div id="completionCodeWrap" class="hidden" style="margin-top:20px; padding:25px; background:#f0fdf4; border:2px solid #22c55e; border-radius:12px; max-width: 400px; margin-left: auto; margin-right: auto;">
+        <p style="margin:0; color:#15803d; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-size: 14px;">
+            Your Completion Code:
+        </p>
+        <p id="completionCode" style="font-family: monospace; font-weight:700; font-size:32px; margin:10px 0; color: #14532d;"></p>
+        <p style="font-size: 13px; color: #16a34a; margin-top: 10px;">
+            Please copy this code and paste it back into Prolific/MTurk.
+        </p>
+    </div>
+
+    <div style="margin-top: 40px;">
+        <p class="muted" style="font-style: italic;">You may now close this window.</p>
+    </div>
+  </section>
   </div>
 
   <script src="static/js/config.js"></script>
   <script src="static/js/view.js"></script>
   <script src="static/js/controller.js"></script>
-  <script src="static/js/practice.js"></script> ```
+  <script src="static/js/practice.js"></script>
   <!-- <script src="static/js/equilibriumstudy_freeplay_4models_2rounds_samemap.js"></script> -->
 </body>
 </html>

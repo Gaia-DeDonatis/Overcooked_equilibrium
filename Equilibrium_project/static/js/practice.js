@@ -1,77 +1,34 @@
 // static/js/practice.js
 
-// --- PRACTICE ROUND LOGIC ---
+// --- PRACTICE ROUND SETUP ONLY ---
 
-// 1. Start Practice Game
 async function startPracticeRound() {
-    STATE.configId = 'layout_practice';
+    // 1. Force the global state to Practice Mode
     STATE.phase = 0; 
+    STATE.configId = 'layout_practice';
     STATE.practiceScore = 0;
     STATE.isPlaying = false;
     STATE.gameOver = false;
 
     try {
+        // 2. Tell the server to reset for practice
         const data = await api('/reset', { config_id: 'layout_practice' });
         
         if (data.state) {
-            // ✅ Enter Practice Mode
+            // 3. Unlock the keyboard listener in controller.js
             STATE.isPlaying = true;
             
-            // Draw First Frame
+            // 4. Draw to the PRACTICE canvas
             drawGame(data.state, 'gameCanvas_practice');
 
-            // Set Score
-            STATE.practiceScore = data.cumulative_reward || 0;
-            
-            // Reset UI
+            // 5. Update UI
             document.getElementById('practiceHint').innerText = "Deliver 1 Salad (200 pts) to proceed.";
             document.getElementById('to-instruction-2').disabled = true;
         }
     } catch (err) {
-        console.error(err);
-        alert('Practice reset failed: ' + err.message);
+        console.error("Practice Reset Error:", err);
     }
 }
 
 // Bind Button
 document.getElementById('btnTryPractice').onclick = startPracticeRound;
-
-
-// 2. Practice Input Handler
-document.addEventListener('keydown', async (e) => {
-    // A. Filters
-    if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].indexOf(e.key) === -1) return;
-    if(!STATE.isPlaying || STATE.gameOver) return;
-    if(STATE.phase !== 0) return; // Exit if not practice
-    
-    e.preventDefault();
-
-    try {
-        // B. Send Key
-        const data = await api('/key_event', { key: e.key, config_id: STATE.configId });
-        
-        // C. Draw
-        drawGame(data.state, 'gameCanvas_practice');
-        
-        // D. Check Win Condition
-        const prevScore = STATE.practiceScore;
-        const currScore = data.cumulative_reward || 0;
-        STATE.practiceScore = currScore;
-
-        // WIN Logic
-        if(currScore >= 200 && currScore > prevScore) {
-            STATE.isPlaying = false;
-            STATE.gameOver = true;
-            
-            document.getElementById('practiceHint').innerText = "Great job! Click 'Next' to continue.";
-            document.getElementById('to-instruction-2').disabled = false;
-            
-            setTimeout(() => {
-                alert("Practice Complete! You delivered the salad.");
-            }, 100);
-        }
-
-    } catch(e) {
-        console.error("Practice Input Error", e);
-    }
-});
