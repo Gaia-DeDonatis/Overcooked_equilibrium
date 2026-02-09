@@ -136,6 +136,22 @@ class Plate(MovableItem):
             self.containing = [items]
         for item in self.containing:
             item.move(self.x, self.y)
+
+
+    # def contain(self, item):
+    #     if self.containing is None:
+    #         self.containing = []
+
+    #     # 禁止同类重复
+    #     for existing in self.containing:
+    #         if type(existing) is type(item):
+    #             return  # 直接 silent fail（啥也不干）
+
+    #     self.containing.append(item)
+    #     item.move(self.x, self.y)
+
+
+
     
     def move(self, x, y):
         super().move(x, y)
