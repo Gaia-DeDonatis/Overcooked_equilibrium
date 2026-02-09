@@ -115,12 +115,29 @@ if(inputID) {
     };
 }
 
+// --- 4. NAVIGATION & BUTTONS (Versione Corretta per il Meeting) ---
+
 const check = document.getElementById('consentCheck');
 const btnInst = document.getElementById('to-instruction');
-if(check) {
-    check.addEventListener('change', () => btnInst.disabled = !check.checked);
-    btnInst.onclick = () => showPage('page-instruction-1');
+const btnToQuiz = document.getElementById('to-instruction-2');
+
+if(check && btnInst) {
+    check.addEventListener('change', () => {
+        btnInst.disabled = !check.checked;
+    });
+
+    btnInst.onclick = () => {
+        showPage('page-instruction-1');
+        
+        if(btnToQuiz) {
+            btnToQuiz.disabled = false; 
+            console.log("Demo Mode: Proceed button enabled.");
+        }
+
+        startPractice().catch(err => console.log("Practice sync pending..."));
+    };
 }
+
 
 // --- 4. NAVIGATION & BUTTONS ---
 

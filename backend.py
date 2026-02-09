@@ -69,11 +69,9 @@ from stable_baselines3.common.save_util import load_from_zip_file
 import random
 import gym_macro_overcooked
 
-from gym.envs.registration import register # <--- Add this import if missing
+from gym.envs.registration import register
 
-# ================= MANUAL REGISTRATION START =================
-# Since we are using a local folder, we manually register the environments
-# to ensure Gym knows they exist.
+# MANUAL REGISTRATION START 
 try:
     # 1. Register the Single-Agent Environment
     register(
@@ -1036,6 +1034,24 @@ def create_envs_for_session(sess: Session, config_id: str):
     # 4) 载入/复用 RL 模型
     model_key = cfg.get('model', None)
     sess.model = _load_or_get_model(model_key, sess.wrapper)  # 允许 None（练习局）
+
+    # PRACTICE ROUND
+    if config_id == "layout_practice":
+        env = sess.env_mac.unwrapped 
+
+        env.tomato = []
+        env.onion = []
+        env.badlettuce = []
+        
+        env.lettuce = [Lettuce(0, 1)]
+        env.knife = [Knife(0, 2)]
+        env.plate = [Plate(2, 0)]
+        env.delivery = [Delivery(3, 4)]
+
+        env.agent[0].x, env.agent[0].y = 0, 4  # top-right
+        env.agent[1].x, env.agent[1].y = 4, 0  # bottom-left
+        
+        env._updateMap()
 
     # 5) 初始 obs
     sess.obs = sess.wrapper.reset()
