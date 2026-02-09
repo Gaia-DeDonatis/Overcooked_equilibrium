@@ -16,7 +16,7 @@ TASKLIST = ["tomato salad", "lettuce salad", "onion salad", "lettuce-tomato sala
 from collections import Counter
 
 
-class Overcooked_equilibrium(gym.Env):
+class Overcooked(gym.Env):
 
     """
     Overcooked Domain Description
@@ -124,9 +124,9 @@ class Overcooked_equilibrium(gym.Env):
             if self.n_agent == 2:
                 if self.mapType == "A":
                     map =  [[1, 1, 1, 1, 1],
-                            [6, 0, 0, 2, 1],
-                            [4, 0, 0, 0, 1],
-                            [7, 0, 0, 2, 1],
+                            [6, 2, 0, 2, 1],
+                            [3, 0, 0, 0, 1],
+                            [7, 0, 0, 0, 1],
                             [1, 5, 1, 1, 1]] 
                 elif self.mapType == "B":
                     map =  [[1, 8, 1, 1, 1],
@@ -140,21 +140,6 @@ class Overcooked_equilibrium(gym.Env):
                             [3, 0, 5, 0, 6],
                             [7, 0, 0, 0, 1],
                             [1, 1, 1, 1, 1]] 
-                # ITEMIDX= {"space": 0, "counter": 1, "agent": 2, "tomato": 3, "lettuce": 4, "plate": 5, "knife": 6, "delivery": 7, "onion": 8}
-                elif self.mapType == "circle":
-                    map =  [[1, 1, 1, 6, 1],
-                            [1, 0, 0, 2, 5],
-                            [1, 0, 1, 0, 5],
-                            [4, 2, 0, 0, 1],
-                            [1, 4, 7, 1, 1]] 
-                    
-                elif self.mapType == "circle2":
-                    map =  [[1, 1, 1, 7, 1],
-                            [1, 0, 0, 2, 5],
-                            [6, 0, 1, 0, 5],
-                            [4, 2, 0, 0, 1],
-                            [1, 4, 1, 1, 1]] 
-                    
             elif self.n_agent == 3:
                 if self.mapType == "A":
                     map =  [[1, 1, 5, 1, 1],
@@ -691,6 +676,23 @@ class Overcooked_equilibrium(gym.Env):
 
 
 
+                # map =  [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                #         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                #         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                #         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                #         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                #         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                #         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5],
+                #         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5],
+                #         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6],
+                #         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 7],
+                #         [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                #         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                #         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                #         [1, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+                #         [1, 1, 10, 1, 7, 4, 4, 6, 1, 1, 1, 1, 1, 1, 1]]
+
+
 
 
             if self.mapType == "B":
@@ -740,7 +742,7 @@ class Overcooked_equilibrium(gym.Env):
                         [1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 4, 0, 0, 1],
                         [1, 0, 0, 1, 1, 1, 1, 0, 1, 5, 1, 1, 0, 0, 1],
                         [1, 0, 0, 1, 5, 6, 7, 1, 7, 6, 1, 1, 0, 0, 1],
-                        [1, 0, 0, 0, 0, 0, 2, 1, 2, 0, 0, 0, 0, 0, 1],
+                        [1, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 1],
                         [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
                         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]    
 
@@ -897,7 +899,7 @@ class Overcooked_equilibrium(gym.Env):
                 # print(self.ylen)
                 # print(self.map)
                 if self.map[x][y] == ITEMIDX["agent"]:
-                    # Shuai Note: 明白了，需要先从map中识别到标记为2的agent，才能创建关于该agent的obs等后续以agent为list item的变量。
+
                     self.agent.append(Agent(x, y, color = AGENTCOLOR[agent_idx]))
                     agent_idx += 1
                 elif self.map[x][y] == ITEMIDX["knife"]:
@@ -1110,125 +1112,6 @@ class Overcooked_equilibrium(gym.Env):
                 # Knife holding
                 if isinstance(item, Knife):
                     obs.append(1 if item.holding else 0)
-
-
-            # === Part 4: oneHotTask ===
-            # obs += self.oneHotTask
-
-
-            macro_obs.append(obs)
-
-        return macro_obs
-
-
-
-
-
-    def _get_vector_state_new_with_obs_judgment(self):
-    
-
-        macro_obs = []
-
-        for idx, agent in enumerate(self.agent):
-            obs = []
-
-            # === Part 1: Encode own agent ===
-            obs.append(agent.x / self.xlen)
-            obs.append(agent.y / self.ylen)
-
-            # identity one-hot: self = [1, 0]
-            obs.append(1)
-            obs.append(0)
-
-            # holding (is holding flag)
-            obs.append(1 if agent.holding else 0)
-
-
-
-            # === Part 2: Encode teammate agent ===
-            for teammate in self.agent:
-                if teammate == agent:
-                    continue  # skip self
-                if teammate.x >= agent.x - self.obs_radius and teammate.x <= agent.x + self.obs_radius and teammate.y >= agent.y - self.obs_radius and teammate.y <= agent.y + self.obs_radius \
-                    or self.obs_radius == 0:
-                        
-                    dx = teammate.x - agent.x
-                    dy = teammate.y - agent.y
-                    rel_x = dx / self.xlen
-                    rel_y = dy / self.ylen
-                    obs.append(rel_x)
-                    obs.append(rel_y)
-
-                    # identity one-hot: teammate = [0, 1]
-                    obs.append(0)
-                    obs.append(1)
-                else:
-                    # 用-1来表示看不到吧，应该没问题
-                    obs.append(-1)
-                    obs.append(-1)
-
-                    # identity one-hot: teammate = [0, 1]
-                    obs.append(0)
-                    obs.append(1)
-
-
-                # # teammate holding: only encode whether holding
-                # obs.append(1 if teammate.holding else 0)
-
-                # # teammate holding_idx one-hot
-                # obs += get_one_hot_index(teammate.holding)
-
-            # === Part 3: Encode items relative to own agent ===
-            for item in self.itemList:
-                if isinstance(item, Agent):
-                    continue  # Agents already encoded separately
-
-                if item.x >= agent.x - self.obs_radius and item.x <= agent.x + self.obs_radius and item.y >= agent.y - self.obs_radius and item.y <= agent.y + self.obs_radius \
-                    or self.obs_radius == 0:
-                        
-                    dx = item.x - agent.x
-                    dy = item.y - agent.y
-                    rel_x = dx / self.xlen
-                    rel_y = dy / self.ylen
-                    obs.append(rel_x)
-                    obs.append(rel_y)
-
-                    # Food chopped progress
-                    if isinstance(item, Food):
-                        obs.append(item.cur_chopped_times / item.required_chopped_times)
-
-                    # Plate containing
-                    if isinstance(item, Plate):
-                        obs.append(1 if item.containing else 0)
-
-
-                    # DirtyPlate containing
-                    if isinstance(item, DirtyPlate):
-                        obs.append(1 if item.containing else 0)
-
-
-                    # Knife holding
-                    if isinstance(item, Knife):
-                        obs.append(1 if item.holding else 0)
-                else:
-                    obs.append(-1)
-                    obs.append(-1)
-
-                    # Food chopped progress
-                    if isinstance(item, Food):
-                        obs.append(-1)
-
-                    # Plate containing
-                    if isinstance(item, Plate):
-                        obs.append(-1)
-
-                    # DirtyPlate containing
-                    if isinstance(item, DirtyPlate):
-                        obs.append(-1)
-
-                    # Knife holding
-                    if isinstance(item, Knife):
-                        obs.append(-1)
 
 
             # === Part 4: oneHotTask ===
@@ -1480,18 +1363,13 @@ class Overcooked_equilibrium(gym.Env):
         """
 
         vec_obs = self._get_vector_obs()
-        # print("===========shuai-Observation shape:", len(self.agent[0].obs))
+
         # print("===========returned obs:", len(self._get_vector_state()[0]))
         # print('~~~~!!!')
         # print(vec_obs)
         if self.obs_radius > 0:
             if self.mode == "vector":
-                # print("===========shuai-Observation shape:", np.shape(vec_obs[0]))
-                # return vec_obs
-
-                """这里是我自己魔改的"""        
-                return self._get_vector_state_new_with_obs_judgment()
-            
+                return vec_obs
             elif self.mode == "image":
                 return self._get_image_obs()
         # 如果radius是0的话，那么每一个agent都可以观察到全部的信息，即state
@@ -1562,18 +1440,6 @@ class Overcooked_equilibrium(gym.Env):
                 elif self.mapType == "C":
                     agent.pomap =  [[1, 1, 1, 1, 1],
                                     [1, 0, 1, 0, 1],
-                                    [1, 0, 1, 0, 1],
-                                    [1, 0, 0, 0, 1],
-                                    [1, 1, 1, 1, 1]]
-                elif self.mapType == "circle":
-                    agent.pomap =  [[1, 1, 1, 1, 1],
-                                    [1, 0, 0, 0, 1],
-                                    [1, 0, 1, 0, 1],
-                                    [1, 0, 0, 0, 1],
-                                    [1, 1, 1, 1, 1]]
-                elif self.mapType == "circle2":
-                    agent.pomap =  [[1, 1, 1, 1, 1],
-                                    [1, 0, 0, 0, 1],
                                     [1, 0, 1, 0, 1],
                                     [1, 0, 0, 0, 1],
                                     [1, 1, 1, 1, 1]]
@@ -2136,8 +2002,8 @@ class Overcooked_equilibrium(gym.Env):
 
 
         # 如果步骤计数达到24，标记done为True并重置计数器
-        if self.step_count >= 200:
-        # if self.step_count >= 400:
+        # if self.step_count >= 200:
+        if self.step_count >= 400:
             # 如果超过50步仍未完成，则视为失败
             # self.reward += self.rewardList["wrong delivery"]
             done = True
@@ -2217,20 +2083,11 @@ class Overcooked_equilibrium(gym.Env):
                             if target_agent_action < 4:
                                 new_target_agent_x = target_agent.x + DIRECTION[target_agent_action][0]
                                 new_target_agent_y = target_agent.y + DIRECTION[target_agent_action][1]
-
-                                # if new_target_agent_x == agent.x and new_target_agent_y == agent.y:
-                                #     target_agent.move(new_target_agent_x, new_target_agent_y)
-                                #     agent.move(target_x, target_y)
-                                #     agent.moved = True
-                                #     target_agent.moved = True
-
-                                """这里改成不允许交换位置了 20251213"""
                                 if new_target_agent_x == agent.x and new_target_agent_y == agent.y:
+                                    target_agent.move(new_target_agent_x, new_target_agent_y)
+                                    agent.move(target_x, target_y)
                                     agent.moved = True
                                     target_agent.moved = True
-                                    # 不调用 move()
-
-
                     # 如果是space，那就直接移动
                     elif  target_name == "space":
                         self.map[agent.x][agent.y] = ITEMIDX["space"]
@@ -2310,30 +2167,6 @@ class Overcooked_equilibrium(gym.Env):
                             # 如果手中拿的是食物，判断是否切好，未切好不能装盘
                             if isinstance(agent.holding, Food):
                                 if agent.holding.chopped:
-
-                                    plate = self._findItem(target_x, target_y, target_name)
-                                    item = agent.holding
-
-
-                                    # 2026年2月2日新增：盘子里已有食物则不允许再装
-                                    # if plate.containing:   # 非空
-                                    #     self.reward[idx] += self.rewardList[idx]["metatask failed"]
-                                    #     self.reward[2] += self.rewardList[idx]["metatask failed"]
-                                    #     continue  # 或者什么都不做
-
-
-                                    # 2026年2月2日新增：盘子里若已存在同一种 food，则不允许重复装盘（但允许组合）
-                                    if plate.containing:  # 非空
-                                        # 判断盘子里是否已有与当前 item 同类型的食材
-                                        same_food_exists = any(type(f) is type(item) for f in plate.containing)
-                                        # 如果你更想按 rawName 判断（更稳），用下面这行替代上一行：
-                                        # same_food_exists = any(getattr(f, "rawName", None) == getattr(item, "rawName", None) for f in plate.containing)
-
-                                        if same_food_exists:
-                                            self.reward[idx] += self.rewardList[idx]["metatask failed"]
-                                            self.reward[2] += self.rewardList[idx]["metatask failed"]
-                                            continue  # 或者什么都不做
-
                                     if isinstance(agent.holding, BadLettuce):
                                         self.reward[idx] += self.rewardList[idx]["penalize using bad lettuce"]
                                         self.reward[2] += self.rewardList[idx]["penalize using bad lettuce"]
@@ -2349,7 +2182,8 @@ class Overcooked_equilibrium(gym.Env):
                                         """也要减分"""
                                         self.reward[idx] += self.rewardList[idx]["penalize using dirty plate"]
                                         self.reward[2] += self.rewardList[idx]["penalize using dirty plate"]
-
+                                    plate = self._findItem(target_x, target_y, target_name)
+                                    item = agent.holding
                                     # 放下手中的物品，恢复未持物状态
                                     agent.putdown(target_x, target_y)
                                     # 把食物装进盘子里
@@ -2387,25 +2221,6 @@ class Overcooked_equilibrium(gym.Env):
                                 item = knife.holding
                                 if item.chopped:
 
-
-                                    # 2026年2月2日新增：盘子里已有食物则不允许再装
-                                    # if agent.holding.containing:
-                                    #     self.reward[idx] += self.rewardList[idx]["metatask failed"]
-                                    #     self.reward[2] += self.rewardList[idx]["metatask failed"]
-                                    #     continue
-
-
-                                    # 2026年2月2日新增：盘子里若已存在同一种 food，则不允许重复装盘（但允许组合）
-                                    if agent.holding.containing:  # 非空
-                                        same_food_exists = any(type(f) is type(item) for f in agent.holding.containing)
-                                        # 如果你更想按 rawName 判断（更稳），用下面这行替代上一行：
-                                        # same_food_exists = any(getattr(f, "rawName", None) == getattr(item, "rawName", None) for f in agent.holding.containing)
-
-                                        if same_food_exists:
-                                            self.reward[idx] += self.rewardList[idx]["metatask failed"]
-                                            self.reward[2] += self.rewardList[idx]["metatask failed"]
-                                            continue
-
                                     if isinstance(item, BadLettuce):
                                         self.reward[idx] += self.rewardList[idx]["penalize using bad lettuce"]
                                         self.reward[2] += self.rewardList[idx]["penalize using bad lettuce"]
@@ -2419,9 +2234,6 @@ class Overcooked_equilibrium(gym.Env):
                                     else:
                                         self.reward[idx] += self.rewardList[idx]["subtask finished"]
                                         self.reward[2] += self.rewardList[idx]["subtask finished"]
-
-
-
                                     knife.release()
                                     agent.holding.contain(item)
                                 else:
@@ -2437,30 +2249,11 @@ class Overcooked_equilibrium(gym.Env):
                                 plate_item = knife.holding
                                 food_item = agent.holding
                                 if food_item.chopped:
-
-
-                                    # ===== 2026年2月2日新增：盘子里若已存在同一种 food，则不允许重复装盘（但允许组合）=====
-                                    if plate_item.containing:  # 非空
-                                        same_food_exists = any(type(f) is type(food_item) for f in plate_item.containing)
-                                        # 如果你更想按 rawName 判断（更稳），用下面这行替代上一行：
-                                        # same_food_exists = any(getattr(f, "rawName", None) == getattr(food_item, "rawName", None) for f in plate_item.containing)
-
-                                        if same_food_exists:
-                                            self.reward[idx] += self.rewardList[idx]["metatask failed"]
-                                            self.reward[2] += self.rewardList[idx]["metatask failed"]
-                                            continue
-
                                     if isinstance(food_item, BadLettuce):
                                         self.reward[idx] += self.rewardList[idx]["penalize using bad lettuce"]
                                         self.reward[2] += self.rewardList[idx]["penalize using bad lettuce"]
                                     self.reward[idx] += self.rewardList[idx]["subtask finished"]
                                     self.reward[2] += self.rewardList[idx]["subtask finished"]
-
-                                    # 注意：这里装的是 knife 上的盘子，盘子可能是 DirtyPlate
-                                    if isinstance(plate_item, DirtyPlate):
-                                        self.reward[idx] += self.rewardList[idx]["penalize using dirty plate"]
-                                        self.reward[2] += self.rewardList[idx]["penalize using dirty plate"]
-
                                     knife.release()
                                     # a little different
                                     agent.pickup(plate_item)
@@ -2638,57 +2431,11 @@ class Overcooked_equilibrium(gym.Env):
                                 self.map[food.x][food.y] = ITEMIDX[food.rawName]
 
                         # 如果移动目标是食物，则只有（1）agent手中拿着盘子，（2）食物已经切好了，才能执行put down的操作。pickup当然没问题，但是put down只有满足这个条件才能进行
-                        elif target_name in ["tomato", "lettuce", "badlettuce", "onion"]:
+                        elif target_name in ["tomato", "lettuce", "badlettuce" "onion"]:
                             item = self._findItem(target_x, target_y, target_name)
-                            # print(target_x, target_y, target_name, item)
-
-                            if item is None:
-                                # 目标已经不在这格了：宏动作过期/被抢走/状态变化
-                                # 选择一种处理：无操作 or 失败惩罚
-                                self.reward[idx] += self.rewardList[idx]["metatask failed"]
-                                self.reward[2] += self.rewardList[idx]["metatask failed"]
-                                # 同时最好把该 agent 的 macro 标记 done，让它重新选目标
-                                # self.macroAgent[idx].cur_macro_action_done = True
-                                continue  # 或 return / pass
-
                             if item.chopped and (isinstance(agent.holding, Plate) or isinstance(agent.holding, DirtyPlate)):
-
-
-                                # 2026年2月2日新增：盘子里若已存在同一种 food，则不允许重复装盘（但允许组合）
-                                if agent.holding.containing:  # 非空
-                                    same_food_exists = any(type(f) is type(item) for f in agent.holding.containing)
-                                    # 如果你更想按 rawName 判断（更稳），用下面这行替代上一行：
-                                    # same_food_exists = any(getattr(f, "rawName", None) == getattr(item, "rawName", None) for f in agent.holding.containing)
-
-                                    if same_food_exists:
-                                        self.reward[idx] += self.rewardList[idx]["metatask failed"]
-                                        self.reward[2] += self.rewardList[idx]["metatask failed"]
-                                        continue
-
-                                # 通过判重后，才计算成功装盘的奖惩
-                                if isinstance(item, BadLettuce):
-                                    self.reward[idx] += self.rewardList[idx]["penalize using bad lettuce"]
-                                    self.reward[2] += self.rewardList[idx]["penalize using bad lettuce"]
-
-                                    
                                 self.reward[idx] += self.rewardList[idx]["subtask finished"]
                                 self.reward[2] += self.rewardList[idx]["subtask finished"]
-
-
-                                if isinstance(agent.holding, DirtyPlate):
-                                    self.reward[idx] += self.rewardList[idx]["penalize using dirty plate"]
-                                    self.reward[2] += self.rewardList[idx]["penalize using dirty plate"]
-
-                                    
-                                # 2026年2月2日新增：盘子里已有食物则不允许再装
-                                # if agent.holding.containing:
-                                #     self.reward[idx] += self.rewardList[idx]["metatask failed"]
-                                #     self.reward[2] += self.rewardList[idx]["metatask failed"]
-                                #     continue
-
-
-
-                                    
                                 agent.holding.contain(item)
                                 self.map[target_x][target_y] = ITEMIDX["counter"]
                             elif not item.chopped and (isinstance(agent.holding, Plate) or isinstance(agent.holding, DirtyPlate)):
