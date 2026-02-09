@@ -215,7 +215,7 @@ def run_single_round(round_num, model_path):
             human_was_holding = human_is_holding
             ai_was_holding = ai_is_holding
             
-            telemetry.append({
+            telemetry.append({                      
                 "Round": round_num,
                 "Timestamp": timestamp,
                 "Score": dishes_served,
