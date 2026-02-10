@@ -1,12 +1,5 @@
 // static/js/controller.js
-const debugging = true;
-const pages_debugging = [
-        'page-intro', 'page-consent', 'page-instruction-1',
-        'page-instruction-2a','page-instruction-2b','page-instruction-2c',
-        'page-phase-1', 'page-phase-1-qs', 'page-intermission', 
-        'page-phase-2', 'page-phase-2-qs', 'page-end'
-    ];
-const debugging_page = pages_debugging[4];
+
 
 // --- 1. API HELPER ---
 async function api(endpoint, data={}) {
