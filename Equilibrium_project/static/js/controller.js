@@ -59,7 +59,12 @@ function showPage(pageId) {
     }
 }
 
-// --- 4. GAME INITIALIZATION ---
+// --- 4. GAME INITIALIZATION (TIME-BASED) ---
+
+let gameTimer = null; // Stores the interval ID
+let timeLeft = 0;     // Stores seconds remaining
+
+// A. START PHASE (Setup Model & Layout)
 async function startPhase(phaseNum) {
     STATE.phase = phaseNum;
     STATE.round = 1;
@@ -69,14 +74,19 @@ async function startPhase(phaseNum) {
     let modelId = phaseNum === 1 ? STATE.assignment.phase1Model : STATE.assignment.phase2Model;
     STATE.configId = `${STATE.assignment.layout}_${modelId}`;
     
+    console.log(`Starting Phase ${phaseNum} with ${STATE.configId}`);
     await startRound();
 }
 
+// B. START ROUND (Reset Backend & Start Timer)
 async function startRound() {
     STATE.isPlaying = false;
     STATE.gameOver = false;
     
-    // Reset current round data
+    // 1. Clear any old timer
+    if (gameTimer) clearInterval(gameTimer);
+
+    // 2. Initialize Round Data
     currentRoundData = {
         roundNumber: STATE.totalRounds + 1,
         phase: STATE.phase,
@@ -88,12 +98,16 @@ async function startRound() {
     };
     
     try {
-        // Reset environment on backend
+        // 3. Reset Environment
         const data = await api('/reset', { config_id: STATE.configId });
         
         if (data.state) {
             STATE.isPlaying = true;
             drawGame(data.state, 'gameCanvas');
+            
+            // 4. Start the 45-Second Timer
+            startTimer(CONFIG.ROUND_DURATION_SEC);
+            
             updateGameUI();
         }
     } catch (err) {
@@ -102,60 +116,98 @@ async function startRound() {
     }
 }
 
+// C. TIMER LOGIC
+function startTimer(duration) {
+    timeLeft = duration;
+    updateTimerDisplay(); // Update immediately
+
+    gameTimer = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay();
+
+        if (timeLeft <= 0) {
+            // TIME IS UP!
+            clearInterval(gameTimer);
+            finishTimeBasedRound();
+        }
+    }, 1000);
+}
+
+function updateTimerDisplay() {
+    const el = document.getElementById('stepsLeft'); // Keeping ID 'stepsLeft' to avoid HTML changes
+    if (el) {
+        const m = Math.floor(timeLeft / 60);
+        const s = timeLeft % 60;
+        el.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+        
+        // Red warning color at 10 seconds
+        el.style.color = timeLeft <= 10 ? '#dc2626' : '#2563eb';
+    }
+}
+
+// D. UI UPDATER
 function updateGameUI() {
     const phaseEl = document.getElementById('currentPhase');
     const roundEl = document.getElementById('currentRound');
-    const stepsEl = document.getElementById('stepsLeft');
     
     if(phaseEl) phaseEl.innerText = STATE.phase;
     if(roundEl) roundEl.innerText = `${STATE.round} / ${CONFIG.ROUNDS_PER_PHASE}`;
-    if(stepsEl) stepsEl.innerText = CONFIG.MAX_STEPS;
 }
 
-async function endRound(data) {
+// E. END ROUND (Triggered by Timer)
+async function finishTimeBasedRound() {
+    if (STATE.gameOver) return;
+    
     STATE.isPlaying = false;
     STATE.gameOver = true;
+    console.log("TIME IS UP!");
+
+    // 1. Get Final Score from UI (or last known state)
+    const scoreEl = document.getElementById('currentScore');
+    const finalScore = scoreEl ? parseInt(scoreEl.innerText) : 0;
     
-    // Finalize round data
-    currentRoundData.finalScore = data.cumulative_reward || 0;
+    // 2. Finalize Data
+    currentRoundData.finalScore = finalScore;
     currentRoundData.endTime = Date.now();
-    currentRoundData.duration = (currentRoundData.endTime - currentRoundData.startTime) / 1000;
+    currentRoundData.duration = CONFIG.ROUND_DURATION_SEC;
     
-    // Save to logs
+    // 3. Save Log
     LOGS.rounds.push({...currentRoundData});
-    
     STATE.totalRounds++;
     
-    // Show round summary
+    // 4. Show Summary
     showRoundSummary(currentRoundData);
 }
 
+// F. SHOW SUMMARY
 function showRoundSummary(roundData) {
     const panel = document.getElementById('round-end-panel');
     const scoreEl = document.getElementById('round-score');
     const stepsEl = document.getElementById('round-steps');
     const btnNext = document.getElementById('btn-next-round');
     
-    if(scoreEl) scoreEl.innerText = Math.floor(roundData.finalScore);
+    if(scoreEl) scoreEl.innerText = roundData.finalScore;
     if(stepsEl) stepsEl.innerText = roundData.humanSteps;
     
     if(panel) panel.classList.remove('hidden');
     
-    // Determine what happens next
     if(btnNext) {
-        btnNext.onclick = () => {
+        // Clone to remove old listeners
+        const newBtn = btnNext.cloneNode(true);
+        btnNext.parentNode.replaceChild(newBtn, btnNext);
+        
+        newBtn.onclick = () => {
             panel.classList.add('hidden');
             
             if(STATE.round < CONFIG.ROUNDS_PER_PHASE) {
-                // Continue to next round in same phase
                 STATE.round++;
                 startRound();
             } else {
-                // Phase complete
+                // Phase Complete Logic
                 if(STATE.phase === 1) {
-                    showPage('page-phase-1-qs');
+                    showPage('page-mid-questionnaire');
                 } else {
-                    showPage('page-phase-2-qs');
+                    finishExperiment(); // Defined in your bottom section
                 }
             }
         };
@@ -191,25 +243,18 @@ document.addEventListener('keydown', async (e) => {
         drawGame(data.state, 'gameCanvas');
         
         // Update UI
-        document.getElementById('stepsLeft').innerText = data.steps_left;
         document.getElementById('currentScore').innerText = Math.floor(data.cumulative_reward || 0);
         
         // Log the step
         currentRoundData.steps.push({ 
             key: e.key, 
-            reward: data.cumulative_reward, 
-            stepsLeft: data.steps_left,
+            reward: data.cumulative_reward,
             timestamp: Date.now()
         });
         
         // Count human steps (not "Stay")
         if(e.key !== 'Stay') {
             currentRoundData.humanSteps++;
-        }
-
-        // Check if round ended
-        if(data.steps_left <= 0) {
-            await endRound(data);
         }
     }
 });
@@ -342,7 +387,7 @@ if (btnStartTask) {
             console.log("Quiz Passed. Starting Phase 1...");
             
             // 1. Show Game Canvas
-            showPage('page-game');
+            showPage('page-phase-1');
 
             // 2. Initialize Game State
             STATE.phase = 1; 
@@ -354,7 +399,7 @@ if (btnStartTask) {
             console.log("Conditions Assigned:", STATE.assignment);
 
             // 4. Trigger Backend to Load Round 1
-            startNextRound(); 
+            startRound(); 
         }
     };
 }

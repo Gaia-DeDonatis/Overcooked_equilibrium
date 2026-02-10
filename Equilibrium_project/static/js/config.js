@@ -4,9 +4,9 @@ const SERVER_URL = 'http://localhost:5000';
 
 // Configuration
 const CONFIG = {
-    PRACTICE_SCORE: 200,    // Points needed to pass practice
-    ROUNDS_PER_PHASE: 7,    // 7 rounds per phase = 14 total
-    MAX_STEPS: 200          // Steps per round (matches backend)
+    PRACTICE_SCORE: 200,
+    ROUNDS_PER_PHASE: 7,
+    ROUND_DURATION_SEC: 45
 };
 
 // Global State (Shared across all files)
