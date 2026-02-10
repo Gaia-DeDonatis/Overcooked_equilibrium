@@ -15,25 +15,32 @@ async function api(endpoint, data={}) {
     return await res.json();
 }
 
-// --- 2. CONFIG & NAVIGATION ---
+// --- 2. CONDITION ASSIGNMENT ---
 function assignConditions() {
     const pid = LOGS.prolificId || "test";
     let h = 0;
     for(let i=0; i<pid.length; i++) h = (h*31 + pid.charCodeAt(i)) >>> 0;
+    
+    // Randomly assign layout and models
     const layouts = ["layout1", "layout2", "layout3", "layout4"];
     const models = ["model1", "model2", "model3", "model4"];
     
-    STATE.assignment.task1 = `${layouts[h%4]}_${models[h%4]}`;
-    STATE.assignment.task2 = `${layouts[h%4]}_${models[(h+1)%4]}`;
+    STATE.assignment.layout = layouts[h % 4];
+    STATE.assignment.phase1Model = models[h % 4];
+    STATE.assignment.phase2Model = models[(h + 1) % 4]; // Different model for phase 2
+    
     LOGS.assignment = STATE.assignment;
+    
+    console.log("Assigned:", STATE.assignment);
 }
 
+// --- 3. PAGE NAVIGATION ---
 function showPage(pageId) {
     const pages = [
         'page-intro', 'page-consent', 'page-instruction-1',
         'page-instruction-2a','page-instruction-2b','page-instruction-2c',
-        'page-phase-1', 'page-intermission', 'page-phase-2', 
-        'page-qs', 'page-end'
+        'page-phase-1', 'page-phase-1-qs', 'page-intermission', 
+        'page-phase-2', 'page-phase-2-qs', 'page-end'
     ];
     
     pages.forEach(id => {
@@ -45,16 +52,118 @@ function showPage(pageId) {
     if(target) target.classList.remove('hidden');
     window.scrollTo(0,0);
 
-    // CHANGE THIS: Only set isPlaying to false if we aren't going to a game page
-    const gamePages = ['page-phase-1', 'page-phase-2', 'page-task', 'page-instruction-1'];
+    // Only set isPlaying for game pages
+    const gamePages = ['page-phase-1', 'page-phase-2', 'page-instruction-1'];
     if (!gamePages.includes(pageId)) {
         STATE.isPlaying = false;
     }
 }
 
-// --- 3. KEYBOARD LISTENER (COMBINED) ---
+// --- 4. GAME INITIALIZATION ---
+async function startPhase(phaseNum) {
+    STATE.phase = phaseNum;
+    STATE.round = 1;
+    STATE.gameOver = false;
+    
+    // Determine which model to use
+    let modelId = phaseNum === 1 ? STATE.assignment.phase1Model : STATE.assignment.phase2Model;
+    STATE.configId = `${STATE.assignment.layout}_${modelId}`;
+    
+    await startRound();
+}
+
+async function startRound() {
+    STATE.isPlaying = false;
+    STATE.gameOver = false;
+    
+    // Reset current round data
+    currentRoundData = {
+        roundNumber: STATE.totalRounds + 1,
+        phase: STATE.phase,
+        configId: STATE.configId,
+        steps: [],
+        finalScore: 0,
+        humanSteps: 0,
+        startTime: Date.now()
+    };
+    
+    try {
+        // Reset environment on backend
+        const data = await api('/reset', { config_id: STATE.configId });
+        
+        if (data.state) {
+            STATE.isPlaying = true;
+            drawGame(data.state, 'gameCanvas');
+            updateGameUI();
+        }
+    } catch (err) {
+        console.error("Round Start Error:", err);
+        alert("Failed to start round. Please refresh.");
+    }
+}
+
+function updateGameUI() {
+    const phaseEl = document.getElementById('currentPhase');
+    const roundEl = document.getElementById('currentRound');
+    const stepsEl = document.getElementById('stepsLeft');
+    
+    if(phaseEl) phaseEl.innerText = STATE.phase;
+    if(roundEl) roundEl.innerText = `${STATE.round} / ${CONFIG.ROUNDS_PER_PHASE}`;
+    if(stepsEl) stepsEl.innerText = CONFIG.MAX_STEPS;
+}
+
+async function endRound(data) {
+    STATE.isPlaying = false;
+    STATE.gameOver = true;
+    
+    // Finalize round data
+    currentRoundData.finalScore = data.cumulative_reward || 0;
+    currentRoundData.endTime = Date.now();
+    currentRoundData.duration = (currentRoundData.endTime - currentRoundData.startTime) / 1000;
+    
+    // Save to logs
+    LOGS.rounds.push({...currentRoundData});
+    
+    STATE.totalRounds++;
+    
+    // Show round summary
+    showRoundSummary(currentRoundData);
+}
+
+function showRoundSummary(roundData) {
+    const panel = document.getElementById('round-end-panel');
+    const scoreEl = document.getElementById('round-score');
+    const stepsEl = document.getElementById('round-steps');
+    const btnNext = document.getElementById('btn-next-round');
+    
+    if(scoreEl) scoreEl.innerText = Math.floor(roundData.finalScore);
+    if(stepsEl) stepsEl.innerText = roundData.humanSteps;
+    
+    if(panel) panel.classList.remove('hidden');
+    
+    // Determine what happens next
+    if(btnNext) {
+        btnNext.onclick = () => {
+            panel.classList.add('hidden');
+            
+            if(STATE.round < CONFIG.ROUNDS_PER_PHASE) {
+                // Continue to next round in same phase
+                STATE.round++;
+                startRound();
+            } else {
+                // Phase complete
+                if(STATE.phase === 1) {
+                    showPage('page-phase-1-qs');
+                } else {
+                    showPage('page-phase-2-qs');
+                }
+            }
+        };
+    }
+}
+
+// --- 5. KEYBOARD LISTENER ---
 document.addEventListener('keydown', async (e) => {
-    // Standard Filters
     if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].indexOf(e.key) === -1) return;
     if(!STATE.isPlaying || STATE.gameOver) return;
     
@@ -68,7 +177,7 @@ document.addEventListener('keydown', async (e) => {
         const prevScore = STATE.practiceScore;
         STATE.practiceScore = data.cumulative_reward || 0;
 
-        if(STATE.practiceScore >= 200 && STATE.practiceScore > prevScore) {
+        if(STATE.practiceScore >= CONFIG.PRACTICE_SCORE && STATE.practiceScore > prevScore) {
             STATE.isPlaying = false;
             STATE.gameOver = true;
             document.getElementById('practiceHint').innerText = "Great job! Click 'Next' to continue.";
@@ -78,133 +187,241 @@ document.addEventListener('keydown', async (e) => {
     } 
     // B. MAIN TASK LOGIC (Phase 1 or 2)
     else {
-    const data = await api('/key_event', { key: e.key, config_id: STATE.configId });
-    drawGame(data.state, 'gameCanvas');
-    document.getElementById('stepsLeft').innerText = data.steps_left;
-    
-    // Make sure this variable name matches your config.js
-    currentRoundSteps.push({ key:e.key, reward:data.cumulative_reward, steps:data.steps_left });
+        const data = await api('/key_event', { key: e.key, config_id: STATE.configId });
+        drawGame(data.state, 'gameCanvas');
+        
+        // Update UI
+        document.getElementById('stepsLeft').innerText = data.steps_left;
+        document.getElementById('currentScore').innerText = Math.floor(data.cumulative_reward || 0);
+        
+        // Log the step
+        currentRoundData.steps.push({ 
+            key: e.key, 
+            reward: data.cumulative_reward, 
+            stepsLeft: data.steps_left,
+            timestamp: Date.now()
+        });
+        
+        // Count human steps (not "Stay")
+        if(e.key !== 'Stay') {
+            currentRoundData.humanSteps++;
+        }
 
-    if(data.steps_left <= 0) {
-        STATE.isPlaying = false;
-        STATE.gameOver = true;
-        document.getElementById('round-end-panel').classList.remove('hidden');
-    }
+        // Check if round ended
+        if(data.steps_left <= 0) {
+            await endRound(data);
+        }
     }
 });
 
-// --- 4. NAVIGATION & BUTTONS ---
-
-// Intro Validation
+// --- 6. INTRO PAGE VALIDATION ---
 const inputID = document.getElementById('prolificId');
 const inputAge = document.getElementById('age');
 const inputGender = document.getElementById('gender');
 const btnConsent = document.getElementById('to-consent');
 
-function validate() {
+function validateIntro() {
     if(!inputID || !inputAge || !inputGender) return;
-    btnConsent.disabled = !(inputID.value.trim().length > 0 && parseInt(inputAge.value) >= 18 && inputGender.value !== "");
+    btnConsent.disabled = !(
+        inputID.value.trim().length > 0 && 
+        parseInt(inputAge.value) >= 18 && 
+        inputGender.value !== ""
+    );
 }
+
 if(inputID) {
-    [inputID, inputAge, inputGender].forEach(el => el.addEventListener('input', validate));
-    inputGender.addEventListener('change', validate);
+    [inputID, inputAge, inputGender].forEach(el => el.addEventListener('input', validateIntro));
+    inputGender.addEventListener('change', validateIntro);
+    
     btnConsent.onclick = () => {
         LOGS.prolificId = inputID.value.trim();
+        LOGS.age = parseInt(inputAge.value);
+        LOGS.gender = inputGender.value;
         assignConditions();
         showPage('page-consent');
     };
 }
 
-// --- 4. NAVIGATION & BUTTONS (Versione Corretta per il Meeting) ---
+// --- 7. CONSENT PAGE ---
+const consentCheck = document.getElementById('consentCheck');
+const btnInstruction = document.getElementById('to-instruction');
 
-const check = document.getElementById('consentCheck');
-const btnInst = document.getElementById('to-instruction');
-const btnToQuiz = document.getElementById('to-instruction-2');
-
-if(check && btnInst) {
-    check.addEventListener('change', () => {
-        btnInst.disabled = !check.checked;
+if(consentCheck && btnInstruction) {
+    consentCheck.addEventListener('change', () => {
+        btnInstruction.disabled = !consentCheck.checked;
     });
 
-    btnInst.onclick = () => {
+    btnInstruction.onclick = () => {
         showPage('page-instruction-1');
+        // Start practice round when page loads
+        setTimeout(() => {
+            if(typeof startPracticeRound === 'function') {
+                startPracticeRound();
+            }
+        }, 100);
+    };
+}
+
+const btnToInst2 = document.getElementById('to-instruction-2');
+if(btnToInst2) {
+    btnToInst2.onclick = () => {
+        // Go to the Quiz/Instruction 2a
+        showPage('page-instruction-2a');
+    };
+}
+
+// --- 8. SILENT QUIZ & EXCLUSION LOGIC ---
+
+let QUIZ_ERRORS = 0;
+
+function calculatePageErrors(questionNames) {
+    let pageErrors = 0;
+    
+    questionNames.forEach(name => {
+        const selected = document.querySelector(`input[name="${name}"]:checked`);
         
-        if(btnToQuiz) {
-            btnToQuiz.disabled = false; 
-            console.log("Demo Mode: Proceed button enabled.");
+        // Logic: 
+        // 1. If nothing selected -> Error
+        // 2. If selected value is NOT 'correct' -> Error
+        if (!selected || selected.value !== 'correct') {
+            pageErrors++;
+            console.log(`Mistake on question: ${name}`);
         }
-
-        startPractice().catch(err => console.log("Practice sync pending..."));
-    };
+    });
+    
+    return pageErrors;
 }
 
+// --- BUTTON LISTENERS ---
 
-// --- 4. NAVIGATION & BUTTONS ---
-
-// 1. Validation for Quiz 2a
+// 1. Page 2a (Goal & Attention Check) -> Move to 2b
 const btnNext2a = document.getElementById('btn-next-2a');
-const q1Radios = document.getElementsByName('q1');
-if(btnNext2a) {
-    q1Radios.forEach(r => r.addEventListener('change', (e) => {
-        btnNext2a.disabled = (e.target.value !== 'correct');
-    }));
-}
-
-// 2. Validation for Quiz 2b
-const btnNext2b = document.getElementById('btn-next-2b');
-const q2Radios = [...document.getElementsByName('q2a'), ...document.getElementsByName('q2b')];
-function val2b() {
-    const a = document.querySelector('input[name="q2a"]:checked')?.value === 'correct';
-    const b = document.querySelector('input[name="q2b"]:checked')?.value === 'correct';
-    btnNext2b.disabled = !(a && b);
-}
-q2Radios.forEach(r => r.addEventListener('change', val2b));
-
-// 3. Validation for Quiz 2c
-const btnStart1 = document.getElementById('start-task-1');
-const q3Radios = [...document.getElementsByName('q3a'), ...document.getElementsByName('q3b')];
-function val2c() {
-    const a = document.querySelector('input[name="q3a"]:checked')?.value === 'correct';
-    const b = document.querySelector('input[name="q3b"]:checked')?.value === 'correct';
-    btnStart1.disabled = !(a && b);
-}
-q3Radios.forEach(r => r.addEventListener('change', val2c));
-
-// Flow Buttons
-document.getElementById('to-instruction-2').onclick = () => showPage('page-instruction-2a');
-document.getElementById('btn-next-2a').onclick = () => showPage('page-instruction-2b');
-document.getElementById('btn-next-2b').onclick = () => showPage('page-instruction-2c');
-
-document.getElementById('start-task-1').onclick = () => showPage('page-phase-1');
-document.getElementById('btnFinishPhase1').onclick = () => showPage('page-intermission');
-document.getElementById('btnStartPhase2').onclick = () => showPage('page-phase-2');
-document.getElementById('btnFinishPhase2').onclick = () => showPage('page-qs');
-
-// --- 5. FINAL SUBMISSION ---
-document.getElementById('qsNext').onclick = () => {
-    const strategy = document.getElementById('q_strategy').value;
-    const adaptation = document.getElementById('q_adaptation').value;
-    const workflow = document.getElementById('q_workflow').value;
-    const trust = document.getElementById('q_trust').value;
-    const experience = document.querySelector('input[name="q_experience"]:checked');
-
-    if(strategy.length < 5 || adaptation.length < 5 || workflow.length < 5 || trust.length < 5 || !experience) {
-        return alert("Please provide an answer for all questions.");
-    }
-
-    LOGS.questionnaire = {
-        strategy_text: strategy, adaptation_text: adaptation,
-        workflow_text: workflow, trust_reliance: trust,
-        played_overcooked_before: experience.value
+if (btnNext2a) {
+    btnNext2a.onclick = () => {
+        const errors = calculatePageErrors(['q1', 'q1_att']);
+        QUIZ_ERRORS += errors;
+        
+        console.log(`Page 2a Errors: ${errors} | Current Total: ${QUIZ_ERRORS}`);
+        showPage('page-instruction-2b');
     };
+}
 
-    showPage('page-end');
-    document.getElementById('completionCodeWrap').classList.remove('hidden');
-    document.getElementById('completionCode').innerText = "C15-協同-2026";
-    document.getElementById('completionHint').classList.add('hidden');
-    document.getElementById('btnFinish').classList.add('hidden');
-};
+// 2. Page 2b (Structure & Observation) -> Move to 2c
+const btnNext2b = document.getElementById('btn-next-2b');
+if (btnNext2b) {
+    btnNext2b.onclick = () => {
+        const errors = calculatePageErrors(['q2a', 'q2b']);
+        QUIZ_ERRORS += errors;
+        
+        console.log(`Page 2b Errors: ${errors} | Current Total: ${QUIZ_ERRORS}`);
+        showPage('page-instruction-2c');
+    };
+}
 
+// 3. Page 2c (Strategy) -> START GAME (Final Filter)
+const btnStartTask = document.getElementById('start-task-1');
+if (btnStartTask) {
+    btnStartTask.onclick = () => {
+        const errors = calculatePageErrors(['q3a', 'q3b']);
+        QUIZ_ERRORS += errors;
+
+        console.log(`Final Check. Total Cumulative Errors: ${QUIZ_ERRORS}`);
+
+        // --- EXCLUSION LOGIC ---
+        if (QUIZ_ERRORS > 2) {
+            
+            // OPTION A: Show an alert and reload (Simple)
+            alert("Qualification Failed.\n\nYou answered too many comprehension questions incorrectly.\nTo ensure high-quality data, you cannot proceed with this experiment.");
+            location.reload(); 
+            
+            // OPTION B: Send them to the specific 'page-disqualified' div if you have one
+            // showPage('page-disqualified');
+
+        } else {
+            // PASS: Start the Experiment
+            console.log("Quiz Passed. Starting Phase 1...");
+            
+            // 1. Show Game Canvas
+            showPage('page-game');
+
+            // 2. Initialize Game State
+            STATE.phase = 1; 
+            STATE.round = 1;
+            STATE.totalRounds = 0;
+            
+            // 3. Assign Experimental Conditions (Layout/Model)
+            assignConditions();
+            console.log("Conditions Assigned:", STATE.assignment);
+
+            // 4. Trigger Backend to Load Round 1
+            startNextRound(); 
+        }
+    };
+}
+
+// --- 9. PHASE TRANSITIONS ---
+
+// After Phase 1 Questionnaire
+document.getElementById('btn-phase1-qs-submit')?.addEventListener('click', () => {
+    // Collect Phase 1 questionnaire data
+    LOGS.phase1Questionnaire = {
+        cognitiveLoad: parseInt(document.querySelector('input[name="p1_cognitive"]:checked')?.value || 0),
+        collaboration: parseInt(document.querySelector('input[name="p1_collab"]:checked')?.value || 0)
+    };
+    
+    if(LOGS.phase1Questionnaire.cognitiveLoad === 0 || LOGS.phase1Questionnaire.collaboration === 0) {
+        alert("Please answer both questions.");
+        return;
+    }
+    
+    showPage('page-intermission');
+});
+
+// Start Phase 2
+document.getElementById('btnStartPhase2')?.addEventListener('click', () => {
+    showPage('page-phase-2');
+    startPhase(2);
+});
+
+// After Phase 2 Questionnaire
+document.getElementById('btn-phase2-qs-submit')?.addEventListener('click', () => {
+    // Collect Phase 2 questionnaire data
+    LOGS.phase2Questionnaire = {
+        cognitiveLoad: parseInt(document.querySelector('input[name="p2_cognitive"]:checked')?.value || 0),
+        collaboration: parseInt(document.querySelector('input[name="p2_collab"]:checked')?.value || 0)
+    };
+    
+    const feedback = document.getElementById('final-feedback')?.value.trim() || "";
+    LOGS.finalFeedback = feedback;
+    
+    if(LOGS.phase2Questionnaire.cognitiveLoad === 0 || LOGS.phase2Questionnaire.collaboration === 0) {
+        alert("Please answer both rating questions.");
+        return;
+    }
+    
+    // Submit all data to backend
+    submitData();
+});
+
+// --- 10. FINAL SUBMISSION ---
+async function submitData() {
+    try {
+        const response = await api('/submit_log', { log: LOGS });
+        
+        if(response.success) {
+            showPage('page-end');
+            document.getElementById('completionCodeWrap')?.classList.remove('hidden');
+            document.getElementById('completionCode').innerText = response.completion_code;
+        } else {
+            alert("Submission failed. Please contact the researcher.");
+        }
+    } catch(err) {
+        console.error("Submission error:", err);
+        alert("Network error during submission. Please try again.");
+    }
+}
+
+// --- 11. INITIALIZE ---
 window.onload = () => {
     preloadImages(() => {
         console.log("Images loaded and game is ready.");

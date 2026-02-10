@@ -378,7 +378,8 @@
 
       <div class="card" style="margin-top:20px; border:1px solid #e5e7eb;">
         <h3>Comprehension Check 1/3</h3>
-        <p style="margin-bottom:8px; font-weight:600;">To get a high score, I should:</p>
+        
+        <p style="margin-bottom:8px; font-weight:600;">1. To get a high score, I should:</p>
         <div id="quiz-q1">
           <label class="role-item">
             <input type="radio" name="q1" value="wrong"> 
@@ -393,32 +394,50 @@
             <span>Stand still and ignore the orders.</span>
           </label>
         </div>
-        <p id="q1-error" class="hidden" style="color:#dc2626; margin-top:10px;">Incorrect. Remember: Movement costs money.</p>
+
+        <div style="margin-top: 25px; padding-top: 20px; border-top: 1px dashed #ccc;">
+            <p style="margin-bottom:8px; font-weight:600;">
+                2. To show you are reading, please select the option below that would result in a low score (The opposite of what you want).
+            </p>
+            <div id="quiz-q1-attention">
+            <label class="role-item">
+                <input type="radio" name="q1_att" value="wrong"> 
+                <span>Collaborate efficiently with the AI.</span>
+            </label>
+            <label class="role-item">
+                <input type="radio" name="q1_att" value="correct"> 
+                <span>Run around in circles wasting energy.</span> 
+                </label>
+            <label class="role-item">
+                <input type="radio" name="q1_att" value="wrong"> 
+                <span>Serve salads with few steps.</span>
+            </label>
+            </div>
+        </div>
       </div>
 
       <div class="center" style="margin-top:20px;">
-        <button id="btn-next-2a" class="btn" disabled>Next Section</button>
+        <button id="btn-next-2a" class="btn btn-primary">Next Section</button>
       </div>
     </section>
 
-
     <section id="page-instruction-2b" class="card hidden">
       <div id="scenarioDescription" style="border-left: 6px solid #8b5cf6; background-color: #f5f3ff; padding: 20px; border-radius: 8px;">
-        <h2 style="color:#5b21b6; margin-top:0;">PART 2: The Study Structure (5 + 5)</h2>
+        <h2 style="color:#5b21b6; margin-top:0;">PART 2: The Study Structure (7 + 7)</h2>
         <p>
-          You will play a total of <strong>10 Rounds</strong>. The experiment is divided into two distinct phases to test how the AI learns from you.
+          You will play a total of <strong>14 Rounds</strong>. The experiment is divided into two distinct phases to test how the AI learns from you.
         </p>
         
         <div style="margin-top:15px; margin-bottom:15px;">
           <div style="background:white; padding:15px; border-radius:8px; border:2px solid #ddd6fe; margin-bottom:10px;">
-            <strong style="color:#7c3aed;">Phase 1: Observation (Rounds 1-5)</strong><br>
+            <strong style="color:#7c3aed;">Phase 1: Observation (Rounds 1-7)</strong><br>
             The AI is <strong>watching you</strong>. It records your decisions (e.g., do you prefer chopping or plating?).<br>
             <em style="color:#666;">Your Job: Play naturally and consistently so it can learn your style.</em>
           </div>
 
           <div style="background:white; padding:15px; border-radius:8px; border:2px solid #ddd6fe;">
-            <strong style="color:#7c3aed;">Phase 2: Adaptation (Rounds 6-10)</strong><br>
-            After Round 5, the AI will <strong>update itself</strong> based on what it learned about you.<br>
+            <strong style="color:#7c3aed;">Phase 2: Adaptation (Rounds 8-14)</strong><br>
+            After Round 7, the AI will <strong>update itself</strong> based on what it learned about you.<br>
             <em style="color:#666;">Your Job: Notice how the AI has changed and use its new efficiency to boost your score.</em>
           </div>
         </div>
@@ -427,7 +446,7 @@
       <div class="card" style="margin-top:20px;">
         <h3>Comprehension Check 2/3</h3>
         
-        <p style="margin-bottom:8px; font-weight:600;">1. What happens after Round 5?</p>
+        <p style="margin-bottom:8px; font-weight:600;">1. What happens after Round 7?</p>
         <div id="quiz-q2a">
           <label class="role-item">
             <input type="radio" name="q2a" value="wrong"> 
@@ -457,7 +476,7 @@
       </div>
 
       <div class="center" style="margin-top:20px;">
-        <button id="btn-next-2b" class="btn" disabled>Next Section</button>
+        <button id="btn-next-2b" class="btn btn-primary">Next Section</button>
       </div>
     </section>
 
@@ -470,129 +489,283 @@
         
         <ul style="line-height:1.7;">
           <li><strong>Phase 1: Play Naturally.</strong> Don't feel forced to stick to a rigid role if it feels inefficient. Play in a way that balances speed and energy costs naturally. The AI needs to observe your <em>real</em> style to learn effectively.</li>
-          
           <li><strong>Phase 2: Find Your Flow.</strong> When the AI updates, it might behave differently. Don't be afraid to adjust your behavior to match it. Your goal is to settle into a rhythm—an <strong>equilibrium</strong>—where you both work smoothly together.</li>
-          
           <li><strong>You Decide the Balance:</strong> Always remember the cost of movement. You have to make the choice: <em>"Is it worth running to get that plate, or should I wait for the AI?"</em> Find the balance that maximizes your own score.</li>
         </ul>
       </div>
 
-      <div class="card" style="margin-top:20px;">
-        <h3>Final Check 3/3</h3>
+        <div class="card" style="margin-top:20px;">
+          <h3>Final Check 3/3</h3>
 
-        <p style="margin-bottom:8px; font-weight:600;">1. How should you play in Phase 1?</p>
-        <div id="quiz-q3a">
-          <label class="role-item">
-            <input type="radio" name="q3a" value="wrong"> 
-            <span>I must force myself to do one specific task only.</span>
-          </label>
-          <label class="role-item">
-            <input type="radio" name="q3a" value="correct"> 
-            <span>I should play naturally so the AI learns my real style.</span>
-          </label>
+          <p style="margin-bottom:8px; font-weight:600;">1. How should you play in Phase 1?</p>
+          <div id="quiz-q3a">
+            <label class="role-item">
+              <input type="radio" name="q3a" value="wrong"> 
+              <span>I must force myself to do one specific task only.</span>
+            </label>
+            <label class="role-item">
+              <input type="radio" name="q3a" value="correct"> 
+              <span>I should play naturally so the AI learns my real style.</span>
+            </label>
+          </div>
+
+          <p style="margin-top:20px; margin-bottom:8px; font-weight:600;">2. To show you are reading, select "Always do nothing".</p>
+          <div id="quiz-q3b">
+            <label class="role-item"><input type="radio" name="q3b" value="wrong"> Find equilibrium</label>
+            <label class="role-item"><input type="radio" name="q3b" value="correct"> Always do nothing</label>
+            <label class="role-item"><input type="radio" name="q3b" value="wrong"> Run around randomly</label>
+          </div>
         </div>
 
-        <p style="margin-top:20px; margin-bottom:8px; font-weight:600;">2. To show you are reading, select "Find equilibrium".</p>
-        <div id="quiz-q3b">
-          <label class="role-item"><input type="radio" name="q3b" value="wrong"> Always do nothing</label>
-          <label class="role-item"><input type="radio" name="q3b" value="correct"> Find equilibrium</label>
-          <label class="role-item"><input type="radio" name="q3b" value="wrong"> Run around randomly</label>
+        <div class="center" style="margin-top:20px;">
+          <button id="start-task-1" class="btn success" style="font-size:18px; padding:15px 30px;">
+            I'm Ready - Start Phase 1
+          </button>
         </div>
+    </section>
 
-        <p id="q3-error" class="hidden" style="color:#dc2626; margin-top:10px;">Please check your answers.</p>
+    <section id="page-phase-1" class="card hidden">
+      <h2 style="color:#2563eb; text-align:center;">Phase 1: Observation</h2>
+      <p class="muted" style="text-align:center;">The AI is learning your play style. Play naturally!</p>
+      
+      <div style="display:flex; justify-content:center; gap:20px; margin:20px 0;">
+        <div class="pill">
+          <span>Phase <strong id="currentPhase">1</strong></span>
+        </div>
+        <div class="pill">
+          <span>Round <strong id="currentRound">1 / 7</strong></span>
+        </div>
+        <!--<div class="pill">
+          <span>Steps Left: <strong id="stepsLeft">200</strong></span>
+        </div>-->
+        <div class="pill" style="background:#f0fdf4; color:#15803d;">
+          <span>Score: <strong id="currentScore">0</strong></span>
+        </div>
+      </div>
+      
+      <div class="game-viewport">
+        <canvas id="gameCanvas" width="600" height="600"></canvas>
       </div>
 
-      <div class="center" style="margin-top:20px;">
-        <button id="start-task-1" class="btn success" disabled style="font-size:18px; padding:15px 30px;">
-          I'm Ready - Start Phase 1
+      <div id="round-end-panel" class="hidden" style="background:#f0fdf4; border:2px solid #22c55e; border-radius:12px; padding:25px; margin-top:20px; text-align:center;">
+        <h3 style="color:#15803d; margin:0 0 15px 0;">Round Complete! 🎉</h3>
+        <div style="display:flex; justify-content:center; gap:30px; margin-bottom:20px;">
+          <div>
+            <p style="margin:0; color:#666; font-size:14px;">Team Score</p>
+            <p style="margin:5px 0 0 0; font-size:32px; font-weight:bold; color:#15803d;" id="round-score">0</p>
+          </div>
+          <div>
+            <p style="margin:0; color:#666; font-size:14px;">Your Steps</p>
+            <p style="margin:5px 0 0 0; font-size:32px; font-weight:bold; color:#7c3aed;" id="round-steps">0</p>
+          </div>
+        </div>
+        <p style="color:#16a34a; font-weight:600; margin-bottom:15px;">Great teamwork! Keep it up! 🌟</p>
+        <button id="btn-next-round" class="btn success">Next Round</button>
+      </div>
+    </section>
+
+    <section id="page-mid-questionnaire" class="card hidden" style="max-width:800px; margin:40px auto;">
+      <h2 style="color:#2563eb; text-align:center; margin-top:0;">Phase 1 Complete</h2>
+      <p class="muted text-center" style="margin-bottom:30px;">Please answer 4 quick questions about your experience with the <strong>Phase 1 Partner</strong>.</p>
+      <div class="hr"></div>
+
+      <div style="margin-bottom:30px; padding:20px; background:#f9fafb; border-radius:8px;">
+        <p style="font-weight:bold; margin-bottom:8px;">1. Mental Effort (Cognitive Load)</p>
+        <p style="font-size:14px; color:#666; margin-bottom:15px;">How much mental effort was required to coordinate with this partner?</p>
+        
+        <div class="likert-7" style="display:flex; justify-content:space-between; max-width:600px;">
+          <label><input type="radio" name="mid_load" value="1"> 1<br><span style="font-size:12px">Very Low</span></label>
+          <label><input type="radio" name="mid_load" value="2"> 2</label>
+          <label><input type="radio" name="mid_load" value="3"> 3</label>
+          <label><input type="radio" name="mid_load" value="4"> 4</label>
+          <label><input type="radio" name="mid_load" value="5"> 5</label>
+          <label><input type="radio" name="mid_load" value="6"> 6</label>
+          <label><input type="radio" name="mid_load" value="7"> 7<br><span style="font-size:12px">Very High</span></label>
+        </div>
+      </div>
+
+      <div style="margin-bottom:30px; padding:20px; background:#f9fafb; border-radius:8px;">
+        <p style="font-weight:bold; margin-bottom:8px;">2. Cooperation & Flow</p>
+        <p style="font-size:14px; color:#666; margin-bottom:15px;">How well did you and the AI work together as a team?</p>
+        
+        <div class="likert-7" style="display:flex; justify-content:space-between; max-width:600px;">
+          <label><input type="radio" name="mid_collab" value="1"> 1<br><span style="font-size:12px">Poorly</span></label>
+          <label><input type="radio" name="mid_collab" value="2"> 2</label>
+          <label><input type="radio" name="mid_collab" value="3"> 3</label>
+          <label><input type="radio" name="mid_collab" value="4"> 4</label>
+          <label><input type="radio" name="mid_collab" value="5"> 5</label>
+          <label><input type="radio" name="mid_collab" value="6"> 6</label>
+          <label><input type="radio" name="mid_collab" value="7"> 7<br><span style="font-size:12px">Perfectly</span></label>
+        </div>
+      </div>
+
+      <div style="margin-bottom:30px; padding:20px; background:#f9fafb; border-radius:8px;">
+        <p style="font-weight:bold; margin-bottom:8px;">3. Role Strategy</p>
+        <p style="font-size:14px; color:#666; margin-bottom:15px;">Who did most of the work?</p>
+        
+        <div class="likert-7" style="display:flex; justify-content:space-between; max-width:600px;">
+          <label><input type="radio" name="mid_strategy" value="1"> 1<br><span style="font-size:12px">I did it all<br>(Hero)</span></label>
+          <label><input type="radio" name="mid_strategy" value="2"> 2</label>
+          <label><input type="radio" name="mid_strategy" value="3"> 3</label>
+          <label><input type="radio" name="mid_strategy" value="4"> 4<br><span style="font-size:12px">Balanced</span></label>
+          <label><input type="radio" name="mid_strategy" value="5"> 5</label>
+          <label><input type="radio" name="mid_strategy" value="6"> 6</label>
+          <label><input type="radio" name="mid_strategy" value="7"> 7<br><span style="font-size:12px">AI did it all<br>(Lazy)</span></label>
+        </div>
+      </div>
+
+      <div style="margin-bottom:30px; padding:20px; background:#f9fafb; border-radius:8px;">
+        <p style="font-weight:bold; margin-bottom:8px;">4. Partner Predictability</p>
+        <p style="font-size:14px; color:#666; margin-bottom:15px;">Was it easy to predict what the AI was going to do next?</p>
+        
+        <div class="likert-7" style="display:flex; justify-content:space-between; max-width:600px;">
+          <label><input type="radio" name="mid_predict" value="1"> 1<br><span style="font-size:12px">Unpredictable</span></label>
+          <label><input type="radio" name="mid_predict" value="2"> 2</label>
+          <label><input type="radio" name="mid_predict" value="3"> 3</label>
+          <label><input type="radio" name="mid_predict" value="4"> 4</label>
+          <label><input type="radio" name="mid_predict" value="5"> 5</label>
+          <label><input type="radio" name="mid_predict" value="6"> 6</label>
+          <label><input type="radio" name="mid_predict" value="7"> 7<br><span style="font-size:12px">Very Predictable</span></label>
+        </div>
+      </div>
+
+      <div class="center" style="margin-top:40px;">
+        <button id="btn-submit-mid-survey" class="btn success" style="font-size:18px; padding:12px 35px;">
+          Submit & Continue
         </button>
       </div>
     </section>
 
-    <!-- Phase 1 and 2 -->
-  <section id="page-phase-1" class="card hidden" style="text-align:center; padding: 60px;">
-    <h1 style="color:#2563eb; font-size: 36px;">Phase 1 Placeholder</h1>
-    <p class="muted" style="font-size: 18px;">
-        (The Python Game Logic for Phase 1 will go here)
-    </p>
-    
-    <div style="margin-top: 40px; padding: 20px; border: 2px dashed #ccc;">
-        <p><em>Placeholder, click below to skip to the Intermission.</em></p>
-        <button id="btnFinishPhase1" class="btn secondary">
-            Click here to go to Phase 2
-        </button>
-    </div>
-  </section>
-
-  <section id="page-intermission" class="card hidden" style="text-align:center; padding:40px;">
-    <h1 style="color:#15803d; margin-top:0;">Phase 1 Complete</h1>
-    
-    <div style="background-color:#f0fdf4; border:2px solid #22c55e; border-radius:10px; padding:20px; max-width:600px; margin:20px auto;">
-        <h3 style="color:#15803d; margin:0 0 10px 0;">AI Updated</h3>
-        <p style="font-size:18px; line-height:1.6; color:#14532d; margin:0;">
-            The AI has processed your gameplay.<br>
-            It is now ready for Phase 2.
+    <section id="page-phase2-intro" class="card hidden" style="text-align:center; padding:40px;">
+      <h1 style="color:#7c3aed; margin-top:0;">Phase 2: Adaptation</h1>
+      
+      <div style="background-color:#f5f3ff; border:2px solid #ddd6fe; border-radius:10px; padding:20px; max-width:600px; margin:20px auto;">
+        <div style="font-size:48px; margin-bottom:10px;">🤖✨</div>
+        <h3 style="color:#5b21b6; margin:0 0 10px 0;">AI Partner Updated</h3>
+        <p style="font-size:18px; line-height:1.6; color:#4c1d95; margin:0;">
+          The AI has analyzed your play style during Phase 1.<br>
+          It has now <strong>adapted its strategy</strong> to work better with you.
         </p>
-    </div>
+        <p style="margin-top:15px; font-weight:bold;">Goal: Find your new "Flow" with this updated partner.</p>
+      </div>
 
-    <button id="btnStartPhase2" class="btn success" style="font-size:22px; padding:15px 40px; margin-top:20px;">
+      <button id="btn-start-phase2" class="btn success" style="font-size:22px; padding:15px 40px; margin-top:20px;">
         Start Phase 2
-    </button>
-  </section>
+      </button>
+    </section>
 
-  <section id="page-phase-2" class="card hidden" style="text-align:center; padding: 60px;">
-    <h1 style="color:#16a34a; font-size: 36px;">Phase 2 Placeholder</h1>
-    <p class="muted" style="font-size: 18px;">
-        (The Python Game Logic for Phase 2 will go here)
-    </p>
+  <section id="page-phase-2" class="card hidden">
+    <h2 style="color:#16a34a; text-align:center;">Phase 2: Adaptation</h2>
+    <p class="muted" style="text-align:center;">The AI has updated. Notice the changes!</p>
     
-    <div style="margin-top: 40px; padding: 20px; border: 2px dashed #ccc;">
-        <p><em>Placeholder, click below to go to the Questionnaire.</em></p>
-        <button id="btnFinishPhase2" class="btn secondary">
-             Click here to go to the Questionnaire
-        </button>
+    <div style="display:flex; justify-content:center; gap:20px; margin:20px 0;">
+      <div class="pill" style="background:#f0fdf4; color:#15803d;">
+        <span>Phase <strong>2</strong></span>
+      </div>
+      <div class="pill">
+        <span>Round <strong id="currentRound">1 / 7</strong></span>
+      </div>
+      <div class="pill">
+        <span>Steps Left: <strong id="stepsLeft">200</strong></span>
+      </div>
+      <div class="pill" style="background:#f0fdf4; color:#15803d;">
+        <span>Score: <strong id="currentScore">0</strong></span>
+      </div>
     </div>
-  </section>
-
-  <!-- Questionnair post-game-->
-  <section id="page-qs" class="card hidden" style="max-width: 800px; margin: 40px auto;">
-    
-    <h2 style="color:#2563eb; margin-top:0; font-size: 26px;">Post-Game Feedback</h2>
-    <p class="muted">Please answer the following questions based on your experience with the AI teammate.</p>
-    <div class="hr"></div>
-
-    <div style="margin-bottom: 25px;">
-        <p style="font-weight:bold; margin-bottom:8px;">1. Describe your strategy during the game</p>
-        <textarea id="q_strategy" rows="3" style="width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:6px;"></textarea>
+  
+    <div class="game-viewport">
+      <canvas id="gameCanvas" width="600" height="600"></canvas>
     </div>
-
-    <div style="margin-bottom: 25px;">
-        <p style="font-weight:bold; margin-bottom:8px;">2. Did you notice any specific changes in the AI's behavior during Phase 2? If so, please describe them.</p>
-        <textarea id="q_adaptation" rows="3" style="width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:6px;"></textarea>
-    </div>
-
-    <div style="margin-bottom: 25px;">
-        <p style="font-weight:bold; margin-bottom:8px;">3. Did you feel the rounds were long enough to establish a good rhythm with your partner?</p>
-        <textarea id="q_workflow" rows="3" style="width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:6px;"></textarea>
-    </div>
-
-    <div style="margin-bottom: 25px;">
-        <p style="font-weight:bold; margin-bottom:8px;">4. To what extent did you feel you could rely on the AI to handle its own tasks?</p>
-        <textarea id="q_trust" rows="3" style="width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:6px;"></textarea>
-    </div>
-
-    <div class="hr"></div>
-
-    <div style="margin-bottom: 30px;">
-        <p style="font-weight:bold; margin-bottom:10px;">5. Have you played the video game 'Overcooked!' before today?</p>
-        <div style="display:flex; gap: 30px;">
-            <label style="cursor:pointer;"><input type="radio" name="q_experience" value="yes"> Yes</label>
-            <label style="cursor:pointer;"><input type="radio" name="q_experience" value="no"> No</label>
+  
+    <!-- Reuse the same round-end-panel as Phase 1 -->
+    <div id="round-end-panel" class="hidden" style="background:#f0fdf4; border:2px solid #22c55e; border-radius:12px; padding:25px; margin-top:20px; text-align:center;">
+      <h3 style="color:#15803d; margin:0 0 15px 0;">Round Complete! 🎉</h3>
+      <div style="display:flex; justify-content:center; gap:30px; margin-bottom:20px;">
+        <div>
+          <p style="margin:0; color:#666; font-size:14px;">Team Score</p>
+          <p style="margin:5px 0 0 0; font-size:32px; font-weight:bold; color:#15803d;" id="round-score">0</p>
         </div>
+        <div>
+          <p style="margin:0; color:#666; font-size:14px;">Your Steps</p>
+          <p style="margin:5px 0 0 0; font-size:32px; font-weight:bold; color:#7c3aed;" id="round-steps">0</p>
+        </div>
+      </div>
+      <p style="color:#16a34a; font-weight:600; margin-bottom:15px;">Excellent work! 🌟</p>
+      <button id="btn-next-round" class="btn success">Next Round</button>
+    </div>
+  </section>
+
+  <!-- Questionnaire Phase 2-->
+  <section id="page-phase-2-qs" class="card hidden" style="max-width:700px; margin:40px auto;">
+    <h2 style="color:#2563eb; margin-top:0;">Phase 2 Complete - Final Questions</h2>
+    <p class="muted">Please rate your experience during Phase 2.</p>
+    <div class="hr"></div>
+
+    <div style="margin-bottom:30px;">
+      <p style="font-weight:bold; margin-bottom:12px;">
+        1. How mentally demanding was it to play with the AI partner in Phase 2?
+      </p>
+      <p style="font-size:13px; color:#666; margin-bottom:10px;">
+        (1 = Very Easy, 7 = Very Demanding)
+      </p>
+      <div class="likert-7">
+        <input type="radio" name="p2_cognitive" value="1" aria-label="1 - Very Easy" />
+        <input type="radio" name="p2_cognitive" value="2" aria-label="2" />
+        <input type="radio" name="p2_cognitive" value="3" aria-label="3" />
+        <input type="radio" name="p2_cognitive" value="4" aria-label="4 - Neutral" />
+        <input type="radio" name="p2_cognitive" value="5" aria-label="5" />
+        <input type="radio" name="p2_cognitive" value="6" aria-label="6" />
+        <input type="radio" name="p2_cognitive" value="7" aria-label="7 - Very Demanding" />
+        
+        <span class="scale-label">Very Easy</span>
+        <span class="scale-label"></span>
+        <span class="scale-label"></span>
+        <span class="scale-label">Neutral</span>
+        <span class="scale-label"></span>
+        <span class="scale-label"></span>
+        <span class="scale-label">Very Demanding</span>
+      </div>
+    </div>
+
+    <div style="margin-bottom:30px;">
+      <p style="font-weight:bold; margin-bottom:12px;">
+        2. How well did you and the AI collaborate as a team in Phase 2?
+      </p>
+      <p style="font-size:13px; color:#666; margin-bottom:10px;">
+        (1 = Very Poorly, 7 = Excellent)
+      </p>
+      <div class="likert-7">
+        <input type="radio" name="p2_collab" value="1" aria-label="1 - Very Poorly" />
+        <input type="radio" name="p2_collab" value="2" aria-label="2" />
+        <input type="radio" name="p2_collab" value="3" aria-label="3" />
+        <input type="radio" name="p2_collab" value="4" aria-label="4 - Neutral" />
+        <input type="radio" name="p2_collab" value="5" aria-label="5" />
+        <input type="radio" name="p2_collab" value="6" aria-label="6" />
+        <input type="radio" name="p2_collab" value="7" aria-label="7 - Excellent" />
+        
+        <span class="scale-label">Very Poorly</span>
+        <span class="scale-label"></span>
+        <span class="scale-label"></span>
+        <span class="scale-label">Neutral</span>
+        <span class="scale-label"></span>
+        <span class="scale-label"></span>
+        <span class="scale-label">Excellent</span>
+      </div>
+    </div>
+
+    <div class="hr"></div>
+
+    <div style="margin-bottom:30px;">
+      <p style="font-weight:bold; margin-bottom:12px;">
+        3. (Optional) Any additional feedback about your experience?
+      </p>
+      <textarea id="final-feedback" rows="4" style="width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:6px;" placeholder="Feel free to share any thoughts..."></textarea>
     </div>
 
     <div class="center" style="margin-top:40px;">
-        <button id="qsNext" class="btn success" style="font-size:20px; padding:12px 40px;">Submit & Finish</button>
+      <button id="btn-phase2-qs-submit" class="btn success" style="font-size:20px; padding:12px 40px;">
+        Submit & Finish
+      </button>
     </div>
   </section>
 

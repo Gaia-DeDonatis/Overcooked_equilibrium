@@ -60,8 +60,6 @@ except Exception:
     pass
 
 
-
-
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from stable_baselines3 import PPO
@@ -69,24 +67,7 @@ from stable_baselines3.common.save_util import load_from_zip_file
 import random
 import gym_macro_overcooked
 
-from gym.envs.registration import register
-
-# MANUAL REGISTRATION START 
-try:
-    # 1. Register the Single-Agent Environment
-    register(
-        id='Overcooked-v0',
-        entry_point='gym_macro_overcooked.overcooked_equilibrium:Overcooked_equilibrium',
-    )
-    # 2. Register the Multi-Agent Environment
-    register(
-        id='Overcooked-MA-v0',
-        entry_point='gym_macro_overcooked.overcooked_MA_equilibrium:Overcooked_MA_equilibrium',
-    )
-    print("--> SUCCESS: Manually registered Overcooked-v0 and Overcooked-MA-v0")
-except Exception as e:
-    # It might already be registered, which is fine
-    print(f"--> Registration Note: {e}")
+print("--> Loaded gym_macro_overcooked (Environments: Overcooked-equilibrium-v0)")
 
 from gym_macro_overcooked.items import Tomato, Lettuce, Onion, Plate, Knife, Delivery, Agent, Food, DirtyPlate
 
@@ -165,8 +146,8 @@ rewardList = [{
 # 一个键对应一个 (layout, model) 组合
 LAYOUT_CONFIG = {
     "layout_practice": {
-        "env_id":     "Overcooked-v0",
-        "mac_env_id": "Overcooked-MA-v0",
+        "env_id":     "Overcooked-equilibrium-v0",
+        "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "A",
         "model":      "none",         # 练习局：不加载RL模型，AI驻留
         "grid_dim":   [5, 5],
@@ -175,32 +156,32 @@ LAYOUT_CONFIG = {
 
 
     "layout1_model1": {
-        "env_id":     "Overcooked-v0",
-        "mac_env_id": "Overcooked-MA-v4",
+        "env_id":     "Overcooked-equilibrium-v0",
+        "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "B",
         "model":      "layout1_model1",  # TrustPOMDP
         "grid_dim":   [15, 15],
         "n_agent":    2
     },
     "layout1_model2": {
-        "env_id":     "Overcooked-v0",
-        "mac_env_id": "Overcooked-MA-v4",
+        "env_id":     "Overcooked-equilibrium-v0",
+        "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "B",
         "model":      "layout1_model2",  # FCP
         "grid_dim":   [15, 15],
         "n_agent":    2
     },
     "layout1_model3": {
-        "env_id":     "Overcooked-v0",
-        "mac_env_id": "Overcooked-MA-v4",
+        "env_id":     "Overcooked-equilibrium-v0",
+        "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "B",
         "model":      "layout1_model3",  # MEP
         "grid_dim":   [15, 15],
         "n_agent":    2
     },
     "layout1_model4": {
-        "env_id":     "Overcooked-v0",
-        "mac_env_id": "Overcooked-MA-v4",
+        "env_id":     "Overcooked-equilibrium-v0",
+        "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "B",
         "model":      "layout1_model4",  # POMDP
         "grid_dim":   [15, 15],
@@ -210,32 +191,32 @@ LAYOUT_CONFIG = {
 
 
     "layout2_model1": {
-        "env_id":     "Overcooked-v0",
-        "mac_env_id": "Overcooked-MA-v3",
+        "env_id":     "Overcooked-equilibrium-v0",
+        "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "A",
         "model":      "layout2_model1",  # TrustPOMDP
         "grid_dim":   [15, 15],
         "n_agent":    2
     },
     "layout2_model2": {
-        "env_id":     "Overcooked-v0",
-        "mac_env_id": "Overcooked-MA-v3",
+       "env_id":     "Overcooked-equilibrium-v0",
+        "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "A",
         "model":      "layout2_model2",  # FCP
         "grid_dim":   [15, 15],
         "n_agent":    2
     },
     "layout2_model3": {
-        "env_id":     "Overcooked-v0",
-        "mac_env_id": "Overcooked-MA-v3",
+        "env_id":     "Overcooked-equilibrium-v0",
+        "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "A",
         "model":      "layout2_model3",  # MEP
         "grid_dim":   [15, 15],
         "n_agent":    2
     },
     "layout2_model4": {
-        "env_id":     "Overcooked-v0",
-        "mac_env_id": "Overcooked-MA-v3",
+        "env_id":     "Overcooked-equilibrium-v0",
+        "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "A",
         "model":      "layout2_model4",  # POMDP
         "grid_dim":   [15, 15],
@@ -245,32 +226,32 @@ LAYOUT_CONFIG = {
 
 
     "layout3_model1": {
-        "env_id":     "Overcooked-v0",
-        "mac_env_id": "Overcooked-MA-v4",
+        "env_id":     "Overcooked-equilibrium-v0",
+        "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "B_lowuncertainty",
         "model":      "layout3_model1",  # TrustPOMDP
         "grid_dim":   [15, 15],
         "n_agent":    2
     },
     "layout3_model2": {
-        "env_id":     "Overcooked-v0",
-        "mac_env_id": "Overcooked-MA-v4",
+        "env_id":     "Overcooked-equilibrium-v0",
+        "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "B_lowuncertainty",
         "model":      "layout3_model2",  # FCP
         "grid_dim":   [15, 15],
         "n_agent":    2
     },
     "layout3_model3": {
-        "env_id":     "Overcooked-v0",
-        "mac_env_id": "Overcooked-MA-v4",
+        "env_id":     "Overcooked-equilibrium-v0",
+        "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "B_lowuncertainty",
         "model":      "layout3_model3",  # MEP
         "grid_dim":   [15, 15],
         "n_agent":    2
     },
     "layout3_model4": {
-        "env_id":     "Overcooked-v0",
-        "mac_env_id": "Overcooked-MA-v4",
+        "env_id":     "Overcooked-equilibrium-v0",
+        "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "B_lowuncertainty",
         "model":      "layout3_model4",  # POMDP
         "grid_dim":   [15, 15],
@@ -280,32 +261,32 @@ LAYOUT_CONFIG = {
 
 
     "layout4_model1": {
-        "env_id":     "Overcooked-v0",
-        "mac_env_id": "Overcooked-MA-v5",
+        "env_id":     "Overcooked-equilibrium-v0",
+        "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "A_lowuncertainty",
         "model":      "layout4_model1",  # TrustPOMDP
         "grid_dim":   [15, 15],
         "n_agent":    2
     },
     "layout4_model2": {
-        "env_id":     "Overcooked-v0",
-        "mac_env_id": "Overcooked-MA-v5",
+        "env_id":     "Overcooked-equilibrium-v0",
+        "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "A_lowuncertainty",
         "model":      "layout4_model2",  # FCP
         "grid_dim":   [15, 15],
         "n_agent":    2
     },
     "layout4_model3": {
-        "env_id":     "Overcooked-v0",
-        "mac_env_id": "Overcooked-MA-v5",
+        "env_id":     "Overcooked-equilibrium-v0",
+        "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "A_lowuncertainty",
         "model":      "layout4_model3",  # MEP
         "grid_dim":   [15, 15],
         "n_agent":    2
     },
     "layout4_model4": {
-        "env_id":     "Overcooked-v0",
-        "mac_env_id": "Overcooked-MA-v5",
+        "env_id":     "Overcooked-equilibrium-v0",
+        "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "A_lowuncertainty",
         "model":      "layout4_model4",  # POMDP
         "grid_dim":   [15, 15],
@@ -1051,7 +1032,7 @@ def create_envs_for_session(sess: Session, config_id: str):
         env.agent[0].x, env.agent[0].y = 0, 4  # top-right
         env.agent[1].x, env.agent[1].y = 4, 0  # bottom-left
         
-        env._updateMap()
+        # env._updateMap()
 
     # 5) 初始 obs
     sess.obs = sess.wrapper.reset()

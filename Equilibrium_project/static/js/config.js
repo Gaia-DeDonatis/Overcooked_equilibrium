@@ -4,26 +4,45 @@ const SERVER_URL = 'http://localhost:5000';
 
 // Configuration
 const CONFIG = {
-    PRACTICE_SCORE: 200, // Points needed to pass practice
-    TOTAL_ROUNDS: 5     // Rounds per phase
+    PRACTICE_SCORE: 200,    // Points needed to pass practice
+    ROUNDS_PER_PHASE: 7,    // 7 rounds per phase = 14 total
+    MAX_STEPS: 200          // Steps per round (matches backend)
 };
 
 // Global State (Shared across all files)
 const STATE = {
     sessionId: null,
-    phase: 0,        // 0: Practice, 1: Phase 1, 2: Phase 2
-    round: 1,
+    phase: 0,               // 0: Practice, 1: Phase 1, 2: Phase 2
+    round: 1,               // Current round within phase (1-7)
+    totalRounds: 0,         // Total rounds completed (0-14)
     isPlaying: false,
     gameOver: false,
     practiceScore: 0,
-    configId: null,  // Current layout ID sent to server
-    assignment: {}   // Stores which model the user gets
+    configId: null,         // Current config sent to server (e.g., "layout1_model1")
+    assignment: {
+        layout: null,       // Assigned layout (layout1-4)
+        phase1Model: null,  // Phase 1 model (model1-4)
+        phase2Model: null   // Phase 2 model (model1-4)
+    }
 };
 
-// Logs to send to server
+// Logs to send to server at the end
 const LOGS = {
     prolificId: "",
-    rounds: [],
-    questionnaire: {}
+    age: null,
+    gender: "",
+    assignment: {},
+    rounds: [],             // Array of round data
+    phase1Questionnaire: {},
+    phase2Questionnaire: {},
+    finalFeedback: ""
 };
-let currentRoundSteps = []; // Buffer for current round steps
+
+// Temporary buffer for current round
+let currentRoundData = {
+    roundNumber: 0,
+    phase: 0,
+    steps: [],
+    finalScore: 0,
+    humanSteps: 0
+};
