@@ -568,7 +568,8 @@
       </div>
     </section>
 
-    <section id="page-mid-questionnaire" class="container hidden" style="max-width: 800px; margin: 40px auto;">
+    <!-- Questionnaire Phase 1-->
+    <section id="page-phase-1-qs" class="container hidden" style="max-width: 800px; margin: 40px auto;">
       <div class="card">
         
         <div style="text-align: center; margin-bottom: 40px;">
@@ -662,161 +663,167 @@
       </div>
     </section>
 
-    <section id="page-phase2-intro" class="card hidden" style="text-align:center; padding:40px;">
-      <h1 style="color:#7c3aed; margin-top:0;">Phase 2: Adaptation</h1>
+    <!-- Phase 2-->
+    <section id="page-phase-2" class="card hidden">
+      <h2 style="color:#16a34a; text-align:center;">Phase 2: Adaptation</h2>
+      <p class="muted" style="text-align:center;">The AI has updated. Notice the changes!</p>
       
-      <div style="background-color:#f5f3ff; border:2px solid #ddd6fe; border-radius:10px; padding:20px; max-width:600px; margin:20px auto;">
-        <div style="font-size:48px; margin-bottom:10px;">🤖✨</div>
-        <h3 style="color:#5b21b6; margin:0 0 10px 0;">AI Partner Updated</h3>
-        <p style="font-size:18px; line-height:1.6; color:#4c1d95; margin:0;">
-          The AI has analyzed your play style during Phase 1.<br>
-          It has now <strong>adapted its strategy</strong> to work better with you.
-        </p>
-        <p style="margin-top:15px; font-weight:bold;">Goal: Find your new "Flow" with this updated partner.</p>
+      <div style="display:flex; justify-content:center; gap:20px; margin:20px 0;">
+        <div class="pill">
+          <span>Phase <strong id="currentPhase_2">2</strong></span>
+        </div>
+        <div class="pill">
+          <span>Round <strong id="currentRound_2">1 / 7</strong></span>
+        </div>
+        <div class="pill">
+          <span>Time: <strong id="stepsLeft_2" style="color:#2563eb;">0:45</strong></span>
+        </div>
+        <div class="pill" style="background:#f0fdf4; color:#15803d;">
+          <span>Score: <strong id="currentScore_2">0</strong></span>
+        </div>
       </div>
-
-      <button id="btn-start-phase2" class="btn success" style="font-size:22px; padding:15px 40px; margin-top:20px;">
-        Start Phase 2
-      </button>
+        
+      <div class="game-viewport" style="position: relative;">
+        <canvas id="gameCanvas_2" width="600" height="600"></canvas>
+          
+        <div id="round-overlay_2" class="hidden" style="
+            position: absolute; 
+            top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(255, 255, 255, 0.95); 
+            display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; 
+            z-index: 50; transition: opacity 0.5s ease;
+            border-radius: 8px;">
+            
+            <h1 id="overlay-title_2" style="color: #2563eb; font-size: 40px; margin: 0; text-transform: uppercase; letter-spacing: 2px;">
+              Round 1 Complete
+            </h1>
+            <p id="overlay-subtitle_2" style="color: #666; font-size: 20px; margin-top: 10px; font-weight: bold;">
+              Next round starting...
+            </p>
+        </div>
+      </div>
     </section>
 
-  <section id="page-phase-2" class="card hidden">
-    <h2 style="color:#16a34a; text-align:center;">Phase 2: Adaptation</h2>
-    <p class="muted" style="text-align:center;">The AI has updated. Notice the changes!</p>
-    
-    <div style="display:flex; justify-content:center; gap:20px; margin:20px 0;">
-      <div class="pill" style="background:#f0fdf4; color:#15803d;">
-        <span>Phase <strong>2</strong></span>
-      </div>
-      <div class="pill">
-        <span>Round <strong id="currentRound">1 / 7</strong></span>
-      </div>
-      <div class="pill">
-        <span>Steps Left: <strong id="stepsLeft">200</strong></span>
-      </div>
-      <div class="pill" style="background:#f0fdf4; color:#15803d;">
-        <span>Score: <strong id="currentScore">0</strong></span>
-      </div>
-    </div>
-  
-    <div class="game-viewport">
-      <canvas id="gameCanvas" width="600" height="600"></canvas>
-    </div>
-  
-    <!-- Reuse the same round-end-panel as Phase 1 -->
-    <div id="round-end-panel" class="hidden" style="background:#f0fdf4; border:2px solid #22c55e; border-radius:12px; padding:25px; margin-top:20px; text-align:center;">
-      <h3 style="color:#15803d; margin:0 0 15px 0;">Round Complete! 🎉</h3>
-      <div style="display:flex; justify-content:center; gap:30px; margin-bottom:20px;">
-        <div>
-          <p style="margin:0; color:#666; font-size:14px;">Team Score</p>
-          <p style="margin:5px 0 0 0; font-size:32px; font-weight:bold; color:#15803d;" id="round-score">0</p>
-        </div>
-        <div>
-          <p style="margin:0; color:#666; font-size:14px;">Your Steps</p>
-          <p style="margin:5px 0 0 0; font-size:32px; font-weight:bold; color:#7c3aed;" id="round-steps">0</p>
-        </div>
-      </div>
-      <p style="color:#16a34a; font-weight:600; margin-bottom:15px;">Excellent work! 🌟</p>
-      <button id="btn-next-round" class="btn success">Next Round</button>
-    </div>
-  </section>
-
-  <!-- Questionnaire Phase 2-->
-  <section id="page-phase-2-qs" class="card hidden" style="max-width:700px; margin:40px auto;">
-    <h2 style="color:#2563eb; margin-top:0;">Phase 2 Complete - Final Questions</h2>
-    <p class="muted">Please rate your experience during Phase 2.</p>
-    <div class="hr"></div>
-
-    <div style="margin-bottom:30px;">
-      <p style="font-weight:bold; margin-bottom:12px;">
-        1. How mentally demanding was it to play with the AI partner in Phase 2?
-      </p>
-      <p style="font-size:13px; color:#666; margin-bottom:10px;">
-        (1 = Very Easy, 7 = Very Demanding)
-      </p>
-      <div class="likert-7">
-        <input type="radio" name="p2_cognitive" value="1" aria-label="1 - Very Easy" />
-        <input type="radio" name="p2_cognitive" value="2" aria-label="2" />
-        <input type="radio" name="p2_cognitive" value="3" aria-label="3" />
-        <input type="radio" name="p2_cognitive" value="4" aria-label="4 - Neutral" />
-        <input type="radio" name="p2_cognitive" value="5" aria-label="5" />
-        <input type="radio" name="p2_cognitive" value="6" aria-label="6" />
-        <input type="radio" name="p2_cognitive" value="7" aria-label="7 - Very Demanding" />
+    <!-- Questionnaire Phase 2-->
+    <section id="page-phase-2-qs" class="container hidden" style="max-width: 800px; margin: 40px auto;">
+      <div class="card">
         
-        <span class="scale-label">Very Easy</span>
-        <span class="scale-label"></span>
-        <span class="scale-label"></span>
-        <span class="scale-label">Neutral</span>
-        <span class="scale-label"></span>
-        <span class="scale-label"></span>
-        <span class="scale-label">Very Demanding</span>
+        <div style="text-align: center; margin-bottom: 40px;">
+          <h1 style="color:#2563eb; margin-bottom: 5px;">Phase 2 Complete!</h1>
+          <p class="muted">Here is a summary of your performance with the Phase 2 AI.</p>
+
+          <div style="margin: 20px 0; overflow-x: auto; border: 1px solid #e5e7eb; border-radius: 8px;">
+            <table style="width: 100%; border-collapse: collapse; text-align: center;">
+              <thead>
+                <tr style="background: #eff6ff; color: #1e3a8a;">
+                  <th style="padding: 12px;">Round</th>
+                  <th style="padding: 12px;">Score</th>
+                  <th style="padding: 12px;">Dishes</th>
+                  <th style="padding: 12px;">Your Steps</th>
+                </tr>
+              </thead>
+              <tbody id="summary-table-body-2">
+                </tbody>
+            </table>
+          </div>
+        </div>
+
+        <hr style="border: 0; border-top: 2px dashed #e5e7eb; margin: 40px 0;">
+
+        <div>
+          <h2 style="color:#1e3a8a; text-align: center; margin-bottom: 20px;">Final Evaluation</h2>
+          <p class="muted text-center" style="margin-bottom: 30px;">Based on Phase 2, please rate your experience.</p>
+
+          <div style="margin-bottom:25px; padding:20px; background:#f9fafb; border-radius:8px;">
+            <p style="font-weight:bold; margin-bottom:8px;">1. Mental Effort (Cognitive Load)</p>
+            <div class="likert-7" style="display:flex; justify-content:space-between;">
+              <label><input type="radio" name="post_load" value="1"> 1</label>
+              <label><input type="radio" name="post_load" value="2"> 2</label>
+              <label><input type="radio" name="post_load" value="3"> 3</label>
+              <label><input type="radio" name="post_load" value="4"> 4</label>
+              <label><input type="radio" name="post_load" value="5"> 5</label>
+              <label><input type="radio" name="post_load" value="6"> 6</label>
+              <label><input type="radio" name="post_load" value="7"> 7</label>
+            </div>
+          </div>
+
+          <div style="margin-bottom:25px; padding:20px; background:#f9fafb; border-radius:8px;">
+            <p style="font-weight:bold; margin-bottom:8px;">2. Cooperation & Flow</p>
+            <div class="likert-7" style="display:flex; justify-content:space-between;">
+              <label><input type="radio" name="post_collab" value="1"> 1</label>
+              <label><input type="radio" name="post_collab" value="2"> 2</label>
+              <label><input type="radio" name="post_collab" value="3"> 3</label>
+              <label><input type="radio" name="post_collab" value="4"> 4</label>
+              <label><input type="radio" name="post_collab" value="5"> 5</label>
+              <label><input type="radio" name="post_collab" value="6"> 6</label>
+              <label><input type="radio" name="post_collab" value="7"> 7</label>
+            </div>
+          </div>
+
+          <div style="margin-bottom:25px; padding:20px; background:#f9fafb; border-radius:8px;">
+            <p style="font-weight:bold; margin-bottom:8px;">3. Role Strategy</p>
+            <div class="likert-7" style="display:flex; justify-content:space-between;">
+              <label><input type="radio" name="post_strategy" value="1"> 1</label>
+              <label><input type="radio" name="post_strategy" value="2"> 2</label>
+              <label><input type="radio" name="post_strategy" value="3"> 3</label>
+              <label><input type="radio" name="post_strategy" value="4"> 4</label>
+              <label><input type="radio" name="post_strategy" value="5"> 5</label>
+              <label><input type="radio" name="post_strategy" value="6"> 6</label>
+              <label><input type="radio" name="post_strategy" value="7"> 7</label>
+            </div>
+          </div>
+
+          <div style="margin-bottom:25px; padding:20px; background:#f9fafb; border-radius:8px;">
+            <p style="font-weight:bold; margin-bottom:8px;">4. Predictability</p>
+            <div class="likert-7" style="display:flex; justify-content:space-between;">
+              <label><input type="radio" name="post_predict" value="1"> 1</label>
+              <label><input type="radio" name="post_predict" value="2"> 2</label>
+              <label><input type="radio" name="post_predict" value="3"> 3</label>
+              <label><input type="radio" name="post_predict" value="4"> 4</label>
+              <label><input type="radio" name="post_predict" value="5"> 5</label>
+              <label><input type="radio" name="post_predict" value="6"> 6</label>
+              <label><input type="radio" name="post_predict" value="7"> 7</label>
+            </div>
+          </div>
+
+          <div style="margin-bottom:30px;">
+            <p style="font-weight:bold; margin-bottom:12px;">3. (Optional) Any additional feedback?</p>
+            <textarea id="final-feedback" rows="4" style="width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:6px;"></textarea>
+          </div>
+
+          <div class="center" style="margin-top:40px;">
+            <button id="btn-submit-final-survey" class="btn btn-primary" style="font-size:18px; padding:12px 35px;">
+              Submit & End Experiment
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <div style="margin-bottom:30px;">
-      <p style="font-weight:bold; margin-bottom:12px;">
-        2. How well did you and the AI collaborate as a team in Phase 2?
+    <!-- End page-->
+    <section id="page-end" class="card hidden center" style="padding: 60px 20px;">
+      <div style="font-size:64px; margin-bottom: 20px;">🎉</div>
+      <h2 style="color:#16a34a; font-size: 32px; margin-top:0;">Experiment Complete!</h2>
+      <p style="font-size: 18px; color: #4b5563; max-width: 500px; margin: 0 auto 30px auto;">
+          Thank you for your participation. Your data has been successfully recorded for our study on Human-AI Collaboration.
       </p>
-      <p style="font-size:13px; color:#666; margin-bottom:10px;">
-        (1 = Very Poorly, 7 = Excellent)
-      </p>
-      <div class="likert-7">
-        <input type="radio" name="p2_collab" value="1" aria-label="1 - Very Poorly" />
-        <input type="radio" name="p2_collab" value="2" aria-label="2" />
-        <input type="radio" name="p2_collab" value="3" aria-label="3" />
-        <input type="radio" name="p2_collab" value="4" aria-label="4 - Neutral" />
-        <input type="radio" name="p2_collab" value="5" aria-label="5" />
-        <input type="radio" name="p2_collab" value="6" aria-label="6" />
-        <input type="radio" name="p2_collab" value="7" aria-label="7 - Excellent" />
-        
-        <span class="scale-label">Very Poorly</span>
-        <span class="scale-label"></span>
-        <span class="scale-label"></span>
-        <span class="scale-label">Neutral</span>
-        <span class="scale-label"></span>
-        <span class="scale-label"></span>
-        <span class="scale-label">Excellent</span>
+      
+      <div id="completionCodeWrap" class="hidden" style="margin-top:20px; padding:25px; background:#f0fdf4; border:2px solid #22c55e; border-radius:12px; max-width: 400px; margin-left: auto; margin-right: auto;">
+          <p style="margin:0; color:#15803d; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-size: 14px;">
+              Your Completion Code:
+          </p>
+          <p id="completionCode" style="font-family: monospace; font-weight:700; font-size:32px; margin:10px 0; color: #14532d;"></p>
+          <p style="font-size: 13px; color: #16a34a; margin-top: 10px;">
+              Please copy this code and paste it back into Prolific.
+          </p>
       </div>
-    </div>
 
-    <div class="hr"></div>
+      <div style="margin-top: 40px;">
+          <p class="muted" style="font-style: italic;">You may now close this window.</p>
+      </div>
+    </section>
 
-    <div style="margin-bottom:30px;">
-      <p style="font-weight:bold; margin-bottom:12px;">
-        3. (Optional) Any additional feedback about your experience?
-      </p>
-      <textarea id="final-feedback" rows="4" style="width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:6px;" placeholder="Feel free to share any thoughts..."></textarea>
-    </div>
-
-    <div class="center" style="margin-top:40px;">
-      <button id="btn-phase2-qs-submit" class="btn success" style="font-size:20px; padding:12px 40px;">
-        Submit & Finish
-      </button>
-    </div>
-  </section>
-
-
-  <section id="page-end" class="card hidden center" style="padding: 60px 20px;">
-    <div style="font-size:64px; margin-bottom: 20px;">🎉</div>
-    <h2 style="color:#16a34a; font-size: 32px; margin-top:0;">Experiment Complete!</h2>
-    <p style="font-size: 18px; color: #4b5563; max-width: 500px; margin: 0 auto 30px auto;">
-        Thank you for your participation. Your data has been successfully recorded for our study on Human-AI Collaboration.
-    </p>
-    
-    <div id="completionCodeWrap" class="hidden" style="margin-top:20px; padding:25px; background:#f0fdf4; border:2px solid #22c55e; border-radius:12px; max-width: 400px; margin-left: auto; margin-right: auto;">
-        <p style="margin:0; color:#15803d; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-size: 14px;">
-            Your Completion Code:
-        </p>
-        <p id="completionCode" style="font-family: monospace; font-weight:700; font-size:32px; margin:10px 0; color: #14532d;"></p>
-        <p style="font-size: 13px; color: #16a34a; margin-top: 10px;">
-            Please copy this code and paste it back into Prolific/MTurk.
-        </p>
-    </div>
-
-    <div style="margin-top: 40px;">
-        <p class="muted" style="font-style: italic;">You may now close this window.</p>
-    </div>
-  </section>
   </div>
 
   <script src="static/js/config.js"></script>

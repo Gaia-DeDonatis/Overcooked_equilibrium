@@ -1,4 +1,12 @@
 // static/js/controller.js
+const debugging = true;
+const pages_debugging = [
+        'page-intro', 'page-consent', 'page-instruction-1',
+        'page-instruction-2a','page-instruction-2b','page-instruction-2c',
+        'page-phase-1', 'page-phase-1-qs', 'page-intermission', 
+        'page-phase-2', 'page-phase-2-qs', 'page-end'
+    ];
+const debugging_page = pages_debugging[4];
 
 // --- 1. API HELPER ---
 async function api(endpoint, data={}) {
@@ -25,9 +33,11 @@ function assignConditions() {
     const layouts = ["layout1", "layout2", "layout3", "layout4"];
     const models = ["model1", "model2", "model3", "model4"];
     
-    STATE.assignment.layout = layouts[h % 4];
-    STATE.assignment.phase1Model = models[h % 4];
-    STATE.assignment.phase2Model = models[(h + 1) % 4]; // Different model for phase 2
+    STATE.assignment.layout = layouts[h % layouts.length];
+    
+    // Assign Models (Phase 1 vs Phase 2)
+    STATE.assignment.phase1Model = models[h % models.length];
+    STATE.assignment.phase2Model = models[(h + 1) % models.length];
     
     LOGS.assignment = STATE.assignment;
     
@@ -61,32 +71,51 @@ function showPage(pageId) {
 
 // --- 4. GAME INITIALIZATION (TIME-BASED) ---
 
-let gameTimer = null; // Stores the interval ID
-let timeLeft = 0;     // Stores seconds remaining
+let gameTimer = null;
+let timeLeft = 0;
 
 // A. START PHASE (Setup Model & Layout)
 async function startPhase(phaseNum) {
+
+    if (!STATE.assignment || !STATE.assignment.layout) {
+            console.warn("⚠️ Conditions missing. Auto-assigning defaults.");
+            // Make sure these match your Backend keys exactly!
+            STATE.assignment = {
+                layout: "layout1", 
+                phase1Model: "model1", 
+                phase2Model: "model2"
+            };
+            LOGS.assignment = STATE.assignment;
+        }
+
     STATE.phase = phaseNum;
     STATE.round = 1;
     STATE.gameOver = false;
     
     // Determine which model to use
-    let modelId = phaseNum === 1 ? STATE.assignment.phase1Model : STATE.assignment.phase2Model;
+    let modelId = (phaseNum === 1) ? STATE.assignment.phase1Model : STATE.assignment.phase2Model;
     STATE.configId = `${STATE.assignment.layout}_${modelId}`;
+
+    if (phaseNum === 1) {
+        showPage('page-phase-1');
+    } else if (phaseNum === 2) {
+        showPage('page-phase-2');
+    }
+
+    if (debugging) {showPage(debugging_page)};
     
     console.log(`Starting Phase ${phaseNum} with ${STATE.configId}`);
     await startRound();
 }
 
-// B. START ROUND (Reset Backend & Start Timer)
+// B. START ROUND
 async function startRound() {
     STATE.isPlaying = false;
     STATE.gameOver = false;
     
-    // 1. Clear any old timer
     if (gameTimer) clearInterval(gameTimer);
 
-    // 2. Initialize Round Data
+    // Initialize Data
     currentRoundData = {
         roundNumber: STATE.totalRounds + 1,
         phase: STATE.phase,
@@ -98,16 +127,15 @@ async function startRound() {
     };
     
     try {
-        // 3. Reset Environment
         const data = await api('/reset', { config_id: STATE.configId });
         
         if (data.state) {
             STATE.isPlaying = true;
-            drawGame(data.state, 'gameCanvas');
             
-            // 4. Start the 45-Second Timer
+            // FIX: Removed 'gameCanvas'. Now drawGame() decides based on STATE.phase
+            drawGame(true); 
+            //drawGame(data.state); 
             startTimer(CONFIG.ROUND_DURATION_SEC);
-            
             updateGameUI();
         }
     } catch (err) {
@@ -126,7 +154,6 @@ function startTimer(duration) {
         updateTimerDisplay();
 
         if (timeLeft <= 0) {
-            // TIME IS UP!
             clearInterval(gameTimer);
             finishTimeBasedRound();
         }
@@ -147,14 +174,16 @@ function updateTimerDisplay() {
 
 // D. UI UPDATER
 function updateGameUI() {
-    const phaseEl = document.getElementById('currentPhase');
-    const roundEl = document.getElementById('currentRound');
+    let suffix = (STATE.phase === 2) ? '_2' : '';
+    
+    const phaseEl = document.getElementById(`currentPhase${suffix}`);
+    const roundEl = document.getElementById(`currentRound${suffix}`);
     
     if(phaseEl) phaseEl.innerText = STATE.phase;
     if(roundEl) roundEl.innerText = `${STATE.round} / ${CONFIG.ROUNDS_PER_PHASE}`;
 }
 
-// E. END ROUND (Triggered by Timer)
+// E. END ROUND
 async function finishTimeBasedRound() {
     if (STATE.gameOver) return;
     
@@ -162,64 +191,59 @@ async function finishTimeBasedRound() {
     STATE.gameOver = true;
     console.log("TIME IS UP!");
 
-    // 1. Finalize Data
-    const scoreEl = document.getElementById('currentScore');
+    // 1. Get Final Score (You already had this correct!)
+    let scoreId = (STATE.phase === 2) ? 'currentScore_2' : 'currentScore';
+    const scoreEl = document.getElementById(scoreId);
     const finalScore = scoreEl ? parseInt(scoreEl.innerText) : 0;
     
     currentRoundData.finalScore = finalScore;
     currentRoundData.endTime = Date.now();
     currentRoundData.duration = CONFIG.ROUND_DURATION_SEC;
     
-    // 2. Save Log
     LOGS.rounds.push({...currentRoundData});
     STATE.totalRounds++; 
     
-    // Rounds repetition
+    // FIX: Determine Overlay IDs dynamically
+    let suffix = (STATE.phase === 2) ? '_2' : '';
+    const overlayId = `round-overlay${suffix}`;
+    const titleId   = `overlay-title${suffix}`;
+    const subId     = `overlay-subtitle${suffix}`;
+
     if (STATE.round < CONFIG.ROUNDS_PER_PHASE) {
-        
-        // animation overlay
-        const overlay = document.getElementById('round-overlay');
-        const title = document.getElementById('overlay-title');
-        const sub = document.getElementById('overlay-subtitle');
+        // --- CASE A: NEXT ROUND ---
+        const overlay = document.getElementById(overlayId);
+        const title   = document.getElementById(titleId);
+        const sub     = document.getElementById(subId);
         
         if(overlay) {
-            // Update Text for "Round Complete"
             if(title) {
                 title.innerText = `ROUND ${STATE.round} COMPLETE`;
-                title.style.color = "#16a34a"; // Green
+                title.style.color = "#16a34a";
             }
             if(sub) sub.innerText = `Score: ${finalScore} | Next round in 3...`;
             
-            // Fade In
             overlay.classList.remove('hidden');
             overlay.style.opacity = '0';
             setTimeout(() => overlay.style.opacity = '1', 50); 
         }
 
-        // countdown
         let countdown = 3;
         const interval = setInterval(() => {
             countdown--;
             if(sub) sub.innerText = `Score: ${finalScore} | Next round in ${countdown}...`;
         }, 1000);
 
-        // AUTO-START NEXT ROUND
         setTimeout(() => {
             clearInterval(interval);
-            
-            // Increment Round
             STATE.round++;
             
-            // Update Overlay for "Start"
             if(title) {
                 title.innerText = `ROUND ${STATE.round}`;
-                title.style.color = "#2563eb"; // Blue
+                title.style.color = "#2563eb"; 
             }
             if(sub) sub.innerText = "GO!";
             
-            // Start the actual game logic
             startRound().then(() => {
-                // Fade Out Overlay when game is ready
                 setTimeout(() => {
                     if(overlay) overlay.style.opacity = '0';
                     setTimeout(() => {
@@ -228,40 +252,36 @@ async function finishTimeBasedRound() {
                 }, 500); 
             });
             
-        }, 3000); // 3 seconds total pause
+        }, 3000);
         
     } else {
-        // CASE B: PHASE COMPLETE
+        // --- CASE B: PHASE COMPLETE ---
         console.log(`Phase ${STATE.phase} Complete!`);
-        
-        // Hide overlay if visible
-        document.getElementById('round-overlay')?.classList.add('hidden');
+        document.getElementById(overlayId)?.classList.add('hidden');
+
+        // FIX: Ensure Summary handles the current phase
+        renderPhaseSummary(); 
 
         if(STATE.phase === 1) {
-            // 1. SUMMARY TABLE
-            if(typeof renderPhaseSummary === 'function') {
-                renderPhaseSummary();
-            }
-            // 2. QUESTIONNAIRE PAGE
-            showPage('page-mid-questionnaire');
+            showPage('page-phase-1-qs');
         } else {
             // End of Experiment
-            finishExperiment(); 
+            showPage('page-phase-2-qs'); 
         }
     }
 }
 
-
 // F. SUMMARY TABLE
 function renderPhaseSummary() {
-    const tbody = document.getElementById('summary-table-body');
+    let tableId = (STATE.phase === 2) ? 'summary-table-body-2' : 'summary-table-body';
+    const tbody = document.getElementById(tableId);
     if(!tbody) return;
 
     tbody.innerHTML = ''; 
 
-    const phase1Rounds = LOGS.rounds.filter(r => r.phase === 1);
+    const rounds = LOGS.rounds.filter(r => r.phase === STATE.phase);
 
-    phase1Rounds.forEach(round => {
+    rounds.forEach(round => {
         const realDishes = round.dishesServed || 0;
 
         const row = `
@@ -310,19 +330,23 @@ document.addEventListener('keydown', async (e) => {
     // B. MAIN TASK LOGIC (Phase 1 or 2)
     else {
         const data = await api('/key_event', { key: e.key, config_id: STATE.configId });
-        drawGame(data.state, 'gameCanvas');
+        
+        const currentCanvasId = (STATE.phase === 2) ? 'gameCanvas_2' : 'gameCanvas';
+        drawGame(data.state, currentCanvasId); 
         
         // Update UI
-        document.getElementById('currentScore').innerText = Math.floor(data.cumulative_reward || 0);
+        let scoreId = (STATE.phase === 2) ? 'currentScore_2' : 'currentScore';
+        const scoreEl = document.getElementById(scoreId);
+        if(scoreEl) scoreEl.innerText = Math.floor(data.cumulative_reward || 0);
         
         // Log the step
+        currentRoundData.dishesServed = data.dishes_served || 0; 
         currentRoundData.steps.push({ 
             key: e.key, 
             reward: data.cumulative_reward,
             timestamp: Date.now()
         });
         
-        // Count human steps (not "Stay")
         if(e.key !== 'Stay') {
             currentRoundData.humanSteps++;
         }
@@ -417,6 +441,7 @@ if (btnNext2a) {
         QUIZ_ERRORS += errors;
         
         console.log(`Page 2a Errors: ${errors} | Current Total: ${QUIZ_ERRORS}`);
+        //showPage('page-instruction-2b');
         showPage('page-instruction-2b');
     };
 }
@@ -442,79 +467,72 @@ if (btnStartTask) {
 
         console.log(`Final Check. Total Cumulative Errors: ${QUIZ_ERRORS}`);
 
-        // --- EXCLUSION LOGIC ---
         if (QUIZ_ERRORS > 2) {
-            
-            // OPTION A: Show an alert and reload (Simple)
-            alert("Qualification Failed.\n\nYou answered too many comprehension questions incorrectly.\nTo ensure high-quality data, you cannot proceed with this experiment.");
+            alert("Qualification Failed.\n\nYou answered too many comprehension questions incorrectly.");
             location.reload(); 
-            
-            // OPTION B: Send them to the specific 'page-disqualified' div if you have one
-            // showPage('page-disqualified');
-
         } else {
-            // PASS: Start the Experiment
             console.log("Quiz Passed. Starting Phase 1...");
             
-            // 1. Show Game Canvas
-            showPage('page-phase-1');
+            // 1. CRITICAL: Ensure Assignment Exists
+            if (!STATE.assignment || !STATE.assignment.layout) {
+                assignConditions();
+            }
 
-            // 2. Initialize Game State
-            STATE.phase = 1; 
-            STATE.round = 1;
-            STATE.totalRounds = 0;
-            
-            // 3. Assign Experimental Conditions (Layout/Model)
-            assignConditions();
-            console.log("Conditions Assigned:", STATE.assignment);
-
-            // 4. Trigger Backend to Load Round 1
-            startRound(); 
+            // 2. Start Phase 1 (This handles Config ID and Showing Page)
+            startPhase(1); 
         }
     };
 }
 
 // --- 9. PHASE TRANSITIONS ---
 
-// After Phase 1 Questionnaire
-document.getElementById('btn-phase1-qs-submit')?.addEventListener('click', () => {
-    // Collect Phase 1 questionnaire data
-    LOGS.phase1Questionnaire = {
-        cognitiveLoad: parseInt(document.querySelector('input[name="p1_cognitive"]:checked')?.value || 0),
-        collaboration: parseInt(document.querySelector('input[name="p1_collab"]:checked')?.value || 0)
-    };
-    
-    if(LOGS.phase1Questionnaire.cognitiveLoad === 0 || LOGS.phase1Questionnaire.collaboration === 0) {
-        alert("Please answer both questions.");
+// A. Phase 1 Mid-Survey -> Start Phase 2
+// (Matches HTML ID: "btn-submit-mid-survey")
+document.getElementById('btn-submit-mid-survey')?.addEventListener('click', () => {
+    // 1. Validation
+    const qLoad = document.querySelector('input[name="mid_load"]:checked');
+    const qCollab = document.querySelector('input[name="mid_collab"]:checked');
+
+    if (!qLoad || !qCollab) {
+        alert("Please answer the required questions (Load & Cooperation).");
         return;
     }
-    
-    showPage('page-intermission');
-});
 
-// Start Phase 2
-document.getElementById('btnStartPhase2')?.addEventListener('click', () => {
-    showPage('page-phase-2');
+    // 2. Save Data
+    LOGS.phase1Questionnaire = {
+        cognitiveLoad: parseInt(qLoad.value),
+        collaboration: parseInt(qCollab.value),
+        strategy: document.querySelector('input[name="mid_strategy"]:checked')?.value,
+        predictability: document.querySelector('input[name="mid_predict"]:checked')?.value
+    };
+
+    // 3. Start Phase 2
     startPhase(2);
 });
 
-// After Phase 2 Questionnaire
-document.getElementById('btn-phase2-qs-submit')?.addEventListener('click', () => {
-    // Collect Phase 2 questionnaire data
-    LOGS.phase2Questionnaire = {
-        cognitiveLoad: parseInt(document.querySelector('input[name="p2_cognitive"]:checked')?.value || 0),
-        collaboration: parseInt(document.querySelector('input[name="p2_collab"]:checked')?.value || 0)
-    };
-    
-    const feedback = document.getElementById('final-feedback')?.value.trim() || "";
-    LOGS.finalFeedback = feedback;
-    
-    if(LOGS.phase2Questionnaire.cognitiveLoad === 0 || LOGS.phase2Questionnaire.collaboration === 0) {
-        alert("Please answer both rating questions.");
+// B. Phase 2 Final Survey -> Submit Data
+// (Matches HTML ID: "btn-submit-final-survey")
+document.getElementById('btn-submit-final-survey')?.addEventListener('click', () => {
+    // 1. Validation
+    const qLoad = document.querySelector('input[name="post_load"]:checked');
+    const qCollab = document.querySelector('input[name="post_collab"]:checked');
+
+    if (!qLoad || !qCollab) {
+        alert("Please answer the required questions.");
         return;
     }
+
+    // 2. Save Data
+    LOGS.phase2Questionnaire = {
+        cognitiveLoad: parseInt(qLoad.value),
+        collaboration: parseInt(qCollab.value),
+        strategy: document.querySelector('input[name="post_strategy"]:checked')?.value,
+        predictability: document.querySelector('input[name="post_predict"]:checked')?.value
+    };
     
-    // Submit all data to backend
+    LOGS.finalFeedback = document.getElementById('final-feedback')?.value || "";
+
+    // 3. Submit to Backend
     submitData();
 });
 

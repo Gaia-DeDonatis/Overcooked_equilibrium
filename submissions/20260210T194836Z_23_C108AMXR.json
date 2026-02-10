@@ -1,0 +1,1201 @@
+{
+  "prolificId": "23",
+  "age": 23,
+  "gender": "Female",
+  "assignment": {
+    "layout": "layout2",
+    "phase1Model": "model2",
+    "phase2Model": "model3"
+  },
+  "rounds": [
+    {
+      "roundNumber": 1,
+      "phase": 1,
+      "configId": "layout2_model2",
+      "steps": [
+        {
+          "key": "ArrowLeft",
+          "reward": -2,
+          "timestamp": 1770752809026
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -4,
+          "timestamp": 1770752810907
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -6,
+          "timestamp": 1770752811334
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -8,
+          "timestamp": 1770752812023
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -10,
+          "timestamp": 1770752812574
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -12,
+          "timestamp": 1770752813285
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -14,
+          "timestamp": 1770752813803
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -16,
+          "timestamp": 1770752814491
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -18,
+          "timestamp": 1770752814894
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -20,
+          "timestamp": 1770752815018
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -22,
+          "timestamp": 1770752815181
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -24,
+          "timestamp": 1770752815440
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -26,
+          "timestamp": 1770752815860
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -28,
+          "timestamp": 1770752816395
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -30,
+          "timestamp": 1770752816818
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -32,
+          "timestamp": 1770752817044
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -34,
+          "timestamp": 1770752817541
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -36,
+          "timestamp": 1770752817588
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -28,
+          "timestamp": 1770752817895
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -20,
+          "timestamp": 1770752818525
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -22,
+          "timestamp": 1770752819265
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -24,
+          "timestamp": 1770752819546
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -16,
+          "timestamp": 1770752819859
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -18,
+          "timestamp": 1770752820514
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -20,
+          "timestamp": 1770752820851
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -22,
+          "timestamp": 1770752821271
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -74,
+          "timestamp": 1770752821596
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -76,
+          "timestamp": 1770752823372
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -78,
+          "timestamp": 1770752823579
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -80,
+          "timestamp": 1770752823735
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -82,
+          "timestamp": 1770752823739
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -84,
+          "timestamp": 1770752823867
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -86,
+          "timestamp": 1770752823999
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -88,
+          "timestamp": 1770752824138
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -90,
+          "timestamp": 1770752824259
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -92,
+          "timestamp": 1770752824398
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -94,
+          "timestamp": 1770752825158
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -96,
+          "timestamp": 1770752825726
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -98,
+          "timestamp": 1770752826152
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -100,
+          "timestamp": 1770752826620
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -102,
+          "timestamp": 1770752826625
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -104,
+          "timestamp": 1770752826746
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -106,
+          "timestamp": 1770752826934
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -108,
+          "timestamp": 1770752827037
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -110,
+          "timestamp": 1770752827096
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -112,
+          "timestamp": 1770752827854
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -114,
+          "timestamp": 1770752827960
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -116,
+          "timestamp": 1770752828081
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -118,
+          "timestamp": 1770752828757
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -120,
+          "timestamp": 1770752829123
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -122,
+          "timestamp": 1770752829856
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -124,
+          "timestamp": 1770752830409
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -126,
+          "timestamp": 1770752830685
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -128,
+          "timestamp": 1770752830812
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -130,
+          "timestamp": 1770752830930
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -132,
+          "timestamp": 1770752831190
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -134,
+          "timestamp": 1770752831320
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -136,
+          "timestamp": 1770752831386
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -138,
+          "timestamp": 1770752831449
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -140,
+          "timestamp": 1770752831561
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -142,
+          "timestamp": 1770752831814
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -144,
+          "timestamp": 1770752831819
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -146,
+          "timestamp": 1770752832022
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -148,
+          "timestamp": 1770752832427
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -150,
+          "timestamp": 1770752833039
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -152,
+          "timestamp": 1770752833532
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -154,
+          "timestamp": 1770752833854
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -156,
+          "timestamp": 1770752833983
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -158,
+          "timestamp": 1770752834100
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -160,
+          "timestamp": 1770752834241
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -152,
+          "timestamp": 1770752834504
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -144,
+          "timestamp": 1770752834549
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -146,
+          "timestamp": 1770752834674
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -148,
+          "timestamp": 1770752834699
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -150,
+          "timestamp": 1770752835407
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -152,
+          "timestamp": 1770752836313
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -204,
+          "timestamp": 1770752836858
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -206,
+          "timestamp": 1770752838229
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -208,
+          "timestamp": 1770752838704
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -210,
+          "timestamp": 1770752838745
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -212,
+          "timestamp": 1770752838829
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -214,
+          "timestamp": 1770752839106
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -216,
+          "timestamp": 1770752839111
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -218,
+          "timestamp": 1770752839237
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -220,
+          "timestamp": 1770752839436
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -222,
+          "timestamp": 1770752839610
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -224,
+          "timestamp": 1770752839729
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -226,
+          "timestamp": 1770752839812
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -228,
+          "timestamp": 1770752840169
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -230,
+          "timestamp": 1770752840240
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -232,
+          "timestamp": 1770752840655
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -234,
+          "timestamp": 1770752840988
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -236,
+          "timestamp": 1770752841476
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -238,
+          "timestamp": 1770752841888
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -240,
+          "timestamp": 1770752843133
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -242,
+          "timestamp": 1770752843549
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -244,
+          "timestamp": 1770752843977
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -246,
+          "timestamp": 1770752844016
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -248,
+          "timestamp": 1770752844175
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -250,
+          "timestamp": 1770752844380
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -252,
+          "timestamp": 1770752844420
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -254,
+          "timestamp": 1770752844531
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -256,
+          "timestamp": 1770752844638
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -258,
+          "timestamp": 1770752844737
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -260,
+          "timestamp": 1770752844813
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -262,
+          "timestamp": 1770752845027
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -264,
+          "timestamp": 1770752845187
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -266,
+          "timestamp": 1770752845753
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -268,
+          "timestamp": 1770752845950
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -270,
+          "timestamp": 1770752846097
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -272,
+          "timestamp": 1770752846237
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -274,
+          "timestamp": 1770752846383
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -276,
+          "timestamp": 1770752846516
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -278,
+          "timestamp": 1770752846695
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -280,
+          "timestamp": 1770752846924
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -282,
+          "timestamp": 1770752847563
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -284,
+          "timestamp": 1770752847921
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -286,
+          "timestamp": 1770752848688
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -288,
+          "timestamp": 1770752849213
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -290,
+          "timestamp": 1770752849673
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -292,
+          "timestamp": 1770752850286
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -294,
+          "timestamp": 1770752850842
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -296,
+          "timestamp": 1770752850854
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -298,
+          "timestamp": 1770752851002
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -300,
+          "timestamp": 1770752851154
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -302,
+          "timestamp": 1770752851273
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -304,
+          "timestamp": 1770752851410
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -306,
+          "timestamp": 1770752851560
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -308,
+          "timestamp": 1770752851704
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -310,
+          "timestamp": 1770752851788
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -302,
+          "timestamp": 1770752852237
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -294,
+          "timestamp": 1770752852839
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -296,
+          "timestamp": 1770752853502
+        }
+      ],
+      "finalScore": -294,
+      "humanSteps": 132,
+      "startTime": 1770752806626,
+      "dishesServed": 0,
+      "endTime": 1770752853185,
+      "duration": 45
+    },
+    {
+      "roundNumber": 2,
+      "phase": 2,
+      "configId": "layout2_model3",
+      "steps": [
+        {
+          "key": "ArrowLeft",
+          "reward": -2,
+          "timestamp": 1770752863920
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -4,
+          "timestamp": 1770752865357
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -6,
+          "timestamp": 1770752865969
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -8,
+          "timestamp": 1770752866806
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -10,
+          "timestamp": 1770752867305
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -12,
+          "timestamp": 1770752867347
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -14,
+          "timestamp": 1770752867441
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -16,
+          "timestamp": 1770752867594
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -18,
+          "timestamp": 1770752867738
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -20,
+          "timestamp": 1770752867948
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -22,
+          "timestamp": 1770752868005
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -24,
+          "timestamp": 1770752868387
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -26,
+          "timestamp": 1770752869232
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -28,
+          "timestamp": 1770752870020
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -30,
+          "timestamp": 1770752870481
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -32,
+          "timestamp": 1770752870504
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -34,
+          "timestamp": 1770752870591
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -36,
+          "timestamp": 1770752870793
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -38,
+          "timestamp": 1770752870961
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -40,
+          "timestamp": 1770752871097
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -42,
+          "timestamp": 1770752871274
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": -44,
+          "timestamp": 1770752872111
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -46,
+          "timestamp": 1770752872645
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -48,
+          "timestamp": 1770752872947
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -50,
+          "timestamp": 1770752872989
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -52,
+          "timestamp": 1770752873568
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -54,
+          "timestamp": 1770752874041
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -56,
+          "timestamp": 1770752874080
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -58,
+          "timestamp": 1770752874156
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -60,
+          "timestamp": 1770752874291
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -62,
+          "timestamp": 1770752874452
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -64,
+          "timestamp": 1770752874710
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -66,
+          "timestamp": 1770752875014
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -68,
+          "timestamp": 1770752875374
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -70,
+          "timestamp": 1770752875521
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -72,
+          "timestamp": 1770752875776
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -74,
+          "timestamp": 1770752875782
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -76,
+          "timestamp": 1770752875905
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -78,
+          "timestamp": 1770752876156
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -80,
+          "timestamp": 1770752876172
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -82,
+          "timestamp": 1770752876299
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -84,
+          "timestamp": 1770752876349
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -86,
+          "timestamp": 1770752877259
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -88,
+          "timestamp": 1770752878086
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -80,
+          "timestamp": 1770752878491
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -72,
+          "timestamp": 1770752878701
+        },
+        {
+          "key": "ArrowRight",
+          "reward": -64,
+          "timestamp": 1770752879435
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -66,
+          "timestamp": 1770752880172
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -48,
+          "timestamp": 1770752880598
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -50,
+          "timestamp": 1770752880715
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -52,
+          "timestamp": 1770752881101
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -54,
+          "timestamp": 1770752881868
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -56,
+          "timestamp": 1770752882442
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -58,
+          "timestamp": 1770752882572
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -60,
+          "timestamp": 1770752883088
+        },
+        {
+          "key": "ArrowUp",
+          "reward": -62,
+          "timestamp": 1770752883835
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -64,
+          "timestamp": 1770752884416
+        },
+        {
+          "key": "ArrowDown",
+          "reward": -66,
+          "timestamp": 1770752884684
+        },
+        {
+          "key": "ArrowRight",
+          "reward": 132,
+          "timestamp": 1770752885459
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": 130,
+          "timestamp": 1770752894495
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": 128,
+          "timestamp": 1770752894947
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": 126,
+          "timestamp": 1770752895061
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": 124,
+          "timestamp": 1770752895175
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": 122,
+          "timestamp": 1770752895305
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": 120,
+          "timestamp": 1770752895521
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": 118,
+          "timestamp": 1770752895651
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": 116,
+          "timestamp": 1770752895788
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": 114,
+          "timestamp": 1770752895920
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": 112,
+          "timestamp": 1770752896164
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": 110,
+          "timestamp": 1770752896273
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": 108,
+          "timestamp": 1770752896424
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": 106,
+          "timestamp": 1770752896498
+        },
+        {
+          "key": "ArrowDown",
+          "reward": 104,
+          "timestamp": 1770752897113
+        },
+        {
+          "key": "ArrowDown",
+          "reward": 102,
+          "timestamp": 1770752897540
+        },
+        {
+          "key": "ArrowDown",
+          "reward": 100,
+          "timestamp": 1770752897606
+        },
+        {
+          "key": "ArrowDown",
+          "reward": 98,
+          "timestamp": 1770752897682
+        },
+        {
+          "key": "ArrowDown",
+          "reward": 96,
+          "timestamp": 1770752897737
+        },
+        {
+          "key": "ArrowDown",
+          "reward": 94,
+          "timestamp": 1770752898112
+        },
+        {
+          "key": "ArrowDown",
+          "reward": 92,
+          "timestamp": 1770752898630
+        },
+        {
+          "key": "ArrowDown",
+          "reward": 90,
+          "timestamp": 1770752898664
+        },
+        {
+          "key": "ArrowDown",
+          "reward": 88,
+          "timestamp": 1770752898698
+        },
+        {
+          "key": "ArrowRight",
+          "reward": 86,
+          "timestamp": 1770752899148
+        },
+        {
+          "key": "ArrowRight",
+          "reward": 84,
+          "timestamp": 1770752899790
+        },
+        {
+          "key": "ArrowRight",
+          "reward": 82,
+          "timestamp": 1770752900365
+        },
+        {
+          "key": "ArrowRight",
+          "reward": 80,
+          "timestamp": 1770752900370
+        },
+        {
+          "key": "ArrowRight",
+          "reward": 78,
+          "timestamp": 1770752900490
+        },
+        {
+          "key": "ArrowRight",
+          "reward": 76,
+          "timestamp": 1770752900631
+        },
+        {
+          "key": "ArrowRight",
+          "reward": 74,
+          "timestamp": 1770752900772
+        },
+        {
+          "key": "ArrowRight",
+          "reward": 72,
+          "timestamp": 1770752900906
+        },
+        {
+          "key": "ArrowRight",
+          "reward": 70,
+          "timestamp": 1770752901023
+        },
+        {
+          "key": "ArrowDown",
+          "reward": 68,
+          "timestamp": 1770752901522
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": 66,
+          "timestamp": 1770752905209
+        },
+        {
+          "key": "ArrowLeft",
+          "reward": 64,
+          "timestamp": 1770752905948
+        },
+        {
+          "key": "ArrowDown",
+          "reward": 62,
+          "timestamp": 1770752906548
+        },
+        {
+          "key": "ArrowUp",
+          "reward": 60,
+          "timestamp": 1770752907548
+        },
+        {
+          "key": "ArrowUp",
+          "reward": 58,
+          "timestamp": 1770752908088
+        },
+        {
+          "key": "ArrowUp",
+          "reward": 56,
+          "timestamp": 1770752908105
+        }
+      ],
+      "finalScore": 60,
+      "humanSteps": 95,
+      "startTime": 1770752861336,
+      "dishesServed": 0,
+      "endTime": 1770752907895,
+      "duration": 45
+    }
+  ],
+  "phase1Questionnaire": {
+    "cognitiveLoad": 3,
+    "collaboration": 3,
+    "strategy": "4",
+    "predictability": "3"
+  },
+  "phase2Questionnaire": {
+    "cognitiveLoad": 4,
+    "collaboration": 3,
+    "strategy": "3",
+    "predictability": "5"
+  },
+  "finalFeedback": ""
+}
