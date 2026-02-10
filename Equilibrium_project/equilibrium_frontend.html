@@ -536,104 +536,129 @@
         <div class="pill">
           <span>Round <strong id="currentRound">1 / 7</strong></span>
         </div>
-        <!--<div class="pill">
-          <span>Steps Left: <strong id="stepsLeft">200</strong></span>
-        </div>-->
+        
+        <div class="pill">
+          <span>Time: <strong id="stepsLeft" style="color:#2563eb;">0:45</strong></span>
+        </div>
+        
         <div class="pill" style="background:#f0fdf4; color:#15803d;">
           <span>Score: <strong id="currentScore">0</strong></span>
         </div>
       </div>
       
-      <div class="game-viewport">
+      <div class="game-viewport" style="position: relative;">
         <canvas id="gameCanvas" width="600" height="600"></canvas>
-      </div>
-
-      <div id="round-end-panel" class="hidden" style="background:#f0fdf4; border:2px solid #22c55e; border-radius:12px; padding:25px; margin-top:20px; text-align:center;">
-        <h3 style="color:#15803d; margin:0 0 15px 0;">Round Complete! 🎉</h3>
-        <div style="display:flex; justify-content:center; gap:30px; margin-bottom:20px;">
-          <div>
-            <p style="margin:0; color:#666; font-size:14px;">Team Score</p>
-            <p style="margin:5px 0 0 0; font-size:32px; font-weight:bold; color:#15803d;" id="round-score">0</p>
-          </div>
-          <div>
-            <p style="margin:0; color:#666; font-size:14px;">Your Steps</p>
-            <p style="margin:5px 0 0 0; font-size:32px; font-weight:bold; color:#7c3aed;" id="round-steps">0</p>
-          </div>
+        
+        <div id="round-overlay" class="hidden" style="
+            position: absolute; 
+            top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(255, 255, 255, 0.95); 
+            display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; 
+            z-index: 50; transition: opacity 0.5s ease;
+            border-radius: 8px;">
+            
+            <h1 id="overlay-title" style="color: #2563eb; font-size: 40px; margin: 0; text-transform: uppercase; letter-spacing: 2px;">
+              Round 1 Complete
+            </h1>
+            <p id="overlay-subtitle" style="color: #666; font-size: 20px; margin-top: 10px; font-weight: bold;">
+              Next round starting...
+            </p>
         </div>
-        <p style="color:#16a34a; font-weight:600; margin-bottom:15px;">Great teamwork! Keep it up! 🌟</p>
-        <button id="btn-next-round" class="btn success">Next Round</button>
       </div>
     </section>
 
-    <section id="page-mid-questionnaire" class="card hidden" style="max-width:800px; margin:40px auto;">
-      <h2 style="color:#2563eb; text-align:center; margin-top:0;">Phase 1 Complete</h2>
-      <p class="muted text-center" style="margin-bottom:30px;">Please answer 4 quick questions about your experience with the <strong>Phase 1 Partner</strong>.</p>
-      <div class="hr"></div>
-
-      <div style="margin-bottom:30px; padding:20px; background:#f9fafb; border-radius:8px;">
-        <p style="font-weight:bold; margin-bottom:8px;">1. Mental Effort (Cognitive Load)</p>
-        <p style="font-size:14px; color:#666; margin-bottom:15px;">How much mental effort was required to coordinate with this partner?</p>
+    <section id="page-mid-questionnaire" class="container hidden" style="max-width: 800px; margin: 40px auto;">
+      <div class="card">
         
-        <div class="likert-7" style="display:flex; justify-content:space-between; max-width:600px;">
-          <label><input type="radio" name="mid_load" value="1"> 1<br><span style="font-size:12px">Very Low</span></label>
-          <label><input type="radio" name="mid_load" value="2"> 2</label>
-          <label><input type="radio" name="mid_load" value="3"> 3</label>
-          <label><input type="radio" name="mid_load" value="4"> 4</label>
-          <label><input type="radio" name="mid_load" value="5"> 5</label>
-          <label><input type="radio" name="mid_load" value="6"> 6</label>
-          <label><input type="radio" name="mid_load" value="7"> 7<br><span style="font-size:12px">Very High</span></label>
-        </div>
-      </div>
+        <div style="text-align: center; margin-bottom: 40px;">
+          <h1 style="color:#2563eb; margin-bottom: 5px;">Phase 1 Complete!</h1>
+          <p class="muted">Here is a summary of your performance with the Phase 1 AI.</p>
 
-      <div style="margin-bottom:30px; padding:20px; background:#f9fafb; border-radius:8px;">
-        <p style="font-weight:bold; margin-bottom:8px;">2. Cooperation & Flow</p>
-        <p style="font-size:14px; color:#666; margin-bottom:15px;">How well did you and the AI work together as a team?</p>
-        
-        <div class="likert-7" style="display:flex; justify-content:space-between; max-width:600px;">
-          <label><input type="radio" name="mid_collab" value="1"> 1<br><span style="font-size:12px">Poorly</span></label>
-          <label><input type="radio" name="mid_collab" value="2"> 2</label>
-          <label><input type="radio" name="mid_collab" value="3"> 3</label>
-          <label><input type="radio" name="mid_collab" value="4"> 4</label>
-          <label><input type="radio" name="mid_collab" value="5"> 5</label>
-          <label><input type="radio" name="mid_collab" value="6"> 6</label>
-          <label><input type="radio" name="mid_collab" value="7"> 7<br><span style="font-size:12px">Perfectly</span></label>
+          <div style="margin: 20px 0; overflow-x: auto; border: 1px solid #e5e7eb; border-radius: 8px;">
+            <table style="width: 100%; border-collapse: collapse; text-align: center;">
+              <thead>
+                <tr style="background: #eff6ff; color: #1e3a8a;">
+                  <th style="padding: 12px;">Round</th>
+                  <th style="padding: 12px;">Score</th>
+                  <th style="padding: 12px;">Dishes</th>
+                  <th style="padding: 12px;">Your Steps</th>
+                </tr>
+              </thead>
+              <tbody id="summary-table-body">
+                </tbody>
+            </table>
+          </div>
         </div>
-      </div>
 
-      <div style="margin-bottom:30px; padding:20px; background:#f9fafb; border-radius:8px;">
-        <p style="font-weight:bold; margin-bottom:8px;">3. Role Strategy</p>
-        <p style="font-size:14px; color:#666; margin-bottom:15px;">Who did most of the work?</p>
-        
-        <div class="likert-7" style="display:flex; justify-content:space-between; max-width:600px;">
-          <label><input type="radio" name="mid_strategy" value="1"> 1<br><span style="font-size:12px">I did it all<br>(Hero)</span></label>
-          <label><input type="radio" name="mid_strategy" value="2"> 2</label>
-          <label><input type="radio" name="mid_strategy" value="3"> 3</label>
-          <label><input type="radio" name="mid_strategy" value="4"> 4<br><span style="font-size:12px">Balanced</span></label>
-          <label><input type="radio" name="mid_strategy" value="5"> 5</label>
-          <label><input type="radio" name="mid_strategy" value="6"> 6</label>
-          <label><input type="radio" name="mid_strategy" value="7"> 7<br><span style="font-size:12px">AI did it all<br>(Lazy)</span></label>
+        <hr style="border: 0; border-top: 2px dashed #e5e7eb; margin: 40px 0;">
+
+        <div>
+          <h2 style="color:#1e3a8a; text-align: center; margin-bottom: 20px;">Partner Evaluation</h2>
+          <p class="muted text-center" style="margin-bottom: 30px;">Based on the performance above, please rate your experience.</p>
+
+          <div style="margin-bottom:25px; padding:20px; background:#f9fafb; border-radius:8px;">
+            <p style="font-weight:bold; margin-bottom:8px;">1. Mental Effort (Cognitive Load)</p>
+            <p style="font-size:14px; color:#666; margin-bottom:15px;">How much mental effort was required to coordinate with this partner?</p>
+            <div class="likert-7" style="display:flex; justify-content:space-between;">
+              <label><input type="radio" name="mid_load" value="1"> 1<br><span style="font-size:10px">Very Low</span></label>
+              <label><input type="radio" name="mid_load" value="2"> 2</label>
+              <label><input type="radio" name="mid_load" value="3"> 3</label>
+              <label><input type="radio" name="mid_load" value="4"> 4</label>
+              <label><input type="radio" name="mid_load" value="5"> 5</label>
+              <label><input type="radio" name="mid_load" value="6"> 6</label>
+              <label><input type="radio" name="mid_load" value="7"> 7<br><span style="font-size:10px">Very High</span></label>
+            </div>
+          </div>
+
+          <div style="margin-bottom:25px; padding:20px; background:#f9fafb; border-radius:8px;">
+            <p style="font-weight:bold; margin-bottom:8px;">2. Cooperation & Flow</p>
+            <p style="font-size:14px; color:#666; margin-bottom:15px;">How well did you and the AI work together as a team?</p>
+            <div class="likert-7" style="display:flex; justify-content:space-between;">
+              <label><input type="radio" name="mid_collab" value="1"> 1<br><span style="font-size:10px">Poorly</span></label>
+              <label><input type="radio" name="mid_collab" value="2"> 2</label>
+              <label><input type="radio" name="mid_collab" value="3"> 3</label>
+              <label><input type="radio" name="mid_collab" value="4"> 4</label>
+              <label><input type="radio" name="mid_collab" value="5"> 5</label>
+              <label><input type="radio" name="mid_collab" value="6"> 6</label>
+              <label><input type="radio" name="mid_collab" value="7"> 7<br><span style="font-size:10px">Perfectly</span></label>
+            </div>
+          </div>
+
+          <div style="margin-bottom:25px; padding:20px; background:#f9fafb; border-radius:8px;">
+            <p style="font-weight:bold; margin-bottom:8px;">3. Role Strategy</p>
+            <p style="font-size:14px; color:#666; margin-bottom:15px;">Who did most of the work?</p>
+            <div class="likert-7" style="display:flex; justify-content:space-between;">
+              <label><input type="radio" name="mid_strategy" value="1"> 1<br><span style="font-size:10px">Me (Hero)</span></label>
+              <label><input type="radio" name="mid_strategy" value="2"> 2</label>
+              <label><input type="radio" name="mid_strategy" value="3"> 3</label>
+              <label><input type="radio" name="mid_strategy" value="4"> 4<br><span style="font-size:10px">Balanced</span></label>
+              <label><input type="radio" name="mid_strategy" value="5"> 5</label>
+              <label><input type="radio" name="mid_strategy" value="6"> 6</label>
+              <label><input type="radio" name="mid_strategy" value="7"> 7<br><span style="font-size:10px">AI (Lazy)</span></label>
+            </div>
+          </div>
+
+          <div style="margin-bottom:25px; padding:20px; background:#f9fafb; border-radius:8px;">
+            <p style="font-weight:bold; margin-bottom:8px;">4. Predictability</p>
+            <p style="font-size:14px; color:#666; margin-bottom:15px;">Was it easy to predict what the AI was going to do?</p>
+            <div class="likert-7" style="display:flex; justify-content:space-between;">
+              <label><input type="radio" name="mid_predict" value="1"> 1<br><span style="font-size:10px">Impossible</span></label>
+              <label><input type="radio" name="mid_predict" value="2"> 2</label>
+              <label><input type="radio" name="mid_predict" value="3"> 3</label>
+              <label><input type="radio" name="mid_predict" value="4"> 4</label>
+              <label><input type="radio" name="mid_predict" value="5"> 5</label>
+              <label><input type="radio" name="mid_predict" value="6"> 6</label>
+              <label><input type="radio" name="mid_predict" value="7"> 7<br><span style="font-size:10px">Very Easy</span></label>
+            </div>
+          </div>
+
+          <div class="center" style="margin-top:40px;">
+            <button id="btn-submit-mid-survey" class="btn btn-primary" style="font-size:18px; padding:12px 35px;">
+              Submit & Start Phase 2
+            </button>
+          </div>
         </div>
-      </div>
-
-      <div style="margin-bottom:30px; padding:20px; background:#f9fafb; border-radius:8px;">
-        <p style="font-weight:bold; margin-bottom:8px;">4. Partner Predictability</p>
-        <p style="font-size:14px; color:#666; margin-bottom:15px;">Was it easy to predict what the AI was going to do next?</p>
-        
-        <div class="likert-7" style="display:flex; justify-content:space-between; max-width:600px;">
-          <label><input type="radio" name="mid_predict" value="1"> 1<br><span style="font-size:12px">Unpredictable</span></label>
-          <label><input type="radio" name="mid_predict" value="2"> 2</label>
-          <label><input type="radio" name="mid_predict" value="3"> 3</label>
-          <label><input type="radio" name="mid_predict" value="4"> 4</label>
-          <label><input type="radio" name="mid_predict" value="5"> 5</label>
-          <label><input type="radio" name="mid_predict" value="6"> 6</label>
-          <label><input type="radio" name="mid_predict" value="7"> 7<br><span style="font-size:12px">Very Predictable</span></label>
-        </div>
-      </div>
-
-      <div class="center" style="margin-top:40px;">
-        <button id="btn-submit-mid-survey" class="btn success" style="font-size:18px; padding:12px 35px;">
-          Submit & Continue
-        </button>
       </div>
     </section>
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
-
+import numpy as np
 import sys
 
 # Equilibrium_project" folder
@@ -1187,6 +1187,9 @@ def key_event():
                     print(f"[HOT-SWITCH][{sid}] -> {target_cfg_id}")
             except Exception as e:
                 return jsonify(success=False, error=f"hot switch failed: {e}"), 400
+            
+        if not hasattr(sess, 'dishes_served'): sess.dishes_served = 0
+        if sess.cur_step == 0: sess.dishes_served = 0
 
         KEYS_ACTIONS = {'ArrowUp':3,'ArrowRight':0,'ArrowDown':1,'ArrowLeft':2}
         if key in KEYS_ACTIONS:
@@ -1225,13 +1228,25 @@ def key_event():
 
                 sess.obs, rewards, dones, info = sess.wrapper.step(action[0], action[1])
                 # _, reward_env, done_env, info_env = sess.env.step(action)
-                t3 = time.time()
+                #t3 = time.time()
 
                 try:
-                    sess.cumulative_reward += float(rewards)
-                except Exception:
-                    pass
+                # Robustly handle rewards (Scalar, List, or Numpy Array)
+                    if isinstance(rewards, (list, tuple, np.ndarray)):
+                        r_flat = np.array(rewards).flatten()
+                        r = float(r_flat[0])
+                    else:
+                        r = float(rewards)
 
+                    sess.cumulative_reward += r
+                
+                    if r >= 199:
+                        sess.dishes_served += 1
+                        print(f"[{sid}] DISH SERVED! Total: {sess.dishes_served}")
+
+                except Exception as e:
+                    print(f"Error updating rewards: {e}")
+                
                 sess.cur_step += 1
 
         state = extract_state(sess)
@@ -1244,6 +1259,7 @@ def key_event():
             config_id=sess.config_id,
             layout_id=sess.current_layout_id,
             model_id=sess.current_model_id,
+            dishes_served=sess.dishes_served,
             robot_last_action=(sess.robot_steps[-1] if sess.robot_steps else None)  # ← 新增（可选）
         )
 

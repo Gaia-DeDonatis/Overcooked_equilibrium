@@ -162,56 +162,126 @@ async function finishTimeBasedRound() {
     STATE.gameOver = true;
     console.log("TIME IS UP!");
 
-    // 1. Get Final Score from UI (or last known state)
+    // 1. Finalize Data
     const scoreEl = document.getElementById('currentScore');
     const finalScore = scoreEl ? parseInt(scoreEl.innerText) : 0;
     
-    // 2. Finalize Data
     currentRoundData.finalScore = finalScore;
     currentRoundData.endTime = Date.now();
     currentRoundData.duration = CONFIG.ROUND_DURATION_SEC;
     
-    // 3. Save Log
+    // 2. Save Log
     LOGS.rounds.push({...currentRoundData});
-    STATE.totalRounds++;
+    STATE.totalRounds++; 
     
-    // 4. Show Summary
-    showRoundSummary(currentRoundData);
+    // Rounds repetition
+    if (STATE.round < CONFIG.ROUNDS_PER_PHASE) {
+        
+        // animation overlay
+        const overlay = document.getElementById('round-overlay');
+        const title = document.getElementById('overlay-title');
+        const sub = document.getElementById('overlay-subtitle');
+        
+        if(overlay) {
+            // Update Text for "Round Complete"
+            if(title) {
+                title.innerText = `ROUND ${STATE.round} COMPLETE`;
+                title.style.color = "#16a34a"; // Green
+            }
+            if(sub) sub.innerText = `Score: ${finalScore} | Next round in 3...`;
+            
+            // Fade In
+            overlay.classList.remove('hidden');
+            overlay.style.opacity = '0';
+            setTimeout(() => overlay.style.opacity = '1', 50); 
+        }
+
+        // countdown
+        let countdown = 3;
+        const interval = setInterval(() => {
+            countdown--;
+            if(sub) sub.innerText = `Score: ${finalScore} | Next round in ${countdown}...`;
+        }, 1000);
+
+        // AUTO-START NEXT ROUND
+        setTimeout(() => {
+            clearInterval(interval);
+            
+            // Increment Round
+            STATE.round++;
+            
+            // Update Overlay for "Start"
+            if(title) {
+                title.innerText = `ROUND ${STATE.round}`;
+                title.style.color = "#2563eb"; // Blue
+            }
+            if(sub) sub.innerText = "GO!";
+            
+            // Start the actual game logic
+            startRound().then(() => {
+                // Fade Out Overlay when game is ready
+                setTimeout(() => {
+                    if(overlay) overlay.style.opacity = '0';
+                    setTimeout(() => {
+                        if(overlay) overlay.classList.add('hidden');
+                    }, 500); 
+                }, 500); 
+            });
+            
+        }, 3000); // 3 seconds total pause
+        
+    } else {
+        // CASE B: PHASE COMPLETE
+        console.log(`Phase ${STATE.phase} Complete!`);
+        
+        // Hide overlay if visible
+        document.getElementById('round-overlay')?.classList.add('hidden');
+
+        if(STATE.phase === 1) {
+            // 1. SUMMARY TABLE
+            if(typeof renderPhaseSummary === 'function') {
+                renderPhaseSummary();
+            }
+            // 2. QUESTIONNAIRE PAGE
+            showPage('page-mid-questionnaire');
+        } else {
+            // End of Experiment
+            finishExperiment(); 
+        }
+    }
 }
 
-// F. SHOW SUMMARY
-function showRoundSummary(roundData) {
-    const panel = document.getElementById('round-end-panel');
-    const scoreEl = document.getElementById('round-score');
-    const stepsEl = document.getElementById('round-steps');
-    const btnNext = document.getElementById('btn-next-round');
-    
-    if(scoreEl) scoreEl.innerText = roundData.finalScore;
-    if(stepsEl) stepsEl.innerText = roundData.humanSteps;
-    
-    if(panel) panel.classList.remove('hidden');
-    
-    if(btnNext) {
-        // Clone to remove old listeners
-        const newBtn = btnNext.cloneNode(true);
-        btnNext.parentNode.replaceChild(newBtn, btnNext);
-        
-        newBtn.onclick = () => {
-            panel.classList.add('hidden');
-            
-            if(STATE.round < CONFIG.ROUNDS_PER_PHASE) {
-                STATE.round++;
-                startRound();
-            } else {
-                // Phase Complete Logic
-                if(STATE.phase === 1) {
-                    showPage('page-mid-questionnaire');
-                } else {
-                    finishExperiment(); // Defined in your bottom section
-                }
-            }
-        };
-    }
+
+// F. SUMMARY TABLE
+function renderPhaseSummary() {
+    const tbody = document.getElementById('summary-table-body');
+    if(!tbody) return;
+
+    tbody.innerHTML = ''; 
+
+    const phase1Rounds = LOGS.rounds.filter(r => r.phase === 1);
+
+    phase1Rounds.forEach(round => {
+        const realDishes = round.dishesServed || 0;
+
+        const row = `
+            <tr style="border-bottom: 1px solid #eee;">
+                <td style="padding: 12px; font-weight: bold; color: #4b5563;">
+                    ${round.phaseRound || round.roundNumber}
+                </td>
+                <td style="padding: 12px; font-weight: bold; color: #16a34a;">
+                    ${round.finalScore}
+                </td>
+                <td style="padding: 12px;">
+                    ${realDishes}
+                </td>
+                <td style="padding: 12px; color: #2563eb;">
+                    ${round.humanSteps}
+                </td>
+            </tr>
+        `;
+        tbody.innerHTML += row;
+    });
 }
 
 // --- 5. KEYBOARD LISTENER ---
