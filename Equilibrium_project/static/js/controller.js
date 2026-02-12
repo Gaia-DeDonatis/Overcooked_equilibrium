@@ -71,7 +71,7 @@ let timeLeft = 0;
 async function startPhase(phaseNum) {
 
     if (!STATE.assignment || !STATE.assignment.layout) {
-            console.warn("⚠️ Conditions missing. Auto-assigning defaults.");
+            console.warn("Conditions missing. Auto-assigning defaults.");
             // Make sure these match your Backend keys exactly!
             STATE.assignment = {
                 layout: "layout1", 
@@ -123,9 +123,9 @@ async function startRound() {
         if (data.state) {
             STATE.isPlaying = true;
             
-            // FIX: Removed 'gameCanvas'. Now drawGame() decides based on STATE.phase
-            drawGame(true); 
-            //drawGame(data.state); 
+            const currentCanvasId = (STATE.phase === 2) ? 'gameCanvas_2' : 'gameCanvas';
+            drawGame(data.state, currentCanvasId); 
+            
             startTimer(CONFIG.ROUND_DURATION_SEC);
             updateGameUI();
         }
