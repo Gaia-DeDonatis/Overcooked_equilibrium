@@ -160,7 +160,7 @@ LAYOUT_CONFIG = {
         "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "B",
         "model":      "layout1_model1",  # TrustPOMDP
-        "grid_dim":   [15, 15],
+        "grid_dim":   [5, 5],
         "n_agent":    2
     },
     "layout1_model2": {
@@ -168,7 +168,7 @@ LAYOUT_CONFIG = {
         "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "B",
         "model":      "layout1_model2",  # FCP
-        "grid_dim":   [15, 15],
+        "grid_dim":   [5, 5],
         "n_agent":    2
     },
     "layout1_model3": {
@@ -176,7 +176,7 @@ LAYOUT_CONFIG = {
         "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "B",
         "model":      "layout1_model3",  # MEP
-        "grid_dim":   [15, 15],
+        "grid_dim":   [5, 5],
         "n_agent":    2
     },
     "layout1_model4": {
@@ -184,7 +184,7 @@ LAYOUT_CONFIG = {
         "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "B",
         "model":      "layout1_model4",  # POMDP
-        "grid_dim":   [15, 15],
+        "grid_dim":   [5, 5],
         "n_agent":    2
     },
 
@@ -195,7 +195,7 @@ LAYOUT_CONFIG = {
         "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "A",
         "model":      "layout2_model1",  # TrustPOMDP
-        "grid_dim":   [15, 15],
+        "grid_dim":   [5, 5],
         "n_agent":    2
     },
     "layout2_model2": {
@@ -203,7 +203,7 @@ LAYOUT_CONFIG = {
         "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "A",
         "model":      "layout2_model2",  # FCP
-        "grid_dim":   [15, 15],
+        "grid_dim":   [5, 5],
         "n_agent":    2
     },
     "layout2_model3": {
@@ -211,7 +211,7 @@ LAYOUT_CONFIG = {
         "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "A",
         "model":      "layout2_model3",  # MEP
-        "grid_dim":   [15, 15],
+        "grid_dim":   [5, 5],
         "n_agent":    2
     },
     "layout2_model4": {
@@ -219,7 +219,7 @@ LAYOUT_CONFIG = {
         "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "A",
         "model":      "layout2_model4",  # POMDP
-        "grid_dim":   [15, 15],
+        "grid_dim":   [5, 5],
         "n_agent":    2
     },
 
@@ -230,7 +230,7 @@ LAYOUT_CONFIG = {
         "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "B_lowuncertainty",
         "model":      "layout3_model1",  # TrustPOMDP
-        "grid_dim":   [15, 15],
+        "grid_dim":   [5, 5],
         "n_agent":    2
     },
     "layout3_model2": {
@@ -238,7 +238,7 @@ LAYOUT_CONFIG = {
         "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "B_lowuncertainty",
         "model":      "layout3_model2",  # FCP
-        "grid_dim":   [15, 15],
+        "grid_dim":   [5, 5],
         "n_agent":    2
     },
     "layout3_model3": {
@@ -246,7 +246,7 @@ LAYOUT_CONFIG = {
         "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "B_lowuncertainty",
         "model":      "layout3_model3",  # MEP
-        "grid_dim":   [15, 15],
+        "grid_dim":   [5, 5],
         "n_agent":    2
     },
     "layout3_model4": {
@@ -254,7 +254,7 @@ LAYOUT_CONFIG = {
         "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "B_lowuncertainty",
         "model":      "layout3_model4",  # POMDP
-        "grid_dim":   [15, 15],
+        "grid_dim":   [5, 5],
         "n_agent":    2
     },
 
@@ -265,7 +265,7 @@ LAYOUT_CONFIG = {
         "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "A_lowuncertainty",
         "model":      "layout4_model1",  # TrustPOMDP
-        "grid_dim":   [15, 15],
+        "grid_dim":   [5, 5],
         "n_agent":    2
     },
     "layout4_model2": {
@@ -273,7 +273,7 @@ LAYOUT_CONFIG = {
         "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "A_lowuncertainty",
         "model":      "layout4_model2",  # FCP
-        "grid_dim":   [15, 15],
+        "grid_dim":   [5, 5],
         "n_agent":    2
     },
     "layout4_model3": {
@@ -281,7 +281,7 @@ LAYOUT_CONFIG = {
         "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "A_lowuncertainty",
         "model":      "layout4_model3",  # MEP
-        "grid_dim":   [15, 15],
+        "grid_dim":   [5, 5],
         "n_agent":    2
     },
     "layout4_model4": {
@@ -289,7 +289,7 @@ LAYOUT_CONFIG = {
         "mac_env_id": "Overcooked-MA-equilibrium-v0",
         "map_type":   "A_lowuncertainty",
         "model":      "layout4_model4",  # POMDP
-        "grid_dim":   [15, 15],
+        "grid_dim":   [5, 5],
         "n_agent":    2
     },
 }
