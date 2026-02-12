@@ -5,7 +5,7 @@ const SERVER_URL = 'http://localhost:5000';
 // Configuration
 const CONFIG = {
     PRACTICE_SCORE: 200,
-    ROUNDS_PER_PHASE: 1, // to change with 7
+    ROUNDS_PER_PHASE: 1, // to change with 6
     ROUND_DURATION_SEC: 45
 };
 

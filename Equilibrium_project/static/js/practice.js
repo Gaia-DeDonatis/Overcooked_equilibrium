@@ -47,7 +47,7 @@ async function startPracticeRound() {
     }
 }
 
-// Bind Button (if it exists)
+// Bind Button
 const btnTryPractice = document.getElementById('btnTryPractice');
 if(btnTryPractice) {
     btnTryPractice.onclick = startPracticeRound;
