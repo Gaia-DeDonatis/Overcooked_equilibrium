@@ -608,36 +608,36 @@
           <p class="muted text-center" style="margin-bottom: 30px;">Based on the performance above, please rate your experience.</p>
 
           <div style="margin-bottom:25px; padding:20px; background:#f9fafb; border-radius:8px;">
-            <p style="font-weight:bold; margin-bottom:8px;">1. Mental Effort (Cognitive Load)</p>
-            <p style="font-size:14px; color:#666; margin-bottom:15px;">How much mental effort was required to coordinate with this partner?</p>
+            <p style="font-weight:bold; margin-bottom:8px;">1. Mental Effort</p>
+            <p style="font-size:14px; color:#666; margin-bottom:15px;">How mentally demanding was it to coordinate with the AI?</p>
             <div class="likert-7" style="display:flex; justify-content:space-between;">
-              <label><input type="radio" name="mid_load" value="1"> 1<br><span style="font-size:10px">Very Low</span></label>
+              <label><input type="radio" name="mid_load" value="1"> 1<br><span style="font-size:10px">Easy</span></label>
               <label><input type="radio" name="mid_load" value="2"> 2</label>
               <label><input type="radio" name="mid_load" value="3"> 3</label>
               <label><input type="radio" name="mid_load" value="4"> 4</label>
               <label><input type="radio" name="mid_load" value="5"> 5</label>
               <label><input type="radio" name="mid_load" value="6"> 6</label>
-              <label><input type="radio" name="mid_load" value="7"> 7<br><span style="font-size:10px">Very High</span></label>
+              <label><input type="radio" name="mid_load" value="7"> 7<br><span style="font-size:10px">Hard</span></label>
             </div>
           </div>
 
           <div style="margin-bottom:25px; padding:20px; background:#f9fafb; border-radius:8px;">
-            <p style="font-weight:bold; margin-bottom:8px;">2. Cooperation & Flow</p>
+            <p style="font-weight:bold; margin-bottom:8px;">2. Team Flow</p>
             <p style="font-size:14px; color:#666; margin-bottom:15px;">How well did you and the AI work together as a team?</p>
             <div class="likert-7" style="display:flex; justify-content:space-between;">
-              <label><input type="radio" name="mid_collab" value="1"> 1<br><span style="font-size:10px">Poorly</span></label>
+              <label><input type="radio" name="mid_collab" value="1"> 1<br><span style="font-size:10px">Not at all</span></label>
               <label><input type="radio" name="mid_collab" value="2"> 2</label>
               <label><input type="radio" name="mid_collab" value="3"> 3</label>
               <label><input type="radio" name="mid_collab" value="4"> 4</label>
               <label><input type="radio" name="mid_collab" value="5"> 5</label>
               <label><input type="radio" name="mid_collab" value="6"> 6</label>
-              <label><input type="radio" name="mid_collab" value="7"> 7<br><span style="font-size:10px">Perfectly</span></label>
+              <label><input type="radio" name="mid_collab" value="7"> 7<br><span style="font-size:10px">Highly</span></label>
             </div>
           </div>
 
           <div style="margin-bottom:25px; padding:20px; background:#f9fafb; border-radius:8px;">
-            <p style="font-weight:bold; margin-bottom:8px;">3. Role Strategy</p>
-            <p style="font-size:14px; color:#666; margin-bottom:15px;">Who did most of the work?</p>
+            <p style="font-weight:bold; margin-bottom:8px;">3. Workload Split</p>
+            <p style="font-size:14px; color:#666; margin-bottom:15px;">How was the workload divided between you and the AI?</p>
             <div class="likert-7" style="display:flex; justify-content:space-between;">
               <label><input type="radio" name="mid_strategy" value="1"> 1<br><span style="font-size:10px">Me (Hero)</span></label>
               <label><input type="radio" name="mid_strategy" value="2"> 2</label>
@@ -651,15 +651,15 @@
 
           <div style="margin-bottom:25px; padding:20px; background:#f9fafb; border-radius:8px;">
             <p style="font-weight:bold; margin-bottom:8px;">4. Predictability</p>
-            <p style="font-size:14px; color:#666; margin-bottom:15px;">Was it easy to predict what the AI was going to do?</p>
+            <p style="font-size:14px; color:#666; margin-bottom:15px;">How easy was it to anticipate the AI’s next move before it happened?</p>
             <div class="likert-7" style="display:flex; justify-content:space-between;">
-              <label><input type="radio" name="mid_predict" value="1"> 1<br><span style="font-size:10px">Impossible</span></label>
+              <label><input type="radio" name="mid_predict" value="1"> 1<br><span style="font-size:10px">Unpredictable</span></label>
               <label><input type="radio" name="mid_predict" value="2"> 2</label>
               <label><input type="radio" name="mid_predict" value="3"> 3</label>
               <label><input type="radio" name="mid_predict" value="4"> 4</label>
               <label><input type="radio" name="mid_predict" value="5"> 5</label>
               <label><input type="radio" name="mid_predict" value="6"> 6</label>
-              <label><input type="radio" name="mid_predict" value="7"> 7<br><span style="font-size:10px">Very Easy</span></label>
+              <label><input type="radio" name="mid_predict" value="7"> 7<br><span style="font-size:10px">Predictable</span></label>
             </div>
           </div>
 
@@ -745,54 +745,58 @@
           <p class="muted text-center" style="margin-bottom: 30px;">Based on Phase 2, please rate your experience.</p>
 
           <div style="margin-bottom:25px; padding:20px; background:#f9fafb; border-radius:8px;">
-            <p style="font-weight:bold; margin-bottom:8px;">1. Mental Effort (Cognitive Load)</p>
+            <p style="font-weight:bold; margin-bottom:8px;">1. Mental Effort</p>
+            <p style="font-size:14px; color:#666; margin-bottom:15px;">How mentally demanding was it to coordinate with the AI?</p>
             <div class="likert-7" style="display:flex; justify-content:space-between;">
-              <label><input type="radio" name="post_load" value="1"> 1</label>
-              <label><input type="radio" name="post_load" value="2"> 2</label>
-              <label><input type="radio" name="post_load" value="3"> 3</label>
-              <label><input type="radio" name="post_load" value="4"> 4</label>
-              <label><input type="radio" name="post_load" value="5"> 5</label>
-              <label><input type="radio" name="post_load" value="6"> 6</label>
-              <label><input type="radio" name="post_load" value="7"> 7</label>
+              <label><input type="radio" name="mid_load" value="1"> 1<br><span style="font-size:10px">Easy</span></label>
+              <label><input type="radio" name="mid_load" value="2"> 2</label>
+              <label><input type="radio" name="mid_load" value="3"> 3</label>
+              <label><input type="radio" name="mid_load" value="4"> 4</label>
+              <label><input type="radio" name="mid_load" value="5"> 5</label>
+              <label><input type="radio" name="mid_load" value="6"> 6</label>
+              <label><input type="radio" name="mid_load" value="7"> 7<br><span style="font-size:10px">Hard</span></label>
             </div>
           </div>
 
           <div style="margin-bottom:25px; padding:20px; background:#f9fafb; border-radius:8px;">
-            <p style="font-weight:bold; margin-bottom:8px;">2. Cooperation & Flow</p>
+            <p style="font-weight:bold; margin-bottom:8px;">2. Team Flow</p>
+            <p style="font-size:14px; color:#666; margin-bottom:15px;">How well did you and the AI work together as a team?</p>
             <div class="likert-7" style="display:flex; justify-content:space-between;">
-              <label><input type="radio" name="post_collab" value="1"> 1</label>
-              <label><input type="radio" name="post_collab" value="2"> 2</label>
-              <label><input type="radio" name="post_collab" value="3"> 3</label>
-              <label><input type="radio" name="post_collab" value="4"> 4</label>
-              <label><input type="radio" name="post_collab" value="5"> 5</label>
-              <label><input type="radio" name="post_collab" value="6"> 6</label>
-              <label><input type="radio" name="post_collab" value="7"> 7</label>
+              <label><input type="radio" name="mid_collab" value="1"> 1<br><span style="font-size:10px">Not at all</span></label>
+              <label><input type="radio" name="mid_collab" value="2"> 2</label>
+              <label><input type="radio" name="mid_collab" value="3"> 3</label>
+              <label><input type="radio" name="mid_collab" value="4"> 4</label>
+              <label><input type="radio" name="mid_collab" value="5"> 5</label>
+              <label><input type="radio" name="mid_collab" value="6"> 6</label>
+              <label><input type="radio" name="mid_collab" value="7"> 7<br><span style="font-size:10px">Highly</span></label>
             </div>
           </div>
 
           <div style="margin-bottom:25px; padding:20px; background:#f9fafb; border-radius:8px;">
-            <p style="font-weight:bold; margin-bottom:8px;">3. Role Strategy</p>
+            <p style="font-weight:bold; margin-bottom:8px;">3. Workload Split</p>
+            <p style="font-size:14px; color:#666; margin-bottom:15px;">How was the workload divided between you and the AI?</p>
             <div class="likert-7" style="display:flex; justify-content:space-between;">
-              <label><input type="radio" name="post_strategy" value="1"> 1</label>
-              <label><input type="radio" name="post_strategy" value="2"> 2</label>
-              <label><input type="radio" name="post_strategy" value="3"> 3</label>
-              <label><input type="radio" name="post_strategy" value="4"> 4</label>
-              <label><input type="radio" name="post_strategy" value="5"> 5</label>
-              <label><input type="radio" name="post_strategy" value="6"> 6</label>
-              <label><input type="radio" name="post_strategy" value="7"> 7</label>
+              <label><input type="radio" name="mid_strategy" value="1"> 1<br><span style="font-size:10px">Me (Hero)</span></label>
+              <label><input type="radio" name="mid_strategy" value="2"> 2</label>
+              <label><input type="radio" name="mid_strategy" value="3"> 3</label>
+              <label><input type="radio" name="mid_strategy" value="4"> 4<br><span style="font-size:10px">Balanced</span></label>
+              <label><input type="radio" name="mid_strategy" value="5"> 5</label>
+              <label><input type="radio" name="mid_strategy" value="6"> 6</label>
+              <label><input type="radio" name="mid_strategy" value="7"> 7<br><span style="font-size:10px">AI (Lazy)</span></label>
             </div>
           </div>
 
           <div style="margin-bottom:25px; padding:20px; background:#f9fafb; border-radius:8px;">
             <p style="font-weight:bold; margin-bottom:8px;">4. Predictability</p>
+            <p style="font-size:14px; color:#666; margin-bottom:15px;">How easy was it to anticipate the AI’s next move before it happened?</p>
             <div class="likert-7" style="display:flex; justify-content:space-between;">
-              <label><input type="radio" name="post_predict" value="1"> 1</label>
-              <label><input type="radio" name="post_predict" value="2"> 2</label>
-              <label><input type="radio" name="post_predict" value="3"> 3</label>
-              <label><input type="radio" name="post_predict" value="4"> 4</label>
-              <label><input type="radio" name="post_predict" value="5"> 5</label>
-              <label><input type="radio" name="post_predict" value="6"> 6</label>
-              <label><input type="radio" name="post_predict" value="7"> 7</label>
+              <label><input type="radio" name="mid_predict" value="1"> 1<br><span style="font-size:10px">Unpredictable</span></label>
+              <label><input type="radio" name="mid_predict" value="2"> 2</label>
+              <label><input type="radio" name="mid_predict" value="3"> 3</label>
+              <label><input type="radio" name="mid_predict" value="4"> 4</label>
+              <label><input type="radio" name="mid_predict" value="5"> 5</label>
+              <label><input type="radio" name="mid_predict" value="6"> 6</label>
+              <label><input type="radio" name="mid_predict" value="7"> 7<br><span style="font-size:10px">Predictable</span></label>
             </div>
           </div>
 
