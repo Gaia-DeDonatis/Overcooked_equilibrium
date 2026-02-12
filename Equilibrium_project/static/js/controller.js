@@ -94,8 +94,6 @@ async function startPhase(phaseNum) {
     } else if (phaseNum === 2) {
         showPage('page-phase-2');
     }
-
-    if (debugging) {showPage(debugging_page)};
     
     console.log(`Starting Phase ${phaseNum} with ${STATE.configId}`);
     await startRound();
