@@ -72,29 +72,31 @@ const DataManager = {
 
         const entry = {
             timestamp: Date.now(),
-            // POSITIONS & ACTIONS
+            // 1. Agents actions
             agents: {
-                human: {
-                    pos: serverData.human_pos, 
-                    action: humanKey
-                },
-                ai: {
-                    pos: serverData.ai_pos,    
-                    action: serverData.ai_action
-                }
+                human: { pos: serverData.human_pos, action: humanKey },
+                ai: { pos: serverData.ai_pos, action: serverData.ai_action }
             },
-            // OBJECT STATES (The "Kitchen State")
+            // 2. Environment state
             objects: serverData.objects ? serverData.objects.map(obj => ({
                 type: obj.name,                  
                 pos: [obj.x, obj.y],
-                state: obj.status // e.g., "fresh", "chopped", "plated"
-            })) : []
+                state: obj.status 
+            })) : [],
+            // 3. Performance
+            stepReward: serverData.last_step_reward || 0, // Did this specific move earn points?
+            isHumanIdle: (humanKey === 'Stay' || humanKey === null) 
         };
         
         currentRound.stateUpdateLog.push(entry);
 
-        // Update the Level 1 score automatically
+        // 4. Summary Metrics Update
         currentRound.metrics.totalScore = serverData.cumulative_reward || 0;
+        
+        // Check if the server reported a finished dish this step
+        if (serverData.dish_delivered_this_step) {
+            currentRound.metrics.dishesServed++;
+        }
     },
 
     // 5. Questionnaire & Final Submission
