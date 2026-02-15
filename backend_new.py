@@ -426,6 +426,7 @@ def extract_state(sess: Session):
     # env = sess.env
     env = sess.env_mac
     state = {
+        "cur_step": sess.cur_step,
         "xlen": env.xlen,
         "ylen": env.ylen,
         "map": env.map,
@@ -531,7 +532,11 @@ def reset():
             layout_id=sess.current_layout_id,
             model_id=sess.current_model_id,
             chosen_policy_dir=sess.current_model_id,
-            chosen_ckpt=os.path.basename(sess.chosen_ckpt_path) if sess.chosen_ckpt_path else None
+            chosen_ckpt=os.path.basename(sess.chosen_ckpt_path) if sess.chosen_ckpt_path else None,
+
+            map_type=FIXED_MAP_TYPE if config_id != "layout_practice" else "A",
+            grid_dim=FIXED_GRID_DIM if config_id != "layout_practice" else [5, 5],
+            policy_id=sess.current_model_id
         )
 
 

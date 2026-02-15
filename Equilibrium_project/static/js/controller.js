@@ -99,30 +99,36 @@ async function startPhase(phaseNum) {
 
 // B. START ROUND
 async function startRound() {
-    STATE.isPlaying = false;
-    STATE.gameOver = false;
-    
-    if (gameTimer) clearInterval(gameTimer);
+  STATE.isPlaying = false;
+  STATE.gameOver = false;
 
-    DataManager.startNewRound(STATE.phase, STATE.configId);
-    
-    try {
-        const data = await api('/reset', { config_id: STATE.configId });
-        
-        if (data.state) {
-            STATE.isPlaying = true;
-            
-            const currentCanvasId = (STATE.phase === 2) ? 'gameCanvas_2' : 'gameCanvas';
-            drawGame(data.state, currentCanvasId); 
-            
-            startTimer(CONFIG.ROUND_DURATION_SEC);
-            updateGameUI();
-        }
-    } catch (err) {
-        console.error("Round Start Error:", err);
-        alert("Failed to start round. Please refresh.");
+  if (gameTimer) clearInterval(gameTimer);
+
+  try {
+    const data = await api('/reset', { config_id: STATE.configId });
+
+    // START NEW ROUND HERE (after reset returns)
+    DataManager.startNewRound(STATE.phase, STATE.configId, {
+      mapTopology: `${data.map_type}_${data.grid_dim}`,
+      policyId: data.policy_id,
+      chosenCkpt: data.chosen_ckpt
+    });
+
+    if (data.state) {
+      STATE.isPlaying = true;
+
+      const currentCanvasId = (STATE.phase === 2) ? 'gameCanvas_2' : 'gameCanvas';
+      drawGame(data.state, currentCanvasId);
+
+      startTimer(CONFIG.ROUND_DURATION_SEC);
+      updateGameUI();
     }
+  } catch (err) {
+    console.error("Round Start Error:", err);
+    alert("Failed to start round. Please refresh.");
+  }
 }
+
 
 // C. TIMER LOGIC
 function startTimer(duration) {

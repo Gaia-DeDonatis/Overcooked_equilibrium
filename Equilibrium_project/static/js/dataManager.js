@@ -24,19 +24,24 @@ const DataManager = {
     },
 
     // 3. Round Management
-    startNewRound(phase, configId) {
+    startNewRound(phase, configId, extraMeta = {}) {
         const newRound = {
-            phase: phase,
-            configId: configId,
+            phase,
+            configId,
             startTime: Date.now(),
             steps: [],
             finalScore: 0,
             dishesServed: 0,
-            humanSteps: 0
-        };
+            humanSteps: 0,
 
+            // experiment metadata
+            mapTopology: extraMeta.mapTopology ?? null,
+            policyId: extraMeta.policyId ?? null,
+            chosenCkpt: extraMeta.chosenCkpt ?? null,
+        };
         this.LOGS.rounds.push(newRound);
     },
+
 
     // 4. Logging Actions
     logStep(serverData, humanKey) {
@@ -58,12 +63,26 @@ const DataManager = {
 
         // D. Log the step
         currentRound.steps.push({
-            step: serverData.state.cur_step,
+            step: serverData.state.cur_step, 
             timestamp: Date.now(),
+
+            // input/actions
             humanAction: humanKey,
+            aiMacroAction: serverData.robot_last_action?.ai_macro_action ?? null,
+            aiLowLevelAction: serverData.robot_last_action?.low_level_action ?? null,
+            aiArrow: serverData.robot_last_action?.arrow ?? null,
+
             reward: currentScore,
-            agents: serverData.state.agents || [] 
+
+            // state
+            agents: serverData.state.agents || [],
+            items: serverData.state.items || [],
+
+            // performance
+            cumulativeReward: serverData.cumulative_reward,
+            deltaReward: delta
         });
+
 
         if (humanKey !== 'Stay') {
             currentRound.humanSteps++;
