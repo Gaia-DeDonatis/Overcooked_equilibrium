@@ -16,14 +16,15 @@ async function api(endpoint, data={}) {
     return await res.json();
 }
 
+
 // --- 2. CONDITION ASSIGNMENT ---
 function assignConditions() {
-    const pid = LOGS.prolificId || "test";
+    const pid = STATE.prolificId || "test";
     let h = 0;
     for(let i=0; i<pid.length; i++) h = (h*31 + pid.charCodeAt(i)) >>> 0;
     
     // Randomly assign layout and models
-    const layouts = ["layout1", "layout2", "layout3", "layout4"];
+    const layouts = ["cramped", "circuit", "asymmetric", "ring", "forced"];
     const models = ["model1", "model2", "model3", "model4"];
     
     STATE.assignment.layout = layouts[h % layouts.length];
@@ -31,8 +32,6 @@ function assignConditions() {
     // Assign Models (Phase 1 vs Phase 2)
     STATE.assignment.phase1Model = models[h % models.length];
     STATE.assignment.phase2Model = models[(h + 1) % models.length];
-    
-    LOGS.assignment = STATE.assignment;
     
     console.log("Assigned:", STATE.assignment);
 }
@@ -78,7 +77,6 @@ async function startPhase(phaseNum) {
                 phase1Model: "model1", 
                 phase2Model: "model2"
             };
-            LOGS.assignment = STATE.assignment;
         }
 
     STATE.phase = phaseNum;
@@ -106,16 +104,7 @@ async function startRound() {
     
     if (gameTimer) clearInterval(gameTimer);
 
-    // Initialize Data
-    currentRoundData = {
-        roundNumber: STATE.totalRounds + 1,
-        phase: STATE.phase,
-        configId: STATE.configId,
-        steps: [],
-        finalScore: 0,
-        humanSteps: 0,
-        startTime: Date.now()
-    };
+    DataManager.startNewRound(STATE.phase, STATE.configId);
     
     try {
         const data = await api('/reset', { config_id: STATE.configId });
@@ -138,7 +127,7 @@ async function startRound() {
 // C. TIMER LOGIC
 function startTimer(duration) {
     timeLeft = duration;
-    updateTimerDisplay(); // Update immediately
+    updateTimerDisplay();
 
     gameTimer = setInterval(() => {
         timeLeft--;
@@ -152,14 +141,18 @@ function startTimer(duration) {
 }
 
 function updateTimerDisplay() {
-    const el = document.getElementById('stepsLeft'); // Keeping ID 'stepsLeft' to avoid HTML changes
+    let timerId = (STATE.phase === 2) ? 'stepsLeft_2' : 'stepsLeft';
+    
+    const el = document.getElementById(timerId); 
+    
     if (el) {
         const m = Math.floor(timeLeft / 60);
         const s = timeLeft % 60;
         el.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
         
-        // Red warning color at 10 seconds
         el.style.color = timeLeft <= 10 ? '#dc2626' : '#2563eb';
+    } else {
+        console.warn(`Timer element '${timerId}' not found!`);
     }
 }
 
@@ -182,17 +175,13 @@ async function finishTimeBasedRound() {
     STATE.gameOver = true;
     console.log("TIME IS UP!");
 
-    // 1. Get Final Score (You already had this correct!)
+    DataManager.endRound();
+    STATE.totalRounds++; 
+    
+    // 2. Final Score
     let scoreId = (STATE.phase === 2) ? 'currentScore_2' : 'currentScore';
     const scoreEl = document.getElementById(scoreId);
     const finalScore = scoreEl ? parseInt(scoreEl.innerText) : 0;
-    
-    currentRoundData.finalScore = finalScore;
-    currentRoundData.endTime = Date.now();
-    currentRoundData.duration = CONFIG.ROUND_DURATION_SEC;
-    
-    LOGS.rounds.push({...currentRoundData});
-    STATE.totalRounds++; 
     
     // FIX: Determine Overlay IDs dynamically
     let suffix = (STATE.phase === 2) ? '_2' : '';
@@ -270,15 +259,17 @@ function renderPhaseSummary() {
 
     tbody.innerHTML = ''; 
 
-    const rounds = LOGS.rounds.filter(r => r.phase === STATE.phase);
+    const rounds = DataManager.LOGS.rounds.filter(r => r.phase === STATE.phase);
 
-    rounds.forEach(round => {
+    rounds.forEach((round, index) => {
         const realDishes = round.dishesServed || 0;
+        
+        const displayRoundNum = index + 1;
 
         const row = `
             <tr style="border-bottom: 1px solid #eee;">
                 <td style="padding: 12px; font-weight: bold; color: #4b5563;">
-                    ${round.phaseRound || round.roundNumber}
+                    ${displayRoundNum}
                 </td>
                 <td style="padding: 12px; font-weight: bold; color: #16a34a;">
                     ${round.finalScore}
@@ -287,7 +278,7 @@ function renderPhaseSummary() {
                     ${realDishes}
                 </td>
                 <td style="padding: 12px; color: #2563eb;">
-                    ${round.humanSteps}
+                    ${round.humanSteps || 0}
                 </td>
             </tr>
         `;
@@ -330,17 +321,7 @@ document.addEventListener('keydown', async (e) => {
         const scoreEl = document.getElementById(scoreId);
         if(scoreEl) scoreEl.innerText = Math.floor(data.cumulative_reward || 0);
         
-        // Log the step
-        currentRoundData.dishesServed = data.dishes_served || 0; 
-        currentRoundData.steps.push({ 
-            key: e.key, 
-            reward: data.cumulative_reward,
-            timestamp: Date.now()
-        });
-        
-        if(e.key !== 'Stay') {
-            currentRoundData.humanSteps++;
-        }
+        DataManager.logStep(data, e.key);
     }
 });
 
@@ -364,10 +345,14 @@ if(inputID) {
     inputGender.addEventListener('change', validateIntro);
     
     btnConsent.onclick = () => {
-        LOGS.prolificId = inputID.value.trim();
-        LOGS.age = parseInt(inputAge.value);
-        LOGS.gender = inputGender.value;
-        assignConditions();
+        STATE.prolificId = inputID.value.trim();
+        const age = parseInt(inputAge.value);
+        const gender = inputGender.value;
+        
+        assignConditions(); 
+
+        DataManager.initUser(STATE.prolificId, age, gender, STATE.assignment);
+
         showPage('page-consent');
     };
 }
@@ -410,9 +395,6 @@ function calculatePageErrors(questionNames) {
     questionNames.forEach(name => {
         const selected = document.querySelector(`input[name="${name}"]:checked`);
         
-        // Logic: 
-        // 1. If nothing selected -> Error
-        // 2. If selected value is NOT 'correct' -> Error
         if (!selected || selected.value !== 'correct') {
             pageErrors++;
             console.log(`Mistake on question: ${name}`);
@@ -478,7 +460,6 @@ if (btnStartTask) {
 // --- 9. PHASE TRANSITIONS ---
 
 // A. Phase 1 Mid-Survey -> Start Phase 2
-// (Matches HTML ID: "btn-submit-mid-survey")
 document.getElementById('btn-submit-mid-survey')?.addEventListener('click', () => {
     // 1. Validation
     const qLoad = document.querySelector('input[name="mid_load"]:checked');
@@ -489,21 +470,22 @@ document.getElementById('btn-submit-mid-survey')?.addEventListener('click', () =
         return;
     }
 
-    // 2. Save Data
-    LOGS.phase1Questionnaire = {
+    // 2. Save Data to dataManager
+    const answers = {
         cognitiveLoad: parseInt(qLoad.value),
         collaboration: parseInt(qCollab.value),
         strategy: document.querySelector('input[name="mid_strategy"]:checked')?.value,
         predictability: document.querySelector('input[name="mid_predict"]:checked')?.value
     };
+    
+    DataManager.saveQuestionnaire(1, answers);
 
     // 3. Start Phase 2
     startPhase(2);
 });
 
-// B. Phase 2 Final Survey -> Submit Data
-// (Matches HTML ID: "btn-submit-final-survey")
-document.getElementById('btn-submit-final-survey')?.addEventListener('click', () => {
+// B. Submit Data
+document.getElementById('btn-submit-final-survey')?.addEventListener('click', async () => {
     // 1. Validation
     const qLoad = document.querySelector('input[name="post_load"]:checked');
     const qCollab = document.querySelector('input[name="post_collab"]:checked');
@@ -514,23 +496,24 @@ document.getElementById('btn-submit-final-survey')?.addEventListener('click', ()
     }
 
     // 2. Save Data
-    LOGS.phase2Questionnaire = {
+    const answers = {
         cognitiveLoad: parseInt(qLoad.value),
         collaboration: parseInt(qCollab.value),
         strategy: document.querySelector('input[name="post_strategy"]:checked')?.value,
         predictability: document.querySelector('input[name="post_predict"]:checked')?.value
     };
-    
-    LOGS.finalFeedback = document.getElementById('final-feedback')?.value || "";
+
+    DataManager.saveQuestionnaire(2, answers);
+    DataManager.saveFinalFeedback(document.getElementById('final-feedback')?.value || "");
 
     // 3. Submit to Backend
-    submitData();
+    await submitData();
 });
 
 // --- 10. FINAL SUBMISSION ---
 async function submitData() {
     try {
-        const response = await api('/submit_log', { log: LOGS });
+        const response = await DataManager.submitToServer();
         
         if(response.success) {
             showPage('page-end');

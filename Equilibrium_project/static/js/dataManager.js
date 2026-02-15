@@ -1,119 +1,102 @@
-// dataManager.js
-//this file is still not connected, it's just a draft of the data we need to collect from the partecipants
-
 const DataManager = {
     // 1. Data Structure
     LOGS: {
-        metadata: {
-            participantId: null,
-            condition: null, // "Control" or "Experiment"
-            age: null,
-            gender: null,
-            //sessionStart: null
+        prolificId: "unknown",
+        startTime: null,
+        rounds: [],
+        questionnaires: {
+            phase1: {},
+            phase2: {}
         },
-        preGameQuiz: { attempts: 0, passed: false },
-        phase1: { rounds: [], questionnaire: {} },
-        phase2: { rounds: [], questionnaire: {} },
         finalFeedback: ""
     },
 
-
-    // 2. Metadata & Quiz Handlers
-    initUser(prolificId, age, gender, assignedGroup) {
+    // 2. Initialization
+    initUser(prolificId, age, gender, assignedCondition) {
+        this.LOGS.prolificId = prolificId;
+        this.LOGS.startTime = new Date().toISOString();
         this.LOGS.metadata = {
-            participantId: prolificId,
-            condition: assignedGroup, // Received from the backend
             age: age,
             gender: gender,
-            //sessionStart: new Date().toISOString()
+            condition: assignedCondition
         };
-        
-        STATE.condition = assignedGroup; 
+        console.log("DataManager Initialized for:", prolificId);
     },
 
-    saveQuiz(attempts, passed) {
-        this.LOGS.preGameQuiz = { 
-            attempts, 
-            passed, 
-            //timestamp: new Date().toISOString() 
-        };
-    },
-
-    // 3. Round Management (Level 1)
-    startNewRound(phaseNumber, mapTopology, policyId) {
-        const phaseKey = `phase${phaseNumber}`;
+    // 3. Round Management
+    startNewRound(phase, configId) {
         const newRound = {
-            // STATIC DATA (Does not change during the round)
-            roundMetadata: {
-                roundNumber: this.LOGS[phaseKey].rounds.length + 1,
-                map: mapTopology,
-                policy_id: policyId,
-                startTime: Date.now()
-            },
-            // SUMMARY METRICS (Updated live, but represents the whole round)
-            metrics: { 
-                totalScore: 0, 
-                humanSubtasks: 0, 
-                aiSubtasks: 0 
-            },
-            // THE ACTION LOG (Level 2 - where the stream goes)
-            stateUpdateLog: [] 
+            phase: phase,
+            configId: configId,
+            startTime: Date.now(),
+            steps: [],
+            finalScore: 0,
+            dishesServed: 0,
+            humanSteps: 0
         };
-        this.LOGS[phaseKey].rounds.push(newRound);
+
+        this.LOGS.rounds.push(newRound);
     },
 
-    // 4. TELEMETRY: State-Update Logger (Level 3)
-    logAction(serverData, humanKey, phaseNumber) {
-        const phaseKey = `phase${phaseNumber}`;
-        const rounds = this.LOGS[phaseKey].rounds;
-        const currentRound = rounds[rounds.length - 1];
-        
+    // 4. Logging Actions
+    logStep(serverData, humanKey) {
+        const currentRound = this.LOGS.rounds[this.LOGS.rounds.length - 1];
         if (!currentRound) return;
 
-        const entry = {
-            timestamp: Date.now(),
-            // 1. Agents actions
-            agents: {
-                human: { pos: serverData.human_pos, action: humanKey },
-                ai: { pos: serverData.ai_pos, action: serverData.ai_action }
-            },
-            // 2. Environment state
-            objects: serverData.objects ? serverData.objects.map(obj => ({
-                type: obj.name,                  
-                pos: [obj.x, obj.y],
-                state: obj.status 
-            })) : [],
-            // 3. Performance
-            stepReward: serverData.last_step_reward || 0, // Did this specific move earn points?
-            isHumanIdle: (humanKey === 'Stay' || humanKey === null) 
-        };
-        
-        currentRound.stateUpdateLog.push(entry);
+        // A. Calculate the Score Jump 
+        const previousScore = currentRound.finalScore || 0;
+        const currentScore = serverData.cumulative_reward;
+        const delta = currentScore - previousScore;
 
-        // 4. Summary Metrics Update
-        currentRound.metrics.totalScore = serverData.cumulative_reward || 0;
-        
-        // Check if the server reported a finished dish this step
-        if (serverData.dish_delivered_this_step) {
-            currentRound.metrics.dishesServed++;
+        // B. Detect a Delivery
+        if (delta > 100) {
+            currentRound.dishesServed = (currentRound.dishesServed || 0) + 1;
+        }
+
+        // C. Update the current score for the next frame's comparison
+        currentRound.finalScore = currentScore;
+
+        // D. Log the step
+        currentRound.steps.push({
+            step: serverData.state.cur_step,
+            timestamp: Date.now(),
+            humanAction: humanKey,
+            reward: currentScore,
+            agents: serverData.state.agents || [] 
+        });
+
+        if (humanKey !== 'Stay') {
+            currentRound.humanSteps++;
         }
     },
 
-    // 5. Questionnaire & Final Submission
-    saveQuestionnaire(phaseNumber, answers) {
-        this.LOGS[`phase${phaseNumber}`].questionnaire = answers;
+    // 5. End Round
+    endRound() {
+        const currentRound = this.LOGS.rounds[this.LOGS.rounds.length - 1];
+        if (currentRound) {
+            currentRound.endTime = Date.now();
+            currentRound.duration = (currentRound.endTime - currentRound.startTime) / 1000;
+        }
     },
 
-    async submitToServer() {
-        console.log("Submitting final log...", this.LOGS);
-        return await fetch('/submit_log', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(this.LOGS)
-        }).then(res => res.json());
+    // 6. Questionnaires
+    saveQuestionnaire(phase, data) {
+        if (phase === 1) this.LOGS.questionnaires.phase1 = data;
+        if (phase === 2) this.LOGS.questionnaires.phase2 = data;
     },
 
     saveFinalFeedback(text) {
         this.LOGS.finalFeedback = text;
+    },
+
+    // 7. Submission
+    async submitToServer() {
+        console.log("Submitting Data...", this.LOGS);
+        // to match the @app.route('/submit_log') in backend_new.py
+        return await fetch(`${SERVER_URL}/submit_log`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ log: this.LOGS }) 
+        }).then(res => res.json());
     }
 };

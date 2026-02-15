@@ -55,7 +55,7 @@ except Exception:
     pass
 
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from stable_baselines3 import PPO
 from stable_baselines3.common.save_util import load_from_zip_file
@@ -67,7 +67,13 @@ print("--> Loaded gym_macro_overcooked (Environments: Overcooked-equilibrium-v0)
 from gym_macro_overcooked.items import Tomato, Lettuce, Onion, Plate, Knife, Delivery, Agent, Food, DirtyPlate
 
 
-app = Flask(__name__)
+STATIC_DIR = os.path.join(target_folder, "static")
+
+app = Flask(
+    __name__,
+    static_folder=STATIC_DIR,
+    static_url_path="/static"
+)
 CORS(app)
 
 
@@ -479,6 +485,13 @@ def extract_state(sess: Session):
 # =========================
 # Routing
 # =========================
+
+# 1. Route for the HTML file
+@app.route('/')
+def index():
+    # Points to Equilibrium_project/equilibrium_frontend.html
+    return send_from_directory(target_folder, 'equilibrium_frontend.html')
+
 @app.route('/new_session', methods=['POST'])
 def new_session():
     sid = SESSION_MGR.new_session()
@@ -641,6 +654,7 @@ def get_state():
     with sess.lock:
         return jsonify(success=True, state=extract_state(sess))
 
+
 @app.route('/submit_log', methods=['POST'])
 def submit_log():
     """Receive the logData json from the frontend, and save the json to the server. Then return the Prolific completion code."""
@@ -651,7 +665,7 @@ def submit_log():
             return jsonify(success=False, error="Invalid payload: 'rounds' missing"), 400
 
 
-        # Prolific completion code. remember change to your code.
+        # Prolific completion code. To change with the real code.
         completion_code = "C108AMXR"
 
 

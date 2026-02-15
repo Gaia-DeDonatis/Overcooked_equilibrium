@@ -1,0 +1,3288 @@
+{
+  "prolificId": "33",
+  "startTime": "2026-02-15T11:11:23.886Z",
+  "rounds": [
+    {
+      "phase": 1,
+      "configId": "asymmetric_model1",
+      "startTime": 1771153921258,
+      "steps": [
+        {
+          "timestamp": 1771153924582,
+          "humanAction": "ArrowLeft",
+          "reward": -2,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 2,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153924910,
+          "humanAction": "ArrowUp",
+          "reward": -4,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 2,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153927471,
+          "humanAction": "ArrowUp",
+          "reward": -6,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153928136,
+          "humanAction": "ArrowRight",
+          "reward": -8,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153929270,
+          "humanAction": "ArrowRight",
+          "reward": -10,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153929951,
+          "humanAction": "ArrowUp",
+          "reward": -2,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153930215,
+          "humanAction": "ArrowUp",
+          "reward": 6,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153930254,
+          "humanAction": "ArrowUp",
+          "reward": 14,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "ChoppedLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153930966,
+          "humanAction": "ArrowRight",
+          "reward": 32,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153931635,
+          "humanAction": "ArrowRight",
+          "reward": 30,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153931922,
+          "humanAction": "ArrowDown",
+          "reward": 28,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 2,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153932631,
+          "humanAction": "ArrowDown",
+          "reward": 26,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 2,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 3,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153932896,
+          "humanAction": "ArrowLeft",
+          "reward": 24,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 3,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153933617,
+          "humanAction": "ArrowDown",
+          "reward": 222,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153933876,
+          "humanAction": "ArrowLeft",
+          "reward": 220,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153934616,
+          "humanAction": "ArrowLeft",
+          "reward": 228,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153936147,
+          "humanAction": "ArrowUp",
+          "reward": 236,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 2,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153936220,
+          "humanAction": "ArrowUp",
+          "reward": 234,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153936610,
+          "humanAction": "ArrowRight",
+          "reward": 252,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 1,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153937580,
+          "humanAction": "ArrowUp",
+          "reward": 250,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 2,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153939434,
+          "humanAction": "ArrowUp",
+          "reward": 248,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 3,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153940804,
+          "humanAction": "ArrowRight",
+          "reward": 246,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153941406,
+          "humanAction": "ArrowUp",
+          "reward": 454,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153941651,
+          "humanAction": "ArrowUp",
+          "reward": 462,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153942088,
+          "humanAction": "ArrowUp",
+          "reward": 460,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "ChoppedLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153943087,
+          "humanAction": "ArrowRight",
+          "reward": 478,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153943427,
+          "humanAction": "ArrowRight",
+          "reward": 476,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153944221,
+          "humanAction": "ArrowDown",
+          "reward": 474,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 2,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153944483,
+          "humanAction": "ArrowDown",
+          "reward": 472,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 2,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 3,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153944778,
+          "humanAction": "ArrowLeft",
+          "reward": 470,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 3,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153945417,
+          "humanAction": "ArrowDown",
+          "reward": 668,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153945703,
+          "humanAction": "ArrowLeft",
+          "reward": 666,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153946988,
+          "humanAction": "ArrowLeft",
+          "reward": 674,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153947500,
+          "humanAction": "ArrowUp",
+          "reward": 682,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 2,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153948553,
+          "humanAction": "ArrowUp",
+          "reward": 680,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153948841,
+          "humanAction": "ArrowRight",
+          "reward": 698,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 1,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153949787,
+          "humanAction": "ArrowUp",
+          "reward": 696,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 2,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153950354,
+          "humanAction": "ArrowUp",
+          "reward": 694,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 3,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153951533,
+          "humanAction": "ArrowRight",
+          "reward": 692,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153952124,
+          "humanAction": "ArrowUp",
+          "reward": 900,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153952385,
+          "humanAction": "ArrowUp",
+          "reward": 908,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153953100,
+          "humanAction": "ArrowUp",
+          "reward": 906,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "ChoppedLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153954218,
+          "humanAction": "ArrowRight",
+          "reward": 924,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153954692,
+          "humanAction": "ArrowRight",
+          "reward": 922,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153955521,
+          "humanAction": "ArrowDown",
+          "reward": 920,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 2,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153955803,
+          "humanAction": "ArrowDown",
+          "reward": 918,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 2,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 3,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153956551,
+          "humanAction": "ArrowLeft",
+          "reward": 916,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 3,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153956816,
+          "humanAction": "ArrowDown",
+          "reward": 1114,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153957465,
+          "humanAction": "ArrowLeft",
+          "reward": 1112,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153957751,
+          "humanAction": "ArrowLeft",
+          "reward": 1120,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153958701,
+          "humanAction": "ArrowUp",
+          "reward": 1128,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 2,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153959006,
+          "humanAction": "ArrowUp",
+          "reward": 1126,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153959788,
+          "humanAction": "ArrowRight",
+          "reward": 1144,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 1,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153960171,
+          "humanAction": "ArrowUp",
+          "reward": 1142,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 2,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153961573,
+          "humanAction": "ArrowUp",
+          "reward": 1140,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 3,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153961820,
+          "humanAction": "ArrowRight",
+          "reward": 1138,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153962079,
+          "humanAction": "ArrowUp",
+          "reward": 1346,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153963133,
+          "humanAction": "ArrowUp",
+          "reward": 1354,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153963491,
+          "humanAction": "ArrowUp",
+          "reward": 1352,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "ChoppedLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153964538,
+          "humanAction": "ArrowRight",
+          "reward": 1370,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153964915,
+          "humanAction": "ArrowRight",
+          "reward": 1368,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153965851,
+          "humanAction": "ArrowDown",
+          "reward": 1366,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 2,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153966340,
+          "humanAction": "ArrowDown",
+          "reward": 1364,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 2,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 3,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153967154,
+          "humanAction": "ArrowLeft",
+          "reward": 1362,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 3,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153967399,
+          "humanAction": "ArrowDown",
+          "reward": 1560,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            }
+          ]
+        }
+      ],
+      "finalScore": 1560,
+      "dishesServed": 7,
+      "humanSteps": 65,
+      "endTime": 1771153968208,
+      "duration": 46.95
+    },
+    {
+      "phase": 2,
+      "configId": "asymmetric_model2",
+      "startTime": 1771153975334,
+      "steps": [
+        {
+          "timestamp": 1771153978191,
+          "humanAction": "ArrowLeft",
+          "reward": -2,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 2,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153978466,
+          "humanAction": "ArrowUp",
+          "reward": -4,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 2,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153979518,
+          "humanAction": "ArrowUp",
+          "reward": -6,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153979786,
+          "humanAction": "ArrowRight",
+          "reward": -8,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153980059,
+          "humanAction": "ArrowRight",
+          "reward": -10,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153981147,
+          "humanAction": "ArrowUp",
+          "reward": -2,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153981409,
+          "humanAction": "ArrowUp",
+          "reward": 6,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153982126,
+          "humanAction": "ArrowUp",
+          "reward": 14,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "ChoppedLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153983107,
+          "humanAction": "ArrowRight",
+          "reward": 32,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153983598,
+          "humanAction": "ArrowRight",
+          "reward": 30,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153983988,
+          "humanAction": "ArrowDown",
+          "reward": 28,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 2,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153984902,
+          "humanAction": "ArrowDown",
+          "reward": 26,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 2,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 3,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153985191,
+          "humanAction": "ArrowLeft",
+          "reward": 24,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 3,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153985885,
+          "humanAction": "ArrowDown",
+          "reward": 222,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153986145,
+          "humanAction": "ArrowLeft",
+          "reward": 220,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153986504,
+          "humanAction": "ArrowLeft",
+          "reward": 228,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153987282,
+          "humanAction": "ArrowUp",
+          "reward": 236,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 2,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153987530,
+          "humanAction": "ArrowUp",
+          "reward": 234,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153987865,
+          "humanAction": "ArrowRight",
+          "reward": 252,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 1,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153988591,
+          "humanAction": "ArrowUp",
+          "reward": 250,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 2,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153989193,
+          "humanAction": "ArrowUp",
+          "reward": 248,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 3,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153989601,
+          "humanAction": "ArrowRight",
+          "reward": 246,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153990336,
+          "humanAction": "ArrowUp",
+          "reward": 454,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153990603,
+          "humanAction": "ArrowUp",
+          "reward": 462,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153991164,
+          "humanAction": "ArrowUp",
+          "reward": 460,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "ChoppedLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153991944,
+          "humanAction": "ArrowRight",
+          "reward": 478,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153992199,
+          "humanAction": "ArrowRight",
+          "reward": 476,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153992587,
+          "humanAction": "ArrowRight",
+          "reward": 474,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153993389,
+          "humanAction": "ArrowRight",
+          "reward": 472,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153993651,
+          "humanAction": "ArrowDown",
+          "reward": 470,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 2,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153994223,
+          "humanAction": "ArrowDown",
+          "reward": 468,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 2,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 3,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153994487,
+          "humanAction": "ArrowLeft",
+          "reward": 466,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 3,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153994763,
+          "humanAction": "ArrowDown",
+          "reward": 664,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153995401,
+          "humanAction": "ArrowLeft",
+          "reward": 662,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153995649,
+          "humanAction": "ArrowLeft",
+          "reward": 670,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153996309,
+          "humanAction": "ArrowUp",
+          "reward": 678,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 2,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153996570,
+          "humanAction": "ArrowUp",
+          "reward": 676,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153996869,
+          "humanAction": "ArrowRight",
+          "reward": 694,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 1,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153997535,
+          "humanAction": "ArrowUp",
+          "reward": 692,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 2,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153997795,
+          "humanAction": "ArrowUp",
+          "reward": 690,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 3,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153998221,
+          "humanAction": "ArrowRight",
+          "reward": 688,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153998862,
+          "humanAction": "ArrowUp",
+          "reward": 896,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153999338,
+          "humanAction": "ArrowUp",
+          "reward": 904,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771153999560,
+          "humanAction": "ArrowUp",
+          "reward": 902,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "ChoppedLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154000223,
+          "humanAction": "ArrowRight",
+          "reward": 920,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154000485,
+          "humanAction": "ArrowRight",
+          "reward": 918,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154000607,
+          "humanAction": "ArrowDown",
+          "reward": 916,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 2,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154001016,
+          "humanAction": "ArrowDown",
+          "reward": 914,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 2,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 3,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154001645,
+          "humanAction": "ArrowLeft",
+          "reward": 912,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 3,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154001900,
+          "humanAction": "ArrowDown",
+          "reward": 1110,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154002071,
+          "humanAction": "ArrowLeft",
+          "reward": 1108,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154002750,
+          "humanAction": "ArrowUp",
+          "reward": 1116,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 2,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154003304,
+          "humanAction": "ArrowDown",
+          "reward": 1124,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154003884,
+          "humanAction": "ArrowLeft",
+          "reward": 1122,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154004131,
+          "humanAction": "ArrowUp",
+          "reward": 1140,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 1,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 2,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154004726,
+          "humanAction": "ArrowUp",
+          "reward": 1138,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 2,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154004982,
+          "humanAction": "ArrowRight",
+          "reward": 1136,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 3,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154005080,
+          "humanAction": "ArrowUp",
+          "reward": 1134,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154005751,
+          "humanAction": "ArrowUp",
+          "reward": 1332,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154006010,
+          "humanAction": "ArrowUp",
+          "reward": 1330,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154006562,
+          "humanAction": "ArrowUp",
+          "reward": 1328,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154007218,
+          "humanAction": "ArrowRight",
+          "reward": 1326,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154007470,
+          "humanAction": "ArrowUp",
+          "reward": 1334,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154007759,
+          "humanAction": "ArrowUp",
+          "reward": 1342,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154008303,
+          "humanAction": "ArrowUp",
+          "reward": 1340,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": "ChoppedLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154008601,
+          "humanAction": "ArrowRight",
+          "reward": 1358,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154009366,
+          "humanAction": "ArrowRight",
+          "reward": 1356,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154010185,
+          "humanAction": "ArrowDown",
+          "reward": 1354,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 2,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154010443,
+          "humanAction": "ArrowDown",
+          "reward": 1352,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 3,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154010975,
+          "humanAction": "ArrowDown",
+          "reward": 1350,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154011669,
+          "humanAction": "ArrowUp",
+          "reward": 1348,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 2,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154011989,
+          "humanAction": "ArrowUp",
+          "reward": 1346,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154012662,
+          "humanAction": "ArrowLeft",
+          "reward": 1344,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154012919,
+          "humanAction": "ArrowLeft",
+          "reward": 1292,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154013166,
+          "humanAction": "ArrowDown",
+          "reward": 1290,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 2,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154013764,
+          "humanAction": "ArrowDown",
+          "reward": 1288,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154014026,
+          "humanAction": "ArrowDown",
+          "reward": 1286,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154014549,
+          "humanAction": "ArrowUp",
+          "reward": 1284,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 2,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154015745,
+          "humanAction": "ArrowUp",
+          "reward": 1282,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154016274,
+          "humanAction": "ArrowRight",
+          "reward": 1280,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 2
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154017412,
+          "humanAction": "ArrowRight",
+          "reward": 1278,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": "FreshLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154017658,
+          "humanAction": "ArrowUp",
+          "reward": 1286,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154017748,
+          "humanAction": "ArrowUp",
+          "reward": 1294,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154018009,
+          "humanAction": "ArrowUp",
+          "reward": 1292,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "ChoppedLettuce",
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154018675,
+          "humanAction": "ArrowDown",
+          "reward": 1290,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 3,
+              "y": 3
+            },
+            {
+              "color": "blue",
+              "holding": "ChoppedLettuce",
+              "holding_containing": null,
+              "x": 2,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154019249,
+          "humanAction": "ArrowRight",
+          "reward": 1308,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 2,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154019508,
+          "humanAction": "ArrowRight",
+          "reward": 1506,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 2
+            },
+            {
+              "color": "blue",
+              "holding": "plate",
+              "holding_containing": "ChoppedLettuce",
+              "x": 2,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154019822,
+          "humanAction": "ArrowLeft",
+          "reward": 1504,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 3,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 2,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "timestamp": 1771154020694,
+          "humanAction": "ArrowUp",
+          "reward": 1502,
+          "agents": [
+            {
+              "color": "robot",
+              "holding": null,
+              "holding_containing": null,
+              "x": 2,
+              "y": 1
+            },
+            {
+              "color": "blue",
+              "holding": null,
+              "holding_containing": null,
+              "x": 1,
+              "y": 3
+            }
+          ]
+        }
+      ],
+      "finalScore": 1502,
+      "dishesServed": 7,
+      "humanSteps": 89,
+      "endTime": 1771154021861,
+      "duration": 46.527
+    }
+  ],
+  "questionnaires": {
+    "phase1": {
+      "cognitiveLoad": 2,
+      "collaboration": 2,
+      "strategy": "2",
+      "predictability": "2"
+    },
+    "phase2": {
+      "cognitiveLoad": 2,
+      "collaboration": 2,
+      "strategy": "2",
+      "predictability": "2"
+    }
+  },
+  "finalFeedback": "",
+  "metadata": {
+    "age": 33,
+    "gender": "Female",
+    "condition": {
+      "layout": "asymmetric",
+      "phase1Model": "model1",
+      "phase2Model": "model2"
+    }
+  }
+}

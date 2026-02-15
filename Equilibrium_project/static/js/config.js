@@ -5,13 +5,14 @@ const SERVER_URL = 'http://localhost:5000';
 // Configuration
 const CONFIG = {
     PRACTICE_SCORE: 200,
-    ROUNDS_PER_PHASE: 1, // to change with 6
+    ROUNDS_PER_PHASE: 1, // to change with 10
     ROUND_DURATION_SEC: 45
 };
 
-// Global State (Shared across all files)
+// Global State
 const STATE = {
     sessionId: null,
+    prolificId: null,
     phase: 0,
     round: 1,
     totalRounds: 0,
@@ -26,6 +27,7 @@ const STATE = {
     }
 };
 
+/*
 // Logs to send to server at the end
 const LOGS = {
     prolificId: "",
@@ -45,4 +47,4 @@ let currentRoundData = {
     steps: [],
     finalScore: 0,
     humanSteps: 0
-};
+};*/
