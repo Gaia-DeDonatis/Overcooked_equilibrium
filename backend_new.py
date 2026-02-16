@@ -111,7 +111,7 @@ MAX_STEPS = 200
 # =========================
 # fixed map, random AI policy
 # =========================
-FIXED_MAP_TYPE = "circle"
+FIXED_MAP_TYPE = "cramped"
 FIXED_GRID_DIM = [5, 5]
 
 POLICY_POOL_DIR = os.path.join(current_dir, "policy_pool")
@@ -407,7 +407,7 @@ def create_envs_for_session(sess: Session, config_id: str):
         sess.current_model_id  = "none"
     else:
         sess.config_id = config_id
-        sess.current_layout_id = "fixed_circle_5x5"
+        sess.current_layout_id = "fixed_cramped_5x5"
         sess.current_model_id  = os.path.basename(sess.chosen_policy_dir)
 
     # reset the step count and reward

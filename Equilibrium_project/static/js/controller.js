@@ -101,7 +101,7 @@ function startAiTick() {
       const scoreEl = document.getElementById(scoreId);
       if (scoreEl) scoreEl.innerText = Math.floor(data.cumulative_reward || 0);
 
-      DataManager.logStep(data, keyToSend);
+      DataManager.logStep(data, keyToSend, timeLeft);
     } catch (err) {
       console.error("AI tick error:", err);
     } finally {
@@ -153,27 +153,48 @@ async function startRound() {
   try {
     const data = await api('/reset', { config_id: STATE.configId });
 
-    // START NEW ROUND HERE (after reset returns)
+    if (DataManager.LOGS.meta.tick_ms == null) {
+      DataManager.LOGS.meta.tick_ms = AI_TICK_MS;
+    }
+
+    if (STATE.phase === 1) {
+      if (DataManager.LOGS.meta.policy_id_phase1 == null && data.model_id != null) {
+        DataManager.LOGS.meta.policy_id_phase1 = data.model_id;
+      }
+      if (DataManager.LOGS.meta.chosen_ckpt_phase1 == null && data.chosen_ckpt != null) {
+        DataManager.LOGS.meta.chosen_ckpt_phase1 = data.chosen_ckpt;
+      }
+    } else if (STATE.phase === 2) {
+      if (DataManager.LOGS.meta.policy_id_phase2 == null && data.model_id != null) {
+        DataManager.LOGS.meta.policy_id_phase2 = data.model_id;
+      }
+      if (DataManager.LOGS.meta.chosen_ckpt_phase2 == null && data.chosen_ckpt != null) {
+        DataManager.LOGS.meta.chosen_ckpt_phase2 = data.chosen_ckpt;
+      }
+    }
+
+    // START NEW ROUND
     DataManager.startNewRound(STATE.phase, STATE.configId, {
       mapTopology: `${data.map_type}_${data.grid_dim}`,
-      policyId: data.policy_id,
+      policyId: data.model_id,
       chosenCkpt: data.chosen_ckpt
     });
 
     if (data.state) {
-        STATE.isPlaying = true;
+      STATE.isPlaying = true;
 
-        const currentCanvasId = (STATE.phase === 2) ? 'gameCanvas_2' : 'gameCanvas';
-        drawGame(data.state, currentCanvasId);
-        startAiTick();
-        startTimer(CONFIG.ROUND_DURATION_SEC);
-        updateGameUI();
+      const currentCanvasId = (STATE.phase === 2) ? 'gameCanvas_2' : 'gameCanvas';
+      drawGame(data.state, currentCanvasId);
+      startAiTick();
+      startTimer(CONFIG.ROUND_DURATION_SEC);
+      updateGameUI();
     }
   } catch (err) {
     console.error("Round Start Error:", err);
     alert("Failed to start round. Please refresh.");
   }
 }
+
 
 
 // C. TIMER LOGIC
@@ -295,7 +316,6 @@ async function finishTimeBasedRound() {
         console.log(`Phase ${STATE.phase} Complete!`);
         document.getElementById(overlayId)?.classList.add('hidden');
 
-        // FIX: Ensure Summary handles the current phase
         renderPhaseSummary(); 
 
         if(STATE.phase === 1) {
@@ -313,13 +333,20 @@ function renderPhaseSummary() {
     const tbody = document.getElementById(tableId);
     if(!tbody) return;
 
-    tbody.innerHTML = ''; 
+    tbody.innerHTML = '';
 
     const rounds = DataManager.LOGS.rounds.filter(r => r.phase === STATE.phase);
 
     rounds.forEach((round, index) => {
-        const realDishes = round.dishesServed || 0;
-        
+
+        const score  = round.summary?.final_score ?? 0;
+        const dishes = round.summary?.dishes_served ?? 0;
+        const steps  = round.summary?.human_steps ?? 0;
+
+        const scoreCompat  = (round.finalScore  ?? score);
+        const dishesCompat = (round.dishesServed ?? dishes);
+        const stepsCompat  = (round.humanSteps ?? steps);
+
         const displayRoundNum = index + 1;
 
         const row = `
@@ -328,19 +355,20 @@ function renderPhaseSummary() {
                     ${displayRoundNum}
                 </td>
                 <td style="padding: 12px; font-weight: bold; color: #16a34a;">
-                    ${round.finalScore}
+                    ${scoreCompat}
                 </td>
                 <td style="padding: 12px;">
-                    ${realDishes}
+                    ${dishesCompat}
                 </td>
                 <td style="padding: 12px; color: #2563eb;">
-                    ${round.humanSteps || 0}
+                    ${stepsCompat}
                 </td>
             </tr>
         `;
         tbody.innerHTML += row;
     });
 }
+
 
 // --- 5. KEYBOARD LISTENER ---
 document.addEventListener('keydown', async (e) => {

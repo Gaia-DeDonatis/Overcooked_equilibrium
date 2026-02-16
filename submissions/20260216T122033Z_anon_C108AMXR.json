@@ -1,0 +1,3476 @@
+{
+  "meta": {
+    "prolificId": "121212",
+    "age": 23,
+    "gender": "Female",
+    "condition": {
+      "layout": "asymmetric",
+      "phase1Model": "model4",
+      "phase2Model": "model1"
+    },
+    "mapTopology": "cramped_5,5",
+    "tick_ms": 500,
+    "seed": 42,
+    "policy_id_phase1": "[equilibrium]agent1_a0sp_20_a1sp_0_helping_True",
+    "policy_id_phase2": "[equilibrium]agent0_a0sp_10_a1sp_1_helping_False",
+    "chosen_ckpt_phase1": "model_500000.zip",
+    "chosen_ckpt_phase2": "model_500000.zip",
+    "startTimeISO": "2026-02-16T12:16:08.561Z"
+  },
+  "questionnaires": {
+    "phase1": {
+      "cognitiveLoad": 5,
+      "collaboration": 1,
+      "strategy": "2",
+      "predictability": "1"
+    },
+    "phase2": {
+      "cognitiveLoad": 7,
+      "collaboration": 1,
+      "strategy": "1",
+      "predictability": "1"
+    }
+  },
+  "finalFeedback": "",
+  "rounds": [
+    {
+      "phase": 1,
+      "configId": "asymmetric_model4",
+      "round_index": null,
+      "mapTopology": "cramped_5,5",
+      "policyId": "[equilibrium]agent1_a0sp_20_a1sp_0_helping_True",
+      "chosenCkpt": "model_500000.zip",
+      "startTimeISO": "2026-02-16T12:16:42.244Z",
+      "tape": [
+        {
+          "t": 1,
+          "time_left_sec": 45,
+          "human_action": "Stay",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -2,
+          "delta_score": -2
+        },
+        {
+          "t": 2,
+          "time_left_sec": 44,
+          "human_action": "Stay",
+          "ai_low": 1,
+          "ai_macro": 2,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            3,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -4,
+          "delta_score": -2
+        },
+        {
+          "t": 3,
+          "time_left_sec": 44,
+          "human_action": "ArrowDown",
+          "ai_low": 2,
+          "ai_macro": 2,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": -6,
+          "delta_score": -2
+        },
+        {
+          "t": 4,
+          "time_left_sec": 43,
+          "human_action": "Stay",
+          "ai_low": 1,
+          "ai_macro": 2,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": -8,
+          "delta_score": -2
+        },
+        {
+          "t": 5,
+          "time_left_sec": 43,
+          "human_action": "ArrowUp",
+          "ai_low": 4,
+          "ai_macro": 2,
+          "human_pos": [
+            2,
+            1
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": -10,
+          "delta_score": -2
+        },
+        {
+          "t": 6,
+          "time_left_sec": 42,
+          "human_action": "ArrowUp",
+          "ai_low": 4,
+          "ai_macro": 2,
+          "human_pos": [
+            1,
+            1
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": -12,
+          "delta_score": -2
+        },
+        {
+          "t": 7,
+          "time_left_sec": 42,
+          "human_action": "ArrowRight",
+          "ai_low": 4,
+          "ai_macro": 2,
+          "human_pos": [
+            1,
+            2
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": -14,
+          "delta_score": -2
+        },
+        {
+          "t": 8,
+          "time_left_sec": 41,
+          "human_action": "ArrowRight",
+          "ai_low": 4,
+          "ai_macro": 2,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": -16,
+          "delta_score": -2
+        },
+        {
+          "t": 9,
+          "time_left_sec": 41,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 2,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": -18,
+          "delta_score": -2
+        },
+        {
+          "t": 10,
+          "time_left_sec": 40,
+          "human_action": "ArrowUp",
+          "ai_low": 4,
+          "ai_macro": 2,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -10,
+          "delta_score": 8
+        },
+        {
+          "t": 11,
+          "time_left_sec": 40,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 2,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -12,
+          "delta_score": -2
+        },
+        {
+          "t": 12,
+          "time_left_sec": 39,
+          "human_action": "ArrowUp",
+          "ai_low": 4,
+          "ai_macro": 2,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -4,
+          "delta_score": 8
+        },
+        {
+          "t": 13,
+          "time_left_sec": 39,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 2,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -6,
+          "delta_score": -2
+        },
+        {
+          "t": 14,
+          "time_left_sec": 38,
+          "human_action": "ArrowUp",
+          "ai_low": 4,
+          "ai_macro": 2,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "ChoppedLettuce",
+          "ai_holding": null,
+          "score": 2,
+          "delta_score": 8
+        },
+        {
+          "t": 15,
+          "time_left_sec": 38,
+          "human_action": "ArrowRight",
+          "ai_low": 4,
+          "ai_macro": 3,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 20,
+          "delta_score": 18
+        },
+        {
+          "t": 16,
+          "time_left_sec": 37,
+          "human_action": "ArrowRight",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "plate",
+          "ai_holding": null,
+          "score": 18,
+          "delta_score": -2
+        },
+        {
+          "t": 17,
+          "time_left_sec": 37,
+          "human_action": "Stay",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "plate",
+          "ai_holding": null,
+          "score": 16,
+          "delta_score": -2
+        },
+        {
+          "t": 18,
+          "time_left_sec": 36,
+          "human_action": "ArrowDown",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            2,
+            3
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "plate",
+          "ai_holding": null,
+          "score": 14,
+          "delta_score": -2
+        },
+        {
+          "t": 19,
+          "time_left_sec": 36,
+          "human_action": "Stay",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            2,
+            3
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "plate",
+          "ai_holding": null,
+          "score": 12,
+          "delta_score": -2
+        },
+        {
+          "t": 20,
+          "time_left_sec": 35,
+          "human_action": "ArrowDown",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            3,
+            3
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "plate",
+          "ai_holding": null,
+          "score": 10,
+          "delta_score": -2
+        },
+        {
+          "t": 21,
+          "time_left_sec": 35,
+          "human_action": "ArrowDown",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            3,
+            3
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 8,
+          "delta_score": -2
+        },
+        {
+          "t": 22,
+          "time_left_sec": 34,
+          "human_action": "Stay",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            3,
+            3
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 6,
+          "delta_score": -2
+        },
+        {
+          "t": 23,
+          "time_left_sec": 34,
+          "human_action": "ArrowUp",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            2,
+            3
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 4,
+          "delta_score": -2
+        },
+        {
+          "t": 24,
+          "time_left_sec": 33,
+          "human_action": "Stay",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            2,
+            3
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 2,
+          "delta_score": -2
+        },
+        {
+          "t": 25,
+          "time_left_sec": 33,
+          "human_action": "ArrowUp",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 0,
+          "delta_score": -2
+        },
+        {
+          "t": 26,
+          "time_left_sec": 32,
+          "human_action": "Stay",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -2,
+          "delta_score": -2
+        },
+        {
+          "t": 27,
+          "time_left_sec": 32,
+          "human_action": "ArrowLeft",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            1,
+            2
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -4,
+          "delta_score": -2
+        },
+        {
+          "t": 28,
+          "time_left_sec": 31,
+          "human_action": "ArrowLeft",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            1,
+            1
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -6,
+          "delta_score": -2
+        },
+        {
+          "t": 29,
+          "time_left_sec": 31,
+          "human_action": "ArrowDown",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            2,
+            1
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -8,
+          "delta_score": -2
+        },
+        {
+          "t": 30,
+          "time_left_sec": 30,
+          "human_action": "Stay",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            2,
+            1
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -10,
+          "delta_score": -2
+        },
+        {
+          "t": 31,
+          "time_left_sec": 30,
+          "human_action": "ArrowDown",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -12,
+          "delta_score": -2
+        },
+        {
+          "t": 32,
+          "time_left_sec": 29,
+          "human_action": "ArrowLeft",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": -14,
+          "delta_score": -2
+        },
+        {
+          "t": 33,
+          "time_left_sec": 29,
+          "human_action": "Stay",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": -16,
+          "delta_score": -2
+        },
+        {
+          "t": 34,
+          "time_left_sec": 28,
+          "human_action": "Stay",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": -18,
+          "delta_score": -2
+        },
+        {
+          "t": 35,
+          "time_left_sec": 28,
+          "human_action": "ArrowUp",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            2,
+            1
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": -20,
+          "delta_score": -2
+        },
+        {
+          "t": 36,
+          "time_left_sec": 27,
+          "human_action": "Stay",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            2,
+            1
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": -22,
+          "delta_score": -2
+        },
+        {
+          "t": 37,
+          "time_left_sec": 27,
+          "human_action": "ArrowUp",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            1,
+            1
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": -24,
+          "delta_score": -2
+        },
+        {
+          "t": 38,
+          "time_left_sec": 26,
+          "human_action": "Stay",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            1,
+            1
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": -26,
+          "delta_score": -2
+        },
+        {
+          "t": 39,
+          "time_left_sec": 26,
+          "human_action": "ArrowRight",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            1,
+            2
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": -28,
+          "delta_score": -2
+        },
+        {
+          "t": 40,
+          "time_left_sec": 25,
+          "human_action": "ArrowRight",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": -30,
+          "delta_score": -2
+        },
+        {
+          "t": 41,
+          "time_left_sec": 25,
+          "human_action": "Stay",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": -32,
+          "delta_score": -2
+        },
+        {
+          "t": 42,
+          "time_left_sec": 24,
+          "human_action": "ArrowUp",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -24,
+          "delta_score": 8
+        },
+        {
+          "t": 43,
+          "time_left_sec": 24,
+          "human_action": "Stay",
+          "ai_low": 0,
+          "ai_macro": 3,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            3,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -26,
+          "delta_score": -2
+        },
+        {
+          "t": 44,
+          "time_left_sec": 23,
+          "human_action": "Stay",
+          "ai_low": 1,
+          "ai_macro": 3,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            3,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": "plate",
+          "score": -28,
+          "delta_score": -2
+        },
+        {
+          "t": 45,
+          "time_left_sec": 23,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 2,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            3,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": "plate",
+          "score": -30,
+          "delta_score": -2
+        },
+        {
+          "t": 46,
+          "time_left_sec": 22,
+          "human_action": "ArrowUp",
+          "ai_low": 4,
+          "ai_macro": 2,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            3,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": "plate",
+          "score": -22,
+          "delta_score": 8
+        },
+        {
+          "t": 47,
+          "time_left_sec": 22,
+          "human_action": "ArrowUp",
+          "ai_low": 4,
+          "ai_macro": 3,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            3,
+            3
+          ],
+          "human_holding": "ChoppedLettuce",
+          "ai_holding": "plate",
+          "score": -24,
+          "delta_score": -2
+        },
+        {
+          "t": 48,
+          "time_left_sec": 21,
+          "human_action": "Stay",
+          "ai_low": 2,
+          "ai_macro": 6,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "ChoppedLettuce",
+          "ai_holding": "plate",
+          "score": -26,
+          "delta_score": -2
+        },
+        {
+          "t": 49,
+          "time_left_sec": 21,
+          "human_action": "ArrowDown",
+          "ai_low": 1,
+          "ai_macro": 3,
+          "human_pos": [
+            2,
+            3
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "ChoppedLettuce",
+          "ai_holding": null,
+          "score": 172,
+          "delta_score": 198
+        },
+        {
+          "t": 50,
+          "time_left_sec": 20,
+          "human_action": "ArrowRight",
+          "ai_low": 2,
+          "ai_macro": 2,
+          "human_pos": [
+            2,
+            3
+          ],
+          "ai_pos": [
+            3,
+            1
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 190,
+          "delta_score": 18
+        },
+        {
+          "t": 51,
+          "time_left_sec": 20,
+          "human_action": "ArrowRight",
+          "ai_low": 1,
+          "ai_macro": 2,
+          "human_pos": [
+            2,
+            3
+          ],
+          "ai_pos": [
+            3,
+            1
+          ],
+          "human_holding": "plate",
+          "ai_holding": "FreshLettuce",
+          "score": 188,
+          "delta_score": -2
+        },
+        {
+          "t": 52,
+          "time_left_sec": 19,
+          "human_action": "Stay",
+          "ai_low": 3,
+          "ai_macro": 5,
+          "human_pos": [
+            2,
+            3
+          ],
+          "ai_pos": [
+            2,
+            1
+          ],
+          "human_holding": "plate",
+          "ai_holding": "FreshLettuce",
+          "score": 186,
+          "delta_score": -2
+        },
+        {
+          "t": 53,
+          "time_left_sec": 19,
+          "human_action": "ArrowDown",
+          "ai_low": 3,
+          "ai_macro": 5,
+          "human_pos": [
+            3,
+            3
+          ],
+          "ai_pos": [
+            1,
+            1
+          ],
+          "human_holding": "plate",
+          "ai_holding": "FreshLettuce",
+          "score": 184,
+          "delta_score": -2
+        },
+        {
+          "t": 54,
+          "time_left_sec": 18,
+          "human_action": "ArrowLeft",
+          "ai_low": 0,
+          "ai_macro": 5,
+          "human_pos": [
+            3,
+            2
+          ],
+          "ai_pos": [
+            1,
+            2
+          ],
+          "human_holding": "plate",
+          "ai_holding": "FreshLettuce",
+          "score": 182,
+          "delta_score": -2
+        },
+        {
+          "t": 55,
+          "time_left_sec": 18,
+          "human_action": "Stay",
+          "ai_low": 0,
+          "ai_macro": 3,
+          "human_pos": [
+            3,
+            2
+          ],
+          "ai_pos": [
+            1,
+            3
+          ],
+          "human_holding": "plate",
+          "ai_holding": "FreshLettuce",
+          "score": 180,
+          "delta_score": -2
+        },
+        {
+          "t": 56,
+          "time_left_sec": 17,
+          "human_action": "ArrowDown",
+          "ai_low": 3,
+          "ai_macro": 6,
+          "human_pos": [
+            3,
+            2
+          ],
+          "ai_pos": [
+            1,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 388,
+          "delta_score": 208
+        },
+        {
+          "t": 57,
+          "time_left_sec": 17,
+          "human_action": "Stay",
+          "ai_low": 3,
+          "ai_macro": 2,
+          "human_pos": [
+            3,
+            2
+          ],
+          "ai_pos": [
+            1,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 396,
+          "delta_score": 8
+        },
+        {
+          "t": 58,
+          "time_left_sec": 16,
+          "human_action": "ArrowLeft",
+          "ai_low": 0,
+          "ai_macro": 3,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            1,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": "plate",
+          "score": 394,
+          "delta_score": -2
+        },
+        {
+          "t": 59,
+          "time_left_sec": 16,
+          "human_action": "ArrowLeft",
+          "ai_low": 3,
+          "ai_macro": 2,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            1,
+            3
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": "plate",
+          "score": 412,
+          "delta_score": 18
+        },
+        {
+          "t": 60,
+          "time_left_sec": 15,
+          "human_action": "Stay",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": "plate",
+          "score": 410,
+          "delta_score": -2
+        },
+        {
+          "t": 61,
+          "time_left_sec": 15,
+          "human_action": "ArrowUp",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            2,
+            1
+          ],
+          "ai_pos": [
+            3,
+            3
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": "plate",
+          "score": 408,
+          "delta_score": -2
+        },
+        {
+          "t": 62,
+          "time_left_sec": 14,
+          "human_action": "ArrowRight",
+          "ai_low": 2,
+          "ai_macro": 6,
+          "human_pos": [
+            2,
+            1
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": null,
+          "ai_holding": "plate",
+          "score": 406,
+          "delta_score": -2
+        },
+        {
+          "t": 63,
+          "time_left_sec": 14,
+          "human_action": "Stay",
+          "ai_low": 1,
+          "ai_macro": 3,
+          "human_pos": [
+            2,
+            1
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 604,
+          "delta_score": 198
+        },
+        {
+          "t": 64,
+          "time_left_sec": 13,
+          "human_action": "ArrowDown",
+          "ai_low": 2,
+          "ai_macro": 2,
+          "human_pos": [
+            2,
+            1
+          ],
+          "ai_pos": [
+            3,
+            1
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 602,
+          "delta_score": -2
+        },
+        {
+          "t": 65,
+          "time_left_sec": 13,
+          "human_action": "Stay",
+          "ai_low": 1,
+          "ai_macro": 2,
+          "human_pos": [
+            2,
+            1
+          ],
+          "ai_pos": [
+            3,
+            1
+          ],
+          "human_holding": null,
+          "ai_holding": "FreshLettuce",
+          "score": 600,
+          "delta_score": -2
+        },
+        {
+          "t": 66,
+          "time_left_sec": 12,
+          "human_action": "Stay",
+          "ai_low": 0,
+          "ai_macro": 5,
+          "human_pos": [
+            2,
+            1
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": null,
+          "ai_holding": "FreshLettuce",
+          "score": 598,
+          "delta_score": -2
+        },
+        {
+          "t": 67,
+          "time_left_sec": 12,
+          "human_action": "ArrowDown",
+          "ai_low": 0,
+          "ai_macro": 5,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            3,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": "FreshLettuce",
+          "score": 596,
+          "delta_score": -2
+        },
+        {
+          "t": 68,
+          "time_left_sec": 11,
+          "human_action": "Stay",
+          "ai_low": 3,
+          "ai_macro": 5,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": "FreshLettuce",
+          "score": 594,
+          "delta_score": -2
+        },
+        {
+          "t": 69,
+          "time_left_sec": 11,
+          "human_action": "Stay",
+          "ai_low": 3,
+          "ai_macro": 5,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            1,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": "FreshLettuce",
+          "score": 592,
+          "delta_score": -2
+        },
+        {
+          "t": 70,
+          "time_left_sec": 10,
+          "human_action": "Stay",
+          "ai_low": 3,
+          "ai_macro": 1,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            1,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 600,
+          "delta_score": 8
+        },
+        {
+          "t": 71,
+          "time_left_sec": 10,
+          "human_action": "Stay",
+          "ai_low": 3,
+          "ai_macro": 2,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            1,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 608,
+          "delta_score": 8
+        },
+        {
+          "t": 72,
+          "time_left_sec": 9,
+          "human_action": "Stay",
+          "ai_low": 0,
+          "ai_macro": 3,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            1,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": "plate",
+          "score": 606,
+          "delta_score": -2
+        },
+        {
+          "t": 73,
+          "time_left_sec": 9,
+          "human_action": "Stay",
+          "ai_low": 3,
+          "ai_macro": 2,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            1,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": "plate",
+          "score": 624,
+          "delta_score": 18
+        },
+        {
+          "t": 74,
+          "time_left_sec": 8,
+          "human_action": "Stay",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": "plate",
+          "score": 622,
+          "delta_score": -2
+        },
+        {
+          "t": 75,
+          "time_left_sec": 8,
+          "human_action": "Stay",
+          "ai_low": 1,
+          "ai_macro": 6,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            3,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": "plate",
+          "score": 620,
+          "delta_score": -2
+        },
+        {
+          "t": 76,
+          "time_left_sec": 7,
+          "human_action": "Stay",
+          "ai_low": 2,
+          "ai_macro": 6,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": null,
+          "ai_holding": "plate",
+          "score": 618,
+          "delta_score": -2
+        },
+        {
+          "t": 77,
+          "time_left_sec": 7,
+          "human_action": "Stay",
+          "ai_low": 1,
+          "ai_macro": 3,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 816,
+          "delta_score": 198
+        },
+        {
+          "t": 78,
+          "time_left_sec": 6,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 2,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 814,
+          "delta_score": -2
+        },
+        {
+          "t": 79,
+          "time_left_sec": 6,
+          "human_action": "ArrowDown",
+          "ai_low": 4,
+          "ai_macro": 2,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": 812,
+          "delta_score": -2
+        },
+        {
+          "t": 80,
+          "time_left_sec": 5,
+          "human_action": "ArrowUp",
+          "ai_low": 4,
+          "ai_macro": 2,
+          "human_pos": [
+            2,
+            1
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": 810,
+          "delta_score": -2
+        },
+        {
+          "t": 81,
+          "time_left_sec": 5,
+          "human_action": "ArrowUp",
+          "ai_low": 4,
+          "ai_macro": 2,
+          "human_pos": [
+            1,
+            1
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": 808,
+          "delta_score": -2
+        },
+        {
+          "t": 82,
+          "time_left_sec": 4,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 2,
+          "human_pos": [
+            1,
+            1
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": 806,
+          "delta_score": -2
+        },
+        {
+          "t": 83,
+          "time_left_sec": 4,
+          "human_action": "ArrowRight",
+          "ai_low": 4,
+          "ai_macro": 2,
+          "human_pos": [
+            1,
+            2
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": 804,
+          "delta_score": -2
+        },
+        {
+          "t": 84,
+          "time_left_sec": 3,
+          "human_action": "ArrowRight",
+          "ai_low": 4,
+          "ai_macro": 2,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": 802,
+          "delta_score": -2
+        },
+        {
+          "t": 85,
+          "time_left_sec": 3,
+          "human_action": "ArrowRight",
+          "ai_low": 4,
+          "ai_macro": 2,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": 800,
+          "delta_score": -2
+        },
+        {
+          "t": 86,
+          "time_left_sec": 2,
+          "human_action": "ArrowUp",
+          "ai_low": 4,
+          "ai_macro": 2,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 808,
+          "delta_score": 8
+        },
+        {
+          "t": 87,
+          "time_left_sec": 2,
+          "human_action": "ArrowUp",
+          "ai_low": 4,
+          "ai_macro": 2,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 816,
+          "delta_score": 8
+        },
+        {
+          "t": 88,
+          "time_left_sec": 1,
+          "human_action": "ArrowUp",
+          "ai_low": 4,
+          "ai_macro": 2,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "ChoppedLettuce",
+          "ai_holding": null,
+          "score": 814,
+          "delta_score": -2
+        },
+        {
+          "t": 89,
+          "time_left_sec": 1,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 3,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": "ChoppedLettuce",
+          "ai_holding": null,
+          "score": 812,
+          "delta_score": -2
+        },
+        {
+          "t": 90,
+          "time_left_sec": 0,
+          "human_action": "ArrowRight",
+          "ai_low": 4,
+          "ai_macro": 3,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            3,
+            2
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 830,
+          "delta_score": 830
+        }
+      ],
+      "events": [],
+      "summary": {
+        "final_score": 830,
+        "dishes_served": 5,
+        "human_steps": 49
+      },
+      "endTimeISO": "2026-02-16T12:17:27.260Z",
+      "_prevScore": 830
+    },
+    {
+      "phase": 2,
+      "configId": "asymmetric_model1",
+      "round_index": null,
+      "mapTopology": "cramped_5,5",
+      "policyId": "[equilibrium]agent0_a0sp_10_a1sp_1_helping_False",
+      "chosenCkpt": "model_500000.zip",
+      "startTimeISO": "2026-02-16T12:17:52.401Z",
+      "tape": [
+        {
+          "t": 1,
+          "time_left_sec": 45,
+          "human_action": "Stay",
+          "ai_low": 1,
+          "ai_macro": 8,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -2,
+          "delta_score": -2
+        },
+        {
+          "t": 2,
+          "time_left_sec": 44,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 8,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -4,
+          "delta_score": -2
+        },
+        {
+          "t": 3,
+          "time_left_sec": 44,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 8,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -6,
+          "delta_score": -2
+        },
+        {
+          "t": 4,
+          "time_left_sec": 43,
+          "human_action": "ArrowDown",
+          "ai_low": 4,
+          "ai_macro": 8,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": -8,
+          "delta_score": -2
+        },
+        {
+          "t": 5,
+          "time_left_sec": 43,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 8,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": -10,
+          "delta_score": -2
+        },
+        {
+          "t": 6,
+          "time_left_sec": 42,
+          "human_action": "ArrowUp",
+          "ai_low": 4,
+          "ai_macro": 8,
+          "human_pos": [
+            2,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": -12,
+          "delta_score": -2
+        },
+        {
+          "t": 7,
+          "time_left_sec": 42,
+          "human_action": "ArrowRight",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            2,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -14,
+          "delta_score": -2
+        },
+        {
+          "t": 8,
+          "time_left_sec": 41,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            2,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -16,
+          "delta_score": -2
+        },
+        {
+          "t": 9,
+          "time_left_sec": 41,
+          "human_action": "ArrowDown",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -18,
+          "delta_score": -2
+        },
+        {
+          "t": 10,
+          "time_left_sec": 40,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -20,
+          "delta_score": -2
+        },
+        {
+          "t": 11,
+          "time_left_sec": 40,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -22,
+          "delta_score": -2
+        },
+        {
+          "t": 12,
+          "time_left_sec": 39,
+          "human_action": "ArrowLeft",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": -24,
+          "delta_score": -2
+        },
+        {
+          "t": 13,
+          "time_left_sec": 39,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": -26,
+          "delta_score": -2
+        },
+        {
+          "t": 14,
+          "time_left_sec": 38,
+          "human_action": "ArrowRight",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            3,
+            2
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": -28,
+          "delta_score": -2
+        },
+        {
+          "t": 15,
+          "time_left_sec": 38,
+          "human_action": "ArrowRight",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            3,
+            3
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": -30,
+          "delta_score": -2
+        },
+        {
+          "t": 16,
+          "time_left_sec": 37,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            3,
+            3
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": -32,
+          "delta_score": -2
+        },
+        {
+          "t": 17,
+          "time_left_sec": 37,
+          "human_action": "ArrowRight",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            3,
+            3
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -34,
+          "delta_score": -2
+        },
+        {
+          "t": 18,
+          "time_left_sec": 36,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 8,
+          "human_pos": [
+            3,
+            3
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -36,
+          "delta_score": -2
+        },
+        {
+          "t": 19,
+          "time_left_sec": 36,
+          "human_action": "ArrowLeft",
+          "ai_low": 4,
+          "ai_macro": 8,
+          "human_pos": [
+            3,
+            2
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -38,
+          "delta_score": -2
+        },
+        {
+          "t": 20,
+          "time_left_sec": 35,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 8,
+          "human_pos": [
+            3,
+            2
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -40,
+          "delta_score": -2
+        },
+        {
+          "t": 21,
+          "time_left_sec": 35,
+          "human_action": "ArrowLeft",
+          "ai_low": 4,
+          "ai_macro": 8,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -42,
+          "delta_score": -2
+        },
+        {
+          "t": 22,
+          "time_left_sec": 34,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 8,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -44,
+          "delta_score": -2
+        },
+        {
+          "t": 23,
+          "time_left_sec": 34,
+          "human_action": "ArrowUp",
+          "ai_low": 4,
+          "ai_macro": 8,
+          "human_pos": [
+            2,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -46,
+          "delta_score": -2
+        },
+        {
+          "t": 24,
+          "time_left_sec": 33,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            2,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -48,
+          "delta_score": -2
+        },
+        {
+          "t": 25,
+          "time_left_sec": 33,
+          "human_action": "ArrowUp",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            1,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -50,
+          "delta_score": -2
+        },
+        {
+          "t": 26,
+          "time_left_sec": 32,
+          "human_action": "ArrowRight",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            1,
+            2
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -52,
+          "delta_score": -2
+        },
+        {
+          "t": 27,
+          "time_left_sec": 32,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            1,
+            2
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -54,
+          "delta_score": -2
+        },
+        {
+          "t": 28,
+          "time_left_sec": 31,
+          "human_action": "ArrowDown",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            1,
+            2
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": -56,
+          "delta_score": -2
+        },
+        {
+          "t": 29,
+          "time_left_sec": 31,
+          "human_action": "ArrowRight",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": -58,
+          "delta_score": -2
+        },
+        {
+          "t": 30,
+          "time_left_sec": 30,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": -60,
+          "delta_score": -2
+        },
+        {
+          "t": 31,
+          "time_left_sec": 30,
+          "human_action": "ArrowUp",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -52,
+          "delta_score": 8
+        },
+        {
+          "t": 32,
+          "time_left_sec": 29,
+          "human_action": "ArrowUp",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -44,
+          "delta_score": 8
+        },
+        {
+          "t": 33,
+          "time_left_sec": 29,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -46,
+          "delta_score": -2
+        },
+        {
+          "t": 34,
+          "time_left_sec": 28,
+          "human_action": "ArrowUp",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": "ChoppedLettuce",
+          "ai_holding": null,
+          "score": -38,
+          "delta_score": 8
+        },
+        {
+          "t": 35,
+          "time_left_sec": 28,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": "ChoppedLettuce",
+          "ai_holding": null,
+          "score": -40,
+          "delta_score": -2
+        },
+        {
+          "t": 36,
+          "time_left_sec": 27,
+          "human_action": "ArrowRight",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -22,
+          "delta_score": 18
+        },
+        {
+          "t": 37,
+          "time_left_sec": 27,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -24,
+          "delta_score": -2
+        },
+        {
+          "t": 38,
+          "time_left_sec": 26,
+          "human_action": "ArrowRight",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": "plate",
+          "ai_holding": null,
+          "score": -26,
+          "delta_score": -2
+        },
+        {
+          "t": 39,
+          "time_left_sec": 26,
+          "human_action": "ArrowLeft",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            2
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": "plate",
+          "ai_holding": null,
+          "score": -28,
+          "delta_score": -2
+        },
+        {
+          "t": 40,
+          "time_left_sec": 25,
+          "human_action": "ArrowDown",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            2
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -30,
+          "delta_score": -2
+        },
+        {
+          "t": 41,
+          "time_left_sec": 25,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            2
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -32,
+          "delta_score": -2
+        },
+        {
+          "t": 42,
+          "time_left_sec": 24,
+          "human_action": "ArrowRight",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -34,
+          "delta_score": -2
+        },
+        {
+          "t": 43,
+          "time_left_sec": 24,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -36,
+          "delta_score": -2
+        },
+        {
+          "t": 44,
+          "time_left_sec": 23,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -38,
+          "delta_score": -2
+        },
+        {
+          "t": 45,
+          "time_left_sec": 23,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -40,
+          "delta_score": -2
+        },
+        {
+          "t": 46,
+          "time_left_sec": 22,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -42,
+          "delta_score": -2
+        },
+        {
+          "t": 47,
+          "time_left_sec": 22,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -44,
+          "delta_score": -2
+        },
+        {
+          "t": 48,
+          "time_left_sec": 21,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -46,
+          "delta_score": -2
+        },
+        {
+          "t": 49,
+          "time_left_sec": 21,
+          "human_action": "ArrowLeft",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            2
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -48,
+          "delta_score": -2
+        },
+        {
+          "t": 50,
+          "time_left_sec": 20,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            2
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -50,
+          "delta_score": -2
+        },
+        {
+          "t": 51,
+          "time_left_sec": 20,
+          "human_action": "ArrowLeft",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -52,
+          "delta_score": -2
+        },
+        {
+          "t": 52,
+          "time_left_sec": 19,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -54,
+          "delta_score": -2
+        },
+        {
+          "t": 53,
+          "time_left_sec": 19,
+          "human_action": "ArrowDown",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            2,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -56,
+          "delta_score": -2
+        },
+        {
+          "t": 54,
+          "time_left_sec": 18,
+          "human_action": "ArrowDown",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -58,
+          "delta_score": -2
+        },
+        {
+          "t": 55,
+          "time_left_sec": 18,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -60,
+          "delta_score": -2
+        },
+        {
+          "t": 56,
+          "time_left_sec": 17,
+          "human_action": "ArrowRight",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            3,
+            2
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -62,
+          "delta_score": -2
+        },
+        {
+          "t": 57,
+          "time_left_sec": 17,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            3,
+            2
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -64,
+          "delta_score": -2
+        },
+        {
+          "t": 58,
+          "time_left_sec": 16,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            3,
+            2
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -66,
+          "delta_score": -2
+        },
+        {
+          "t": 59,
+          "time_left_sec": 16,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            3,
+            2
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -68,
+          "delta_score": -2
+        },
+        {
+          "t": 60,
+          "time_left_sec": 15,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            3,
+            2
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": -70,
+          "delta_score": -2
+        },
+        {
+          "t": 61,
+          "time_left_sec": 15,
+          "human_action": "ArrowUp",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            3,
+            2
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": "plate",
+          "ai_holding": null,
+          "score": -72,
+          "delta_score": -2
+        },
+        {
+          "t": 62,
+          "time_left_sec": 14,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            3,
+            2
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": "plate",
+          "ai_holding": null,
+          "score": -74,
+          "delta_score": -2
+        },
+        {
+          "t": 63,
+          "time_left_sec": 14,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            3,
+            2
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": "plate",
+          "ai_holding": null,
+          "score": -76,
+          "delta_score": -2
+        },
+        {
+          "t": 64,
+          "time_left_sec": 13,
+          "human_action": "ArrowDown",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            3,
+            2
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 122,
+          "delta_score": 198
+        },
+        {
+          "t": 65,
+          "time_left_sec": 13,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 8,
+          "human_pos": [
+            3,
+            2
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 120,
+          "delta_score": -2
+        },
+        {
+          "t": 66,
+          "time_left_sec": 12,
+          "human_action": "ArrowLeft",
+          "ai_low": 4,
+          "ai_macro": 8,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 118,
+          "delta_score": -2
+        },
+        {
+          "t": 67,
+          "time_left_sec": 11,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 8,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 116,
+          "delta_score": -2
+        },
+        {
+          "t": 68,
+          "time_left_sec": 11,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 8,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 114,
+          "delta_score": -2
+        },
+        {
+          "t": 69,
+          "time_left_sec": 10,
+          "human_action": "ArrowDown",
+          "ai_low": 4,
+          "ai_macro": 8,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": 112,
+          "delta_score": -2
+        },
+        {
+          "t": 70,
+          "time_left_sec": 10,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 8,
+          "human_pos": [
+            3,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": 110,
+          "delta_score": -2
+        },
+        {
+          "t": 71,
+          "time_left_sec": 9,
+          "human_action": "ArrowUp",
+          "ai_low": 4,
+          "ai_macro": 8,
+          "human_pos": [
+            2,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": 108,
+          "delta_score": -2
+        },
+        {
+          "t": 72,
+          "time_left_sec": 9,
+          "human_action": "ArrowRight",
+          "ai_low": 4,
+          "ai_macro": 8,
+          "human_pos": [
+            2,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 106,
+          "delta_score": -2
+        },
+        {
+          "t": 73,
+          "time_left_sec": 8,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            2,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 104,
+          "delta_score": -2
+        },
+        {
+          "t": 74,
+          "time_left_sec": 8,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            2,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 102,
+          "delta_score": -2
+        },
+        {
+          "t": 75,
+          "time_left_sec": 7,
+          "human_action": "ArrowUp",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            1,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 100,
+          "delta_score": -2
+        },
+        {
+          "t": 76,
+          "time_left_sec": 7,
+          "human_action": "ArrowRight",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            1,
+            2
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 98,
+          "delta_score": -2
+        },
+        {
+          "t": 77,
+          "time_left_sec": 6,
+          "human_action": "ArrowDown",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            1,
+            2
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": 96,
+          "delta_score": -2
+        },
+        {
+          "t": 78,
+          "time_left_sec": 6,
+          "human_action": "ArrowRight",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": "FreshLettuce",
+          "ai_holding": null,
+          "score": 94,
+          "delta_score": -2
+        },
+        {
+          "t": 79,
+          "time_left_sec": 5,
+          "human_action": "ArrowUp",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 102,
+          "delta_score": 8
+        },
+        {
+          "t": 80,
+          "time_left_sec": 5,
+          "human_action": "ArrowUp",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 110,
+          "delta_score": 8
+        },
+        {
+          "t": 81,
+          "time_left_sec": 4,
+          "human_action": "ArrowUp",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": "ChoppedLettuce",
+          "ai_holding": null,
+          "score": 108,
+          "delta_score": -2
+        },
+        {
+          "t": 82,
+          "time_left_sec": 4,
+          "human_action": "ArrowRight",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 126,
+          "delta_score": 18
+        },
+        {
+          "t": 83,
+          "time_left_sec": 3,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": null,
+          "ai_holding": null,
+          "score": 124,
+          "delta_score": -2
+        },
+        {
+          "t": 84,
+          "time_left_sec": 3,
+          "human_action": "ArrowRight",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            3
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": "plate",
+          "ai_holding": null,
+          "score": 122,
+          "delta_score": -2
+        },
+        {
+          "t": 85,
+          "time_left_sec": 2,
+          "human_action": "ArrowLeft",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            2
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": "plate",
+          "ai_holding": null,
+          "score": 120,
+          "delta_score": -2
+        },
+        {
+          "t": 86,
+          "time_left_sec": 2,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            2
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": "plate",
+          "ai_holding": null,
+          "score": 118,
+          "delta_score": -2
+        },
+        {
+          "t": 87,
+          "time_left_sec": 1,
+          "human_action": "ArrowLeft",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            1,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": "plate",
+          "ai_holding": null,
+          "score": 116,
+          "delta_score": -2
+        },
+        {
+          "t": 88,
+          "time_left_sec": 1,
+          "human_action": "ArrowDown",
+          "ai_low": 4,
+          "ai_macro": 7,
+          "human_pos": [
+            2,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": "plate",
+          "ai_holding": null,
+          "score": 114,
+          "delta_score": -2
+        },
+        {
+          "t": 89,
+          "time_left_sec": 0,
+          "human_action": "Stay",
+          "ai_low": 4,
+          "ai_macro": 0,
+          "human_pos": [
+            2,
+            1
+          ],
+          "ai_pos": [
+            2,
+            3
+          ],
+          "human_holding": "plate",
+          "ai_holding": null,
+          "score": 112,
+          "delta_score": 112
+        }
+      ],
+      "events": [],
+      "summary": {
+        "final_score": 112,
+        "dishes_served": 2,
+        "human_steps": 46
+      },
+      "endTimeISO": "2026-02-16T12:18:37.418Z",
+      "_prevScore": 112
+    }
+  ]
+}
