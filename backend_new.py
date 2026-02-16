@@ -570,79 +570,81 @@ def key_event():
         if not hasattr(sess, 'dishes_served'): sess.dishes_served = 0
         if sess.cur_step == 0: sess.dishes_served = 0
 
-        KEYS_ACTIONS = {'ArrowUp':3,'ArrowRight':0,'ArrowDown':1,'ArrowLeft':2, 'Stay': 4}
+        KEYS_ACTIONS = {'ArrowUp': 3, 'ArrowRight': 0, 'ArrowDown': 1, 'ArrowLeft': 2, 'Stay': 4}
+
         if key in KEYS_ACTIONS:
-            # index 0 is AI, index 1 is the human user
-            if True:
-                t0 = time.time()
-                if sess.model is not None:
-                    with torch.no_grad():
-                        ai_action, _ = sess.model.predict(sess.obs, deterministic=True)
-                    ai_action_int = _as_int_action(ai_action)   # convert action to integer
-                else:
-                    ai_action_int = 4  # stay
-                t1 = time.time()
+            t0 = time.time()
 
-                if sess.model is not None:
-                    primitive_action, _ = sess.env_mac._computeLowLevelActions([ai_action_int, 0])
-                else:
+            if sess.model is not None:
+                with torch.no_grad():
+                    ai_action, _ = sess.model.predict(sess.obs, deterministic=True)
+                ai_action_int = _as_int_action(ai_action)
+            else:
+                ai_action_int = 4  # stay
+
+            t1 = time.time()
+
+            if sess.model is not None:
+                if ai_action_int == 4:
                     primitive_action = [4] * sess.env.n_agent
+                else:
+                    primitive_action, _ = sess.env_mac._computeLowLevelActions([ai_action_int, 0])
+            else:
+                primitive_action = [4] * sess.env.n_agent
 
-                action = [4] * sess.env.n_agent
-                action[1] = KEYS_ACTIONS[key]
-                action[0] = primitive_action[0]
+            action = [4] * sess.env.n_agent
+            action[1] = KEYS_ACTIONS[key]           
+            action[0] = int(primitive_action[0])
 
-                # record the robot's step
-                robot_low = int(action[0])
-                robot_key = ACTION_TO_KEY.get(robot_low, "Unknown")
-                sess.robot_steps.append({
-                    "step": int(sess.cur_step + 1),
-                    "ai_macro_action": ai_action_int,
-                    "low_level_action": robot_low,
-                    "arrow": robot_key,
-                    "timestamp": time.time(),
-                })
-
+            robot_low = int(action[0])
+            robot_key = ACTION_TO_KEY.get(robot_low, "Unknown")
+            sess.robot_steps.append({
+                "step": int(sess.cur_step + 1),
+                "ai_macro_action": int(ai_action_int),
+                "low_level_action": robot_low,
+                "arrow": robot_key,
+                "timestamp": time.time(),
+            })
 
 
-                sess.obs, rewards, dones, info = sess.wrapper.step(action[0], action[1])
+            sess.obs, rewards, dones, info = sess.wrapper.step(action[0], action[1])
+            
+            r_env = 0.0
+            r_adjusted = 0.0
+
+            try:
+                if isinstance(rewards, (list, tuple, np.ndarray)):
+                    r_env = float(np.array(rewards).flatten()[0])
                 
-                r_env = 0.0
-                r_adjusted = 0.0
+                else:
+                    r_env = float(rewards)
 
                 try:
-                    if isinstance(rewards, (list, tuple, np.ndarray)):
-                        r_env = float(np.array(rewards).flatten()[0])
-                    
-                    else:
-                        r_env = float(rewards)
+                    step_pen_ai = float(sess.env_mac.rewardList[0].get("step penalty", 0))
+                    step_pen_hu = float(sess.env_mac.rewardList[1].get("step penalty", 0))
+                except Exception:
+                    step_pen_ai = -1.0
+                    step_pen_hu = -1.0
 
-                    try:
-                        step_pen_ai = float(sess.env_mac.rewardList[0].get("step penalty", 0))
-                        step_pen_hu = float(sess.env_mac.rewardList[1].get("step penalty", 0))
-                    except Exception:
-                        step_pen_ai = -1.0
-                        step_pen_hu = -1.0
+                # compensate "Stay" actions so they don't subtract points
+                ai_low = int(action[0])
+                human_low = int(action[1])
 
-                    # compensate "Stay" actions so they don't subtract points
-                    ai_low = int(action[0])
-                    human_low = int(action[1])
+                r_adjusted = r_env
+                if ai_low == 4:
+                    r_adjusted += (-step_pen_ai)   # add back +1 if penalty is -1
+                if human_low == 4:
+                    r_adjusted += (-step_pen_hu)
 
-                    r_adjusted = r_env
-                    if ai_low == 4:
-                        r_adjusted += (-step_pen_ai)   # add back +1 if penalty is -1
-                    if human_low == 4:
-                        r_adjusted += (-step_pen_hu)
+                sess.cumulative_reward += r_adjusted
 
-                    sess.cumulative_reward += r_adjusted
+                # dish served detection
+                if r_env >= 199:
+                    sess.dishes_served += 1
+                    print(f"[{sid}] DISH SERVED! Total: {sess.dishes_served}")
 
-                    # dish served detection
-                    if r_env >= 199:
-                        sess.dishes_served += 1
-                        print(f"[{sid}] DISH SERVED! Total: {sess.dishes_served}")
-
-                except Exception as e:
-                    print(f"Error updating rewards: {e}")
+            except Exception as e:
+                print(f"Error updating rewards: {e}")
                 
             sess.cur_step += 1
 
