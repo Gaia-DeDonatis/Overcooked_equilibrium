@@ -103,7 +103,7 @@ const DataManager = {
    * @param {string} humanKey   - the human key applied this step (Arrow... or Stay)
    * @param {number} timeLeftSec - seconds remaining in the round (countdown). Optional.
    */
-  logStep(serverData, humanKey) {
+  logStep(serverData, humanKey, timing = {}) {
     const r = this.getCurrentRound();
     if (!r || !serverData) return;
 
@@ -116,9 +116,6 @@ const DataManager = {
 
     // step index
     const t = (typeof state.cur_step === "number") ? state.cur_step : null;
-    const tickMs = this.LOGS.meta.tick_ms ?? 500; // fallback
-    const roundMs = (this.LOGS.meta.round_duration_sec ?? 45) * 1000;
-    const timeLeftMs = (t != null) ? Math.max(0, roundMs - (t - 1) * tickMs) : null;
 
     // reward tracking
     const currentScore = (typeof serverData.cumulative_reward === "number") ? serverData.cumulative_reward : r.summary.final_score;
@@ -136,24 +133,28 @@ const DataManager = {
     const aiLow = serverData.robot_last_action?.low_level_action ?? null;
 
     // ---- REPLAY TAPE ENTRY ----
+    const applied_ms = (typeof timing?.appliedMs === "number") ? timing.appliedMs : null;
+    const human_press_ms = (typeof timing?.humanPressMs === "number") ? timing.humanPressMs : null;
+
     r.tape.push({
-      t,
-      time_left_ms: timeLeftMs,          // countdown time
-      human_action: humanKey,
-      ai_low: aiLow,
+    t,
 
-      // positions for analysis without replay
-      human_pos: (human.x != null && human.y != null) ? [human.x, human.y] : null,
-      ai_pos: (ai.x != null && ai.y != null) ? [ai.x, ai.y] : null,
+    applied_ms,
+    human_press_ms,
 
-      // optional holdings
-      human_holding: human.holding ?? null,
-      ai_holding: ai.holding ?? null,
+    human_action: humanKey,
+    ai_low: aiLow,
 
-      // optional reward trace
-      score: currentScore,
-      delta_score: delta
+    human_pos: (human.x != null && human.y != null) ? [human.x, human.y] : null,
+    ai_pos: (ai.x != null && ai.y != null) ? [ai.x, ai.y] : null,
+
+    human_holding: human.holding ?? null,
+    ai_holding: ai.holding ?? null,
+
+    score: currentScore,
+    delta_score: delta
     });
+
 
     // ---- SPARSE EVENTS (CRC) ----
     // If backend returns serverData.events = [{actor:"human|ai", event:"pick_plate"}...]
@@ -161,7 +162,7 @@ const DataManager = {
       for (const ev of serverData.events) {
         r.events.push({
           t,
-          time_left_ms: timeLeftMs,
+          applied_ms,
           actor: ev.actor ?? null,
           event: ev.event ?? ev
         });

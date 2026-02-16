@@ -67,9 +67,11 @@ let gameTimer = null;
 let timeLeft = 0;
 let aiTickTimer = null;
 let aiTickInFlight = false;
-const AI_TICK_MS = 500;     //check if it's too fast
+const AI_TICK_MS = 500;
 
-let bufferedHumanKey = 'Stay';  
+let bufferedHumanKey = 'Stay';
+let roundStartPerfMs = 0;
+let lastHumanPressMs = null;  
 
 function stopAiTick() {
   if (aiTickTimer) {
@@ -79,36 +81,43 @@ function stopAiTick() {
   aiTickInFlight = false;
 }
 
+async function doOneTick() {
+  if (!STATE.isPlaying || STATE.gameOver) return;
+  if (aiTickInFlight) return; // prevent request pile-up
+  aiTickInFlight = true;
+
+  try {
+    const keyToSend = bufferedHumanKey || 'Stay';
+    bufferedHumanKey = 'Stay';
+
+    const data = await api('/key_event', { key: keyToSend, config_id: STATE.configId });
+
+    const currentCanvasId = (STATE.phase === 2) ? 'gameCanvas_2' : 'gameCanvas';
+    drawGame(data.state, currentCanvasId);
+
+    // Update UI
+    let scoreId = (STATE.phase === 2) ? 'currentScore_2' : 'currentScore';
+    const scoreEl = document.getElementById(scoreId);
+    if (scoreEl) scoreEl.innerText = Math.floor(data.cumulative_reward || 0);
+
+    //DataManager.logStep(data, keyToSend);
+    const appliedMs = performance.now() - roundStartPerfMs;
+    DataManager.logStep(data, keyToSend, { appliedMs, humanPressMs: lastHumanPressMs });
+    lastHumanPressMs = null;
+
+  } catch (err) {
+    console.error("Tick error:", err);
+  } finally {
+    aiTickInFlight = false;
+  }
+}
+
+
 function startAiTick() {
   stopAiTick();
-
-  aiTickTimer = setInterval(async () => {
-    if (!STATE.isPlaying || STATE.gameOver) return;
-    if (aiTickInFlight) return; // prevent request pile-up
-    aiTickInFlight = true;
-
-    try {
-      const keyToSend = bufferedHumanKey || 'Stay';
-      bufferedHumanKey = 'Stay';
-
-      const data = await api('/key_event', { key: keyToSend, config_id: STATE.configId });
-
-      const currentCanvasId = (STATE.phase === 2) ? 'gameCanvas_2' : 'gameCanvas';
-      drawGame(data.state, currentCanvasId);
-
-      // Update UI
-      let scoreId = (STATE.phase === 2) ? 'currentScore_2' : 'currentScore';
-      const scoreEl = document.getElementById(scoreId);
-      if (scoreEl) scoreEl.innerText = Math.floor(data.cumulative_reward || 0);
-
-      DataManager.logStep(data, keyToSend);
-    } catch (err) {
-      console.error("AI tick error:", err);
-    } finally {
-      aiTickInFlight = false;
-    }
-  }, AI_TICK_MS);
+  aiTickTimer = setInterval(doOneTick, AI_TICK_MS);
 }
+
 
 
 
@@ -152,6 +161,8 @@ async function startRound() {
 
   try {
     const data = await api('/reset', { config_id: STATE.configId });
+    bufferedHumanKey = 'Stay';
+    aiTickInFlight = false;
 
     if (DataManager.LOGS.meta.tick_ms == null) {
       DataManager.LOGS.meta.tick_ms = AI_TICK_MS;
@@ -179,6 +190,9 @@ async function startRound() {
 
     if (data.state) {
       STATE.isPlaying = true;
+    
+      roundStartPerfMs = performance.now();
+      lastHumanPressMs = null;
 
       const currentCanvasId = (STATE.phase === 2) ? 'gameCanvas_2' : 'gameCanvas';
       drawGame(data.state, currentCanvasId);
@@ -393,6 +407,8 @@ document.addEventListener('keydown', async (e) => {
     // B. MAIN TASK LOGIC (Phase 1 or 2)
     else {
         bufferedHumanKey = e.key;
+        lastHumanPressMs = performance.now() - roundStartPerfMs;
+        doOneTick();
     }
 });
 
