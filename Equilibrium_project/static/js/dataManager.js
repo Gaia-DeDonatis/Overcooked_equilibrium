@@ -11,8 +11,6 @@ const DataManager = {
       seed: 42,                 //if fixed; otherwise set from backend
       policy_id_phase1: null,
       policy_id_phase2: null,
-      chosen_ckpt_phase1: null,
-      chosen_ckpt_phase2: null,
       startTimeISO: null
     },
 
@@ -40,8 +38,6 @@ const DataManager = {
     // phase-level policy info
     if (extraMeta.policy_id_phase1 != null) this.LOGS.meta.policy_id_phase1 = extraMeta.policy_id_phase1;
     if (extraMeta.policy_id_phase2 != null) this.LOGS.meta.policy_id_phase2 = extraMeta.policy_id_phase2;
-    if (extraMeta.chosen_ckpt_phase1 != null) this.LOGS.meta.chosen_ckpt_phase1 = extraMeta.chosen_ckpt_phase1;
-    if (extraMeta.chosen_ckpt_phase2 != null) this.LOGS.meta.chosen_ckpt_phase2 = extraMeta.chosen_ckpt_phase2;
 
     console.log("DataManager Initialized for:", prolificId);
   },
@@ -107,7 +103,7 @@ const DataManager = {
    * @param {string} humanKey   - the human key applied this step (Arrow... or Stay)
    * @param {number} timeLeftSec - seconds remaining in the round (countdown). Optional.
    */
-  logStep(serverData, humanKey, timeLeftSec = null) {
+  logStep(serverData, humanKey) {
     const r = this.getCurrentRound();
     if (!r || !serverData) return;
 
@@ -120,6 +116,9 @@ const DataManager = {
 
     // step index
     const t = (typeof state.cur_step === "number") ? state.cur_step : null;
+    const tickMs = this.LOGS.meta.tick_ms ?? 500; // fallback
+    const roundMs = (this.LOGS.meta.round_duration_sec ?? 45) * 1000;
+    const timeLeftMs = (t != null) ? Math.max(0, roundMs - (t - 1) * tickMs) : null;
 
     // reward tracking
     const currentScore = (typeof serverData.cumulative_reward === "number") ? serverData.cumulative_reward : r.summary.final_score;
@@ -134,16 +133,14 @@ const DataManager = {
     if (humanKey !== "Stay") r.summary.human_steps += 1;
 
     // AI actions
-    const aiMacro = serverData.robot_last_action?.ai_macro_action ?? null;
     const aiLow = serverData.robot_last_action?.low_level_action ?? null;
 
     // ---- REPLAY TAPE ENTRY ----
     r.tape.push({
       t,
-      time_left_sec: timeLeftSec,          // countdown time
+      time_left_ms: timeLeftMs,          // countdown time
       human_action: humanKey,
       ai_low: aiLow,
-      ai_macro: aiMacro,
 
       // positions for analysis without replay
       human_pos: (human.x != null && human.y != null) ? [human.x, human.y] : null,
@@ -164,7 +161,7 @@ const DataManager = {
       for (const ev of serverData.events) {
         r.events.push({
           t,
-          time_left_sec: timeLeftSec,
+          time_left_ms: timeLeftMs,
           actor: ev.actor ?? null,
           event: ev.event ?? ev
         });

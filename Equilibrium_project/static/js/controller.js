@@ -101,7 +101,7 @@ function startAiTick() {
       const scoreEl = document.getElementById(scoreId);
       if (scoreEl) scoreEl.innerText = Math.floor(data.cumulative_reward || 0);
 
-      DataManager.logStep(data, keyToSend, timeLeft);
+      DataManager.logStep(data, keyToSend);
     } catch (err) {
       console.error("AI tick error:", err);
     } finally {
@@ -160,9 +160,6 @@ async function startRound() {
     if (STATE.phase === 1) {
       if (DataManager.LOGS.meta.policy_id_phase1 == null && data.model_id != null) {
         DataManager.LOGS.meta.policy_id_phase1 = data.model_id;
-      }
-      if (DataManager.LOGS.meta.chosen_ckpt_phase1 == null && data.chosen_ckpt != null) {
-        DataManager.LOGS.meta.chosen_ckpt_phase1 = data.chosen_ckpt;
       }
     } else if (STATE.phase === 2) {
       if (DataManager.LOGS.meta.policy_id_phase2 == null && data.model_id != null) {
