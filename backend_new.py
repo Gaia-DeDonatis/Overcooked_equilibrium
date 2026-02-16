@@ -99,7 +99,7 @@ def _seed_env_everything(env, seed: int):
 
 
 
-KEYS_ACTIONS = {'ArrowUp': 3, 'ArrowRight': 0, 'ArrowDown': 1, 'ArrowLeft': 2}
+KEYS_ACTIONS = {'ArrowUp': 3, 'ArrowRight': 0, 'ArrowDown': 1, 'ArrowLeft': 2,  'Stay': 4}
 ACTION_TO_KEY = {v: k for k, v in KEYS_ACTIONS.items()}
 ACTION_TO_KEY[4] = "Stay"
 
@@ -570,7 +570,7 @@ def key_event():
         if not hasattr(sess, 'dishes_served'): sess.dishes_served = 0
         if sess.cur_step == 0: sess.dishes_served = 0
 
-        KEYS_ACTIONS = {'ArrowUp':3,'ArrowRight':0,'ArrowDown':1,'ArrowLeft':2}
+        KEYS_ACTIONS = {'ArrowUp':3,'ArrowRight':0,'ArrowDown':1,'ArrowLeft':2, 'Stay': 4}
         if key in KEYS_ACTIONS:
             # index 0 is AI, index 1 is the human user
             if True:

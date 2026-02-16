@@ -65,6 +65,52 @@ function showPage(pageId) {
 
 let gameTimer = null;
 let timeLeft = 0;
+let aiTickTimer = null;
+let aiTickInFlight = false;
+const AI_TICK_MS = 500;     //check if it's too fast
+
+let bufferedHumanKey = 'Stay';  
+
+function stopAiTick() {
+  if (aiTickTimer) {
+    clearInterval(aiTickTimer);
+    aiTickTimer = null;
+  }
+  aiTickInFlight = false;
+}
+
+function startAiTick() {
+  stopAiTick();
+
+  aiTickTimer = setInterval(async () => {
+    if (!STATE.isPlaying || STATE.gameOver) return;
+    if (aiTickInFlight) return; // prevent request pile-up
+    aiTickInFlight = true;
+
+    try {
+      const keyToSend = bufferedHumanKey || 'Stay';
+      bufferedHumanKey = 'Stay';
+
+      const data = await api('/key_event', { key: keyToSend, config_id: STATE.configId });
+
+      const currentCanvasId = (STATE.phase === 2) ? 'gameCanvas_2' : 'gameCanvas';
+      drawGame(data.state, currentCanvasId);
+
+      // Update UI
+      let scoreId = (STATE.phase === 2) ? 'currentScore_2' : 'currentScore';
+      const scoreEl = document.getElementById(scoreId);
+      if (scoreEl) scoreEl.innerText = Math.floor(data.cumulative_reward || 0);
+
+      DataManager.logStep(data, keyToSend);
+    } catch (err) {
+      console.error("AI tick error:", err);
+    } finally {
+      aiTickInFlight = false;
+    }
+  }, AI_TICK_MS);
+}
+
+
 
 // A. START PHASE (Setup Model & Layout)
 async function startPhase(phaseNum) {
@@ -115,13 +161,13 @@ async function startRound() {
     });
 
     if (data.state) {
-      STATE.isPlaying = true;
+        STATE.isPlaying = true;
 
-      const currentCanvasId = (STATE.phase === 2) ? 'gameCanvas_2' : 'gameCanvas';
-      drawGame(data.state, currentCanvasId);
-
-      startTimer(CONFIG.ROUND_DURATION_SEC);
-      updateGameUI();
+        const currentCanvasId = (STATE.phase === 2) ? 'gameCanvas_2' : 'gameCanvas';
+        drawGame(data.state, currentCanvasId);
+        startAiTick();
+        startTimer(CONFIG.ROUND_DURATION_SEC);
+        updateGameUI();
     }
   } catch (err) {
     console.error("Round Start Error:", err);
@@ -180,6 +226,10 @@ async function finishTimeBasedRound() {
     STATE.isPlaying = false;
     STATE.gameOver = true;
     console.log("TIME IS UP!");
+
+    stopAiTick();
+    bufferedHumanKey = 'Stay';
+
 
     DataManager.endRound();
     STATE.totalRounds++; 
@@ -317,17 +367,7 @@ document.addEventListener('keydown', async (e) => {
     } 
     // B. MAIN TASK LOGIC (Phase 1 or 2)
     else {
-        const data = await api('/key_event', { key: e.key, config_id: STATE.configId });
-        
-        const currentCanvasId = (STATE.phase === 2) ? 'gameCanvas_2' : 'gameCanvas';
-        drawGame(data.state, currentCanvasId); 
-        
-        // Update UI
-        let scoreId = (STATE.phase === 2) ? 'currentScore_2' : 'currentScore';
-        const scoreEl = document.getElementById(scoreId);
-        if(scoreEl) scoreEl.innerText = Math.floor(data.cumulative_reward || 0);
-        
-        DataManager.logStep(data, e.key);
+        bufferedHumanKey = e.key;
     }
 });
 
