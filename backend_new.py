@@ -606,25 +606,45 @@ def key_event():
 
 
                 sess.obs, rewards, dones, info = sess.wrapper.step(action[0], action[1])
+                
+                r_env = 0.0
+                r_adjusted = 0.0
 
                 try:
-                # Robustly handle rewards (Scalar, List, or Numpy Array)
                     if isinstance(rewards, (list, tuple, np.ndarray)):
-                        r_flat = np.array(rewards).flatten()
-                        r = float(r_flat[0])
+                        r_env = float(np.array(rewards).flatten()[0])
+                    
                     else:
-                        r = float(rewards)
+                        r_env = float(rewards)
 
-                    sess.cumulative_reward += r
-                
-                    if r >= 199:
+                    try:
+                        step_pen_ai = float(sess.env_mac.rewardList[0].get("step penalty", 0))
+                        step_pen_hu = float(sess.env_mac.rewardList[1].get("step penalty", 0))
+                    except Exception:
+                        step_pen_ai = -1.0
+                        step_pen_hu = -1.0
+
+                    # compensate "Stay" actions so they don't subtract points
+                    ai_low = int(action[0])
+                    human_low = int(action[1])
+
+                    r_adjusted = r_env
+                    if ai_low == 4:
+                        r_adjusted += (-step_pen_ai)   # add back +1 if penalty is -1
+                    if human_low == 4:
+                        r_adjusted += (-step_pen_hu)
+
+                    sess.cumulative_reward += r_adjusted
+
+                    # dish served detection
+                    if r_env >= 199:
                         sess.dishes_served += 1
                         print(f"[{sid}] DISH SERVED! Total: {sess.dishes_served}")
 
                 except Exception as e:
                     print(f"Error updating rewards: {e}")
                 
-                sess.cur_step += 1
+            sess.cur_step += 1
 
         state = extract_state(sess)
         steps_left = max(0, MAX_STEPS - sess.cur_step)
@@ -633,6 +653,8 @@ def key_event():
             state=state,
             steps_left=steps_left,
             cumulative_reward=sess.cumulative_reward,
+            raw_reward=r_env,
+            adjusted_reward=r_adjusted,
             config_id=sess.config_id,
             layout_id=sess.current_layout_id,
             model_id=sess.current_model_id,
