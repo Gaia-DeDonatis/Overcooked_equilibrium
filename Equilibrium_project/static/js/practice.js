@@ -33,7 +33,7 @@ async function startPracticeRound() {
             drawGame(data.state, 'gameCanvas_practice');
 
             // 5. Update UI
-            document.getElementById('practiceHint').innerText = "Deliver 1 Salad (200 pts) to proceed.";
+            document.getElementById('practiceHint').innerText = "Deliver 1 complete dish to proceed.";
             document.getElementById('to-instruction-2').disabled = true;
             
             console.log("Practice round loaded successfully!");
