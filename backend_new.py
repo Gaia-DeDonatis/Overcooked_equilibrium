@@ -694,8 +694,8 @@ def submit_log():
             return jsonify(success=False, error="Invalid payload: 'rounds' missing"), 400
 
 
-        # Prolific completion code. To change with the real code.
-        completion_code = "C108AMXR"
+        # Prolific completion code.
+        completion_code = "CK4KW637"
 
 
         os.makedirs('submissions', exist_ok=True)

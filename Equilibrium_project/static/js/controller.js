@@ -96,9 +96,16 @@ async function doOneTick() {
     drawGame(data.state, currentCanvasId);
 
     // Update UI
-    let scoreId = (STATE.phase === 2) ? 'currentScore_2' : 'currentScore';
-    const scoreEl = document.getElementById(scoreId);
-    if (scoreEl) scoreEl.innerText = Math.floor(data.cumulative_reward || 0);
+    const dishesId = (STATE.phase === 2) ? 'dishesServed_2' : 'dishesServed';
+    const stepsId  = (STATE.phase === 2) ? 'humanSteps_2'   : 'humanSteps';
+
+    const dishesEl = document.getElementById(dishesId);
+    if (dishesEl) dishesEl.innerText = (data.dishes_served ?? 0);
+
+    const stepsEl = document.getElementById(stepsId);
+    const r = DataManager.getCurrentRound();
+    if (stepsEl) stepsEl.innerText = (r?.summary?.human_steps ?? 0);
+
 
     //DataManager.logStep(data, keyToSend);
     const appliedMs = performance.now() - roundStartPerfMs;
@@ -199,6 +206,10 @@ async function startRound() {
       startAiTick();
       startTimer(CONFIG.ROUND_DURATION_SEC);
       updateGameUI();
+
+       const suffix = (STATE.phase === 2) ? '_2' : '';
+        document.getElementById(`dishesServed${suffix}`)?.innerText = "0";
+        document.getElementById(`humanSteps${suffix}`)?.innerText = "0";
     }
   } catch (err) {
     console.error("Round Start Error:", err);
@@ -401,7 +412,7 @@ document.addEventListener('keydown', async (e) => {
             STATE.gameOver = true;
             document.getElementById('practiceHint').innerText = "Great job! Click 'Next' to continue.";
             document.getElementById('to-instruction-2').disabled = false;
-            alert("Practice Complete! You delivered the salad.");
+            //alert("Practice Complete! You delivered the salad.");
         }
     } 
     // B. MAIN TASK LOGIC (Phase 1 or 2)
@@ -604,8 +615,24 @@ async function submitData() {
         
         if(response.success) {
             showPage('page-end');
+           
+            const code = response.completion_code || "CK4KW637";
+            const prolificUrl = `https://app.prolific.com/submissions/complete?cc=${encodeURIComponent(code)}`;
+
+            // Show the completion code
             document.getElementById('completionCodeWrap')?.classList.remove('hidden');
-            document.getElementById('completionCode').innerText = response.completion_code;
+
+            const codeEl = document.getElementById('completionCode');
+            if (codeEl) codeEl.innerText = code;
+
+            // "copy/paste" fallback text element
+            const codeInlineEl = document.getElementById('completionCodeInline');
+            if (codeInlineEl) codeInlineEl.innerText = code;
+
+            // "Return to Prolific" link
+            const linkEl = document.getElementById('prolificReturnLink');
+            if (linkEl) linkEl.href = prolificUrl;
+            
         } else {
             alert("Submission failed. Please contact the researcher.");
         }
