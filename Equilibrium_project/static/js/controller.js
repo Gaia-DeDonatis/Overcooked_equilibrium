@@ -112,6 +112,8 @@ async function doOneTick() {
     DataManager.logStep(data, keyToSend, { appliedMs, humanPressMs: lastHumanPressMs });
     lastHumanPressMs = null;
 
+    STATE.lastScore = data.cumulative_reward ?? STATE.lastScore ?? 0
+
   } catch (err) {
     console.error("Tick error:", err);
   } finally {
@@ -278,11 +280,10 @@ async function finishTimeBasedRound() {
     STATE.totalRounds++; 
     
     // 2. Final Score
-    let scoreId = (STATE.phase === 2) ? 'currentScore_2' : 'currentScore';
-    const scoreEl = document.getElementById(scoreId);
-    const finalScore = scoreEl ? parseInt(scoreEl.innerText) : 0;
+    const r = DataManager.getCurrentRound();
+    const finalScore = Math.floor(r?.summary?.final_score ?? 0);
     
-    // FIX: Determine Overlay IDs dynamically
+    // Determine Overlay IDs dynamically
     let suffix = (STATE.phase === 2) ? '_2' : '';
     const overlayId = `round-overlay${suffix}`;
     const titleId   = `overlay-title${suffix}`;
