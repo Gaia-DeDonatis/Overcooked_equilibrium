@@ -639,7 +639,7 @@ def key_event():
                 sess.cumulative_reward += r_adjusted
 
                 # dish served detection
-                if r_env >= 199:
+                if r_env >= 150:
                     sess.dishes_served += 1
                     print(f"[{sid}] DISH SERVED! Total: {sess.dishes_served}")
 

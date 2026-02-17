@@ -95,15 +95,17 @@ async function doOneTick() {
     const currentCanvasId = (STATE.phase === 2) ? 'gameCanvas_2' : 'gameCanvas';
     drawGame(data.state, currentCanvasId);
 
-    
-    //DataManager.logStep(data, keyToSend);
     const appliedMs = performance.now() - roundStartPerfMs;
     DataManager.logStep(data, keyToSend, { appliedMs, humanPressMs: lastHumanPressMs });
     lastHumanPressMs = null;
 
-    STATE.lastScore = data.cumulative_reward ?? STATE.lastScore ?? 0
+    const roundObj = DataManager.getCurrentRound();
+    if (roundObj && roundObj.summary) {
+      roundObj.summary.dishes_served = (data.dishes_served ?? roundObj.summary.dishes_served ?? 0);
+    }
 
-    // Update UI
+    STATE.lastScore = data.cumulative_reward ?? STATE.lastScore ?? 0;
+
     const dishesId = (STATE.phase === 2) ? 'dishesServed_2' : 'dishesServed';
     const stepsId  = (STATE.phase === 2) ? 'humanSteps_2'   : 'humanSteps';
 
@@ -111,8 +113,7 @@ async function doOneTick() {
     if (dishesEl) dishesEl.innerText = (data.dishes_served ?? 0);
 
     const stepsEl = document.getElementById(stepsId);
-    const r = DataManager.getCurrentRound();
-    if (stepsEl) stepsEl.innerText = (r?.summary?.human_steps ?? 0);
+    if (stepsEl) stepsEl.innerText = (roundObj?.summary?.human_steps ?? 0);
 
   } catch (err) {
     console.error("Tick error:", err);
@@ -120,6 +121,7 @@ async function doOneTick() {
     aiTickInFlight = false;
   }
 }
+
 
 
 function startAiTick() {
@@ -208,10 +210,14 @@ async function startRound() {
       startAiTick();
       startTimer(CONFIG.ROUND_DURATION_SEC);
       updateGameUI();
-
-       const suffix = (STATE.phase === 2) ? '_2' : '';
-        document.getElementById(`dishesServed${suffix}`)?.innerText = "0";
-        document.getElementById(`humanSteps${suffix}`)?.innerText = "0";
+      
+      const suffix = (STATE.phase === 2) ? '_2' : '';
+      
+      const dishesEl = document.getElementById(`dishesServed${suffix}`);
+      if (dishesEl) dishesEl.innerText = "0";
+      
+      const stepsEl = document.getElementById(`humanSteps${suffix}`);
+      if (stepsEl) stepsEl.innerText = "0";
     }
   } catch (err) {
     console.error("Round Start Error:", err);
