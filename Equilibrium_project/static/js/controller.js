@@ -95,6 +95,14 @@ async function doOneTick() {
     const currentCanvasId = (STATE.phase === 2) ? 'gameCanvas_2' : 'gameCanvas';
     drawGame(data.state, currentCanvasId);
 
+    
+    //DataManager.logStep(data, keyToSend);
+    const appliedMs = performance.now() - roundStartPerfMs;
+    DataManager.logStep(data, keyToSend, { appliedMs, humanPressMs: lastHumanPressMs });
+    lastHumanPressMs = null;
+
+    STATE.lastScore = data.cumulative_reward ?? STATE.lastScore ?? 0
+
     // Update UI
     const dishesId = (STATE.phase === 2) ? 'dishesServed_2' : 'dishesServed';
     const stepsId  = (STATE.phase === 2) ? 'humanSteps_2'   : 'humanSteps';
@@ -105,14 +113,6 @@ async function doOneTick() {
     const stepsEl = document.getElementById(stepsId);
     const r = DataManager.getCurrentRound();
     if (stepsEl) stepsEl.innerText = (r?.summary?.human_steps ?? 0);
-
-
-    //DataManager.logStep(data, keyToSend);
-    const appliedMs = performance.now() - roundStartPerfMs;
-    DataManager.logStep(data, keyToSend, { appliedMs, humanPressMs: lastHumanPressMs });
-    lastHumanPressMs = null;
-
-    STATE.lastScore = data.cumulative_reward ?? STATE.lastScore ?? 0
 
   } catch (err) {
     console.error("Tick error:", err);
