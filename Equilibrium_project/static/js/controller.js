@@ -67,7 +67,7 @@ let gameTimer = null;
 let timeLeft = 0;
 let aiTickTimer = null;
 let aiTickInFlight = false;
-const AI_TICK_MS = 500;
+const AI_TICK_MS = 300;
 
 let bufferedHumanKey = 'Stay';
 let roundStartPerfMs = 0;
@@ -543,20 +543,25 @@ if (btnStartTask) {
         const errors = calculatePageErrors(['q3a', 'q3b']);
         QUIZ_ERRORS += errors;
 
+
         console.log(`Final Check. Total Cumulative Errors: ${QUIZ_ERRORS}`);
 
         if (QUIZ_ERRORS > 2) {
+            STATE.isPlaying = false;
+            STATE.gameOver = true;
+            stopAiTick();
+            if (gameTimer) clearInterval(gameTimer);
             alert("Qualification Failed.\n\nYou answered too many comprehension questions incorrectly.");
-            location.reload(); 
+            window.location.href = "https://app.prolific.com/submissions/complete?cc=CGDMBD6O";
+            return; 
+
         } else {
             console.log("Quiz Passed. Starting Phase 1...");
-            
-            // 1. CRITICAL: Ensure Assignment Exists
+
             if (!STATE.assignment || !STATE.assignment.layout) {
                 assignConditions();
             }
-
-            // 2. Start Phase 1 (This handles Config ID and Showing Page)
+            // Start Phase 1
             startPhase(1); 
         }
     };
