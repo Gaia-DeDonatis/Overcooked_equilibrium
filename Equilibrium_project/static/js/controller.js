@@ -539,17 +539,17 @@ if (btnNext2b) {
     };
 }
 
-// 3. Page 2c (Strategy) -> START GAME (Final Filter)
-const btnStartTask = document.getElementById('start-task-1');
-if (btnStartTask) {
-    btnStartTask.onclick = () => {
+// 3. Page 2c -> SUBMIT QUIZ & FILTER
+const btnSubmitQuiz = document.getElementById('btn-submit-quiz');
+if (btnSubmitQuiz) {
+    btnSubmitQuiz.onclick = () => {
         const errors = calculatePageErrors(['q3a', 'q3b']);
         QUIZ_ERRORS += errors;
-
 
         console.log(`Final Check. Total Cumulative Errors: ${QUIZ_ERRORS}`);
 
         if (QUIZ_ERRORS > 2) {
+            // Disqualify
             STATE.isPlaying = false;
             STATE.gameOver = true;
             stopAiTick();
@@ -557,16 +557,26 @@ if (btnStartTask) {
             alert("Qualification Failed.\n\nYou answered too many comprehension questions incorrectly.");
             window.location.href = "https://app.prolific.com/submissions/complete?cc=CGDMBD6O";
             return; 
-
         } else {
-            console.log("Quiz Passed. Starting Phase 1...");
-
-            if (!STATE.assignment || !STATE.assignment.layout) {
-                assignConditions();
-            }
-            // Start Phase 1
-            startPhase(1); 
+            // Pass! Reveal the "All Set" box and Start button
+            console.log("Quiz Passed. Revealing start button.");
+            document.getElementById('submit-quiz-container').classList.add('hidden');
+            document.getElementById('all-set-container').classList.remove('hidden');
         }
+    };
+}
+
+// 4. START GAME
+const btnStartTask = document.getElementById('start-task-1');
+if (btnStartTask) {
+    btnStartTask.onclick = () => {
+        console.log("Starting Phase 1...");
+
+        if (!STATE.assignment || !STATE.assignment.layout) {
+            assignConditions();
+        }
+        // Start Phase 1
+        startPhase(1); 
     };
 }
 
