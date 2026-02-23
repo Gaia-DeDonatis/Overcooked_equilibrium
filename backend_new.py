@@ -381,7 +381,7 @@ def create_envs_for_session(sess: Session, config_id: str):
     _seed_env_everything(sess.env_mac, SEED)
 
     # wrapper the env
-    reset_step = 100
+    reset_step = 10000
     sess.wrapper = SingleAgentWrapper_accept_keyboard_action(
         sess.env_mac, agent_index=0, reset_step=reset_step
     )

@@ -27,6 +27,7 @@ const DataManager = {
     this.LOGS.meta.prolificId = prolificId;
     this.LOGS.meta.age = age;
     this.LOGS.meta.gender = gender;
+    this.LOGS.meta.experience = extraMeta.experience || "not_provided";
     this.LOGS.meta.condition = assignedCondition;
     this.LOGS.meta.startTimeISO = new Date().toISOString();
 

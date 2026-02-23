@@ -434,29 +434,32 @@ document.addEventListener('keydown', async (e) => {
 const inputID = document.getElementById('prolificId');
 const inputAge = document.getElementById('age');
 const inputGender = document.getElementById('gender');
+const inputExp = document.getElementById('experience');
 const btnConsent = document.getElementById('to-consent');
 
 function validateIntro() {
-    if(!inputID || !inputAge || !inputGender) return;
+    if(!inputID || !inputAge || !inputGender || !inputExp) return;
     btnConsent.disabled = !(
         inputID.value.trim().length > 0 && 
         parseInt(inputAge.value) >= 18 && 
-        inputGender.value !== ""
+        inputGender.value !== "" &&
+        inputExp.value !== ""
     );
 }
 
 if(inputID) {
-    [inputID, inputAge, inputGender].forEach(el => el.addEventListener('input', validateIntro));
+    [inputID, inputAge, inputGender, inputExp].forEach(el => el.addEventListener('input', validateIntro));
     inputGender.addEventListener('change', validateIntro);
     
     btnConsent.onclick = () => {
         STATE.prolificId = inputID.value.trim();
         const age = parseInt(inputAge.value);
         const gender = inputGender.value;
+        const experience = inputExp.value;
         
         assignConditions(); 
 
-        DataManager.initUser(STATE.prolificId, age, gender, STATE.assignment);
+        DataManager.initUser(STATE.prolificId, age, gender, STATE.assignment, {experience: experience});
 
         showPage('page-consent');
     };

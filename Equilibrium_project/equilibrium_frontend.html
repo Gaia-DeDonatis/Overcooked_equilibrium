@@ -163,7 +163,7 @@
     <!-- Page 1: Prolific + Demographics -->
     <section id="page-intro" class="card">
       <h2>Basic Information</h2>
-      <p class="muted">Please fill in the following, then continue.</p>
+      <p class="muted" style="margin-bottom: 24px;">Please fill in the following, then continue.</p>
       <div class="row">
         <div class="col">
           <label for="prolificId">Prolific ID</label>
@@ -174,7 +174,7 @@
         </div>
         <div class="col">
           <label for="age">Age</label>
-          <input id="age" type="number" min="18" max="99" class="input" placeholder="e.g., 28" />
+          <input id="age" type="number" min="18" max="60" class="input" placeholder="e.g., 28" />
         </div>
         <div class="col">
           <label for="gender">Gender</label>
@@ -188,9 +188,19 @@
           </select>
         </div>
       </div>
-      <div class="inline" style="margin-top:12px">
-        <button id="to-consent" class="btn" disabled>Next</button>
+      <div style="height: 1px; background: #e5e7eb; margin: 30px 0;"></div>
+      <div class="col" style="margin-bottom: 30px;">
+        <label for="experience">Have you ever played <i>Overcooked!</i> before?</label>
+          <select id="experience" class="input">
+            <option value="">Please select</option>
+            <option value="none">No, never</option>
+            <option value="little">Yes, I've played a little</option>
+            <option value="regular">Yes, I'm a regular player</option>
+          </select>
       </div>
+      <div class="margin-right">
+        <button id="to-consent" class="btn" style="width: 200px;" disabled>Next</button>
+      </div>  
 
       <script>
         (function() {
@@ -233,8 +243,8 @@
         <input type="checkbox" id="consentCheck">
         <label for="consentCheck" style="margin:0">I have read and agree</label>
       </div>
-      <div class="inline" style="margin-top:12px">
-        <button id="to-instruction" class="btn" disabled>Continue</button>
+      <div class="margin-right" style="margin-top: 30px;">
+        <button id="to-instruction" class="btn" style="width: 200px;" disabled>Next</button>
       </div>
     </section>
 
@@ -331,9 +341,9 @@
 
       <div style="margin-top:20px; text-align:center;">
         <div class="game-controls">
-          <button id="btnTryPractice" class="btn">
+          <!--<button id="btnTryPractice" class="btn">
             Try One Game (In this practice, your teammate won't move)
-          </button>
+          </button>-->
         </div>
         <h3 style="font-size:14px; color:#555;">
            If movement feels delayed, pause briefly and continue.
@@ -348,7 +358,7 @@
       </p>
 
       <div style="margin-top:20px; text-align:center;">
-        <button id="to-instruction-2" class="btn" disabled>
+        <button id="to-instruction-2" class="btn" style="width: 200px;" disabled>
           Next
         </button>
       </div>
@@ -360,18 +370,18 @@
         <h2 style="color:#1e3a8a; margin-top:0;">PART 1: The Goal - Work Smart, Not Hard</h2>
         <p>
           You are a chef in a busy kitchen. Unlike standard games, your goal is <strong>NOT just to be fast</strong>. 
-          Your goal is to get a <span style="color:#2563eb; font-weight:bold;">High Score</span>.
+          Your goal is to get a <span style="color:#2563eb; font-weight:bold;">highest possible team score</span>.
         </p>
         
         <div style="background:white; padding:15px; border-radius:8px; border:1px solid #dbeafe; margin:15px 0;">
           <h3 style="margin-top:0;">How scoring works:</h3>
           <ul style="line-height:1.8;">
             <li><span style="color:#16a34a; font-weight:bold;">(+) Team Goal:</span> You gain points for every dish served.</li>
-            <li><span style="color:#dc2626; font-weight:bold;">(-) Energy Cost:</span> You <span style="text-decoration:underline;">LOSE points for every step YOU take</span>.</li>
+            <li><span style="color:#dc2626; font-weight:bold;">(-) Energy Cost:</span> You LOSE points for every step YOU take.</li>
           </ul>
         </div>
 
-        <p>Work with your AI teammate in a way that feels natural. The rules above explain how points are gained and lost.</p>
+        <p>The AI teammate is there to help. To get a high score, you need to find your rhythm.</p>
       </div>
 
       <p class="muted" style="margin: 10px 0 0 0;">
@@ -427,12 +437,12 @@
       <div id="scenarioDescription" style="border-left: 6px solid #8b5cf6; background-color: #f5f3ff; padding: 20px; border-radius: 8px;">
         <h2 style="color:#5b21b6; margin-top:0;">PART 2: The Game Structure</h2>
         <p>
-          You will play a total of <strong>20 Rounds</strong>, devided in two phases.
+          You will play a total of <strong>11 episodes</strong>. Each episode consists of 3 rounds (45 seconds each).
         </p>
         
         <div style="margin-top:15px; margin-bottom:15px;">
           <div style="background:white; padding:15px; border-radius:8px; border:2px solid #ddd6fe; margin-bottom:10px;">
-            <strong style="color:#7c3aed;">Phase 1: Observation</strong><br>
+            <strong style="color:#7c3aed;">The AI Partner</strong><br>
             The AI is <strong>learning your style</strong>. It records your decisions (e.g., do you prefer chopping or plating?).<br>
             <em style="color:#666;">Your Job: Play naturally and consistently so it can learn your style.</em>
           </div>
@@ -595,7 +605,7 @@
               <thead>
                 <tr style="background: #eff6ff; color: #1e3a8a;">
                   <th style="padding: 12px;">Round</th>
-                  <!-- <th style="padding: 12px;">Score</th> -->
+                  <th style="padding: 12px;">Score</th>
                   <th style="padding: 12px;">Dishes</th>
                   <th style="padding: 12px;">Your Steps</th>
                 </tr>
@@ -735,7 +745,7 @@
               <thead>
                 <tr style="background: #eff6ff; color: #1e3a8a;">
                   <th style="padding: 12px;">Round</th>
-                  <!-- <th style="padding: 12px;">Score</th> -->
+                  <th style="padding: 12px;">Score</th>
                   <th style="padding: 12px;">Dishes</th>
                   <th style="padding: 12px;">Your Steps</th>
                 </tr>
