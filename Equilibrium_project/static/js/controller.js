@@ -23,15 +23,9 @@ function assignConditions() {
     let h = 0;
     for(let i=0; i<pid.length; i++) h = (h*31 + pid.charCodeAt(i)) >>> 0;
     
-    // Randomly assign layout and models
+    // Randomly assign layout (kept for logging / future; backend currently uses a fixed map)
     const layouts = ["cramped", "circuit", "asymmetric", "ring", "forced"];
-    const models = ["model1", "model2", "model3", "model4"];
-    
     STATE.assignment.layout = layouts[h % layouts.length];
-    
-    // Assign Models (Phase 1 vs Phase 2)
-    STATE.assignment.phase1Model = models[h % models.length];
-    STATE.assignment.phase2Model = models[(h + 1) % models.length];
     
     console.log("Assigned:", STATE.assignment);
 }
@@ -41,8 +35,8 @@ function showPage(pageId) {
     const pages = [
         'page-intro', 'page-consent', 'page-instruction-1',
         'page-instruction-2a','page-instruction-2b','page-instruction-2c',
-        'page-phase-1', 'page-phase-1-qs', 'page-intermission', 
-        'page-phase-2', 'page-phase-2-qs', 'page-end'
+        'page-phase-1', 'page-episode-break',
+        'page-end'
     ];
     
     pages.forEach(id => {
@@ -55,13 +49,19 @@ function showPage(pageId) {
     window.scrollTo(0,0);
 
     // Only set isPlaying for game pages
-    const gamePages = ['page-phase-1', 'page-phase-2', 'page-instruction-1'];
+    const gamePages = ['page-phase-1', 'page-instruction-1'];
     if (!gamePages.includes(pageId)) {
         STATE.isPlaying = false;
     }
 }
 
 // --- 4. GAME INITIALIZATION (TIME-BASED) ---
+
+function getEpisodePhase(episodeIndex) {
+  if (episodeIndex <= CONFIG.EPISODES_SEED) return 'seed';
+  if (episodeIndex <= CONFIG.EPISODES_SEED + CONFIG.EPISODES_BO) return 'bo';
+  return 'stress';
+}
 
 let gameTimer = null;
 let timeLeft = 0;
@@ -92,8 +92,7 @@ async function doOneTick() {
 
     const data = await api('/key_event', { key: keyToSend, config_id: STATE.configId });
 
-    const currentCanvasId = (STATE.phase === 2) ? 'gameCanvas_2' : 'gameCanvas';
-    drawGame(data.state, currentCanvasId);
+    drawGame(data.state, 'gameCanvas');
 
     const appliedMs = performance.now() - roundStartPerfMs;
     DataManager.logStep(data, keyToSend, { appliedMs, humanPressMs: lastHumanPressMs });
@@ -101,21 +100,23 @@ async function doOneTick() {
 
     const roundObj = DataManager.getCurrentRound();
     if (roundObj && roundObj.summary) {
-      roundObj.summary.dishes_served = (data.dishes_served ?? roundObj.summary.dishes_served ?? 0);
+      // Backend dishes_served is per-round; store it so we can sum across rounds in the episode.
+      if (data.dishes_served != null) roundObj.summary.dishes_served = data.dishes_served;
     }
 
     STATE.lastScore = data.cumulative_reward ?? STATE.lastScore ?? 0;
 
-    const dishesId = (STATE.phase === 2) ? 'dishesServed_2' : 'dishesServed';
-    const stepsId  = (STATE.phase === 2) ? 'humanSteps_2'   : 'humanSteps';
+    const roundNow = DataManager.getCurrentRound();
 
-    const dishesEl = document.getElementById(dishesId);
-    if (dishesEl) dishesEl.innerText = (data.dishes_served ?? 0);
+    const dishesNow = roundNow?.summary?.dishes_served ?? 0;
+    const stepsNow  = roundNow?.summary?.human_steps ?? 0;
 
-    const stepsEl = document.getElementById(stepsId);
-    if (stepsEl) stepsEl.innerText = (roundObj?.summary?.human_steps ?? 0);
+    const dishesEl = document.getElementById('dishesServed');
+    if (dishesEl) dishesEl.innerText = String(dishesNow);
 
-  } catch (err) {
+    const stepsEl = document.getElementById('humanSteps');
+    if (stepsEl) stepsEl.innerText = String(stepsNow);
+} catch (err) {
     console.error("Tick error:", err);
   } finally {
     aiTickInFlight = false;
@@ -132,46 +133,41 @@ function startAiTick() {
 
 
 
-// A. START PHASE (Setup Model & Layout)
-async function startPhase(phaseNum) {
+// A. START EPISODE (3 rounds each)
+async function startEpisode(episodeIndex) {
+  if (!STATE.assignment || !STATE.assignment.layout) {
+    assignConditions();
+  }
 
-    if (!STATE.assignment || !STATE.assignment.layout) {
-            console.warn("Conditions missing. Auto-assigning defaults.");
-            // Make sure these match your Backend keys exactly!
-            STATE.assignment = {
-                layout: "layout1", 
-                phase1Model: "model1", 
-                phase2Model: "model2"
-            };
-        }
+  STATE.phase = 1; // main task
+  STATE.episodeIndex = episodeIndex;
+  STATE.roundInEpisode = 1;
+  STATE.episodePhase = getEpisodePhase(episodeIndex);
+  STATE.gameOver = false;
 
-    STATE.phase = phaseNum;
-    STATE.round = 1;
-    STATE.gameOver = false;
-    
-    // Determine which model to use
-    let modelId = (phaseNum === 1) ? STATE.assignment.phase1Model : STATE.assignment.phase2Model;
-    STATE.configId = `${STATE.assignment.layout}_${modelId}`;
+  // Backend currently ignores config_id for main task, but we keep something stable.
+  STATE.configId = `${STATE.assignment.layout}_experiment`;
 
-    if (phaseNum === 1) {
-        showPage('page-phase-1');
-    } else if (phaseNum === 2) {
-        showPage('page-phase-2');
-    }
-    
-    console.log(`Starting Phase ${phaseNum} with ${STATE.configId}`);
-    await startRound();
+  showPage('page-phase-1');
+  updateGameUI();
+  await startRound({ newEpisode: true });
 }
 
 // B. START ROUND
-async function startRound() {
+async function startRound({ newEpisode = false } = {}) {
   STATE.isPlaying = false;
   STATE.gameOver = false;
 
   if (gameTimer) clearInterval(gameTimer);
 
   try {
-    const data = await api('/reset', { config_id: STATE.configId });
+    const data = await api('/reset', {
+      config_id: STATE.configId,
+      episode_index: STATE.episodeIndex,
+      round_in_episode: STATE.roundInEpisode,
+      episode_phase: STATE.episodePhase,
+      new_episode: !!newEpisode
+    });
     bufferedHumanKey = 'Stay';
     aiTickInFlight = false;
 
@@ -179,17 +175,9 @@ async function startRound() {
       DataManager.LOGS.meta.tick_ms = AI_TICK_MS;
     }
 
-    if (STATE.phase === 1) {
-      if (DataManager.LOGS.meta.policy_id_phase1 == null && data.model_id != null) {
-        DataManager.LOGS.meta.policy_id_phase1 = data.model_id;
-      }
-    } else if (STATE.phase === 2) {
-      if (DataManager.LOGS.meta.policy_id_phase2 == null && data.model_id != null) {
-        DataManager.LOGS.meta.policy_id_phase2 = data.model_id;
-      }
-      if (DataManager.LOGS.meta.chosen_ckpt_phase2 == null && data.chosen_ckpt != null) {
-        DataManager.LOGS.meta.chosen_ckpt_phase2 = data.chosen_ckpt;
-      }
+    // Keep a first-seen policy id for convenience
+    if (DataManager.LOGS.meta.policy_id_phase1 == null && data.model_id != null) {
+      DataManager.LOGS.meta.policy_id_phase1 = data.model_id;
     }
 
     // START NEW ROUND
@@ -197,6 +185,10 @@ async function startRound() {
       mapTopology: `${data.map_type}_${data.grid_dim}`,
       policyId: data.model_id,
       chosenCkpt: data.chosen_ckpt
+      ,
+      episode_index: STATE.episodeIndex,
+      round_in_episode: STATE.roundInEpisode,
+      episode_phase: STATE.episodePhase
     });
 
     if (data.state) {
@@ -205,20 +197,19 @@ async function startRound() {
       roundStartPerfMs = performance.now();
       lastHumanPressMs = null;
 
-      const currentCanvasId = (STATE.phase === 2) ? 'gameCanvas_2' : 'gameCanvas';
-      drawGame(data.state, currentCanvasId);
+      drawGame(data.state, 'gameCanvas');
       startAiTick();
       startTimer(CONFIG.ROUND_DURATION_SEC);
       updateGameUI();
-      
-      const suffix = (STATE.phase === 2) ? '_2' : '';
-      
-      const dishesEl = document.getElementById(`dishesServed${suffix}`);
-      if (dishesEl) dishesEl.innerText = "0";
-      
-      const stepsEl = document.getElementById(`humanSteps${suffix}`);
-      if (stepsEl) stepsEl.innerText = "0";
-    }
+
+      const roundNow = DataManager.getCurrentRound();
+
+      const dishesEl = document.getElementById('dishesServed');
+      if (dishesEl) dishesEl.innerText = String(roundNow?.summary?.dishes_served ?? 0);
+
+      const stepsEl = document.getElementById('humanSteps');
+      if (stepsEl) stepsEl.innerText = String(roundNow?.summary?.human_steps ?? 0);
+}
   } catch (err) {
     console.error("Round Start Error:", err);
     alert("Failed to start round. Please refresh.");
@@ -244,9 +235,7 @@ function startTimer(duration) {
 }
 
 function updateTimerDisplay() {
-    let timerId = (STATE.phase === 2) ? 'stepsLeft_2' : 'stepsLeft';
-    
-    const el = document.getElementById(timerId); 
+    const el = document.getElementById('timeRemaining');
     
     if (el) {
         const m = Math.floor(timeLeft / 60);
@@ -255,19 +244,14 @@ function updateTimerDisplay() {
         
         el.style.color = timeLeft <= 10 ? '#dc2626' : '#2563eb';
     } else {
-        console.warn(`Timer element '${timerId}' not found!`);
+        console.warn("Timer element 'timeRemaining' not found!");
     }
 }
 
 // D. UI UPDATER
 function updateGameUI() {
-    let suffix = (STATE.phase === 2) ? '_2' : '';
-    
-    const phaseEl = document.getElementById(`currentPhase${suffix}`);
-    const roundEl = document.getElementById(`currentRound${suffix}`);
-    
-    if(phaseEl) phaseEl.innerText = STATE.phase;
-    if(roundEl) roundEl.innerText = `${STATE.round} / ${CONFIG.ROUNDS_PER_PHASE}`;
+    const epEl = document.getElementById('currentEpisode');
+    if (epEl) epEl.innerText = `${STATE.episodeIndex} / ${CONFIG.TOTAL_EPISODES}`;
 }
 
 // E. END ROUND
@@ -283,34 +267,28 @@ async function finishTimeBasedRound() {
 
 
     DataManager.endRound();
-    STATE.totalRounds++; 
     
     // 2. Final Score
     const r = DataManager.getCurrentRound();
     const finalScore = Math.floor(r?.summary?.final_score ?? 0);
     
-    // Determine Overlay IDs dynamically
-    let suffix = (STATE.phase === 2) ? '_2' : '';
-    const overlayId = `round-overlay${suffix}`;
-    const titleId   = `overlay-title${suffix}`;
-    const subId     = `overlay-subtitle${suffix}`;
+    const overlay = document.getElementById('round-overlay');
+    const title   = document.getElementById('overlay-title');
+    const sub     = document.getElementById('overlay-subtitle');
 
-    if (STATE.round < CONFIG.ROUNDS_PER_PHASE) {
-        // --- CASE A: NEXT ROUND ---
-        const overlay = document.getElementById(overlayId);
-        const title   = document.getElementById(titleId);
-        const sub     = document.getElementById(subId);
+    if (STATE.roundInEpisode < CONFIG.ROUNDS_PER_EPISODE) {
+        // --- CASE A: NEXT ROUND (within the same episode) ---
         
-        if(overlay) {
-            if(title) {
-                title.innerText = `ROUND ${STATE.round} COMPLETE`;
-                title.style.color = "#16a34a";
-            }
-            if(sub) sub.innerText = `Score: ${finalScore} | Next round in 3...`;
-            
-            overlay.classList.remove('hidden');
-            overlay.style.opacity = '0';
-            setTimeout(() => overlay.style.opacity = '1', 50); 
+        if (overlay) {
+          if (title) {
+            title.innerText = `ROUND ${STATE.roundInEpisode} COMPLETE`;
+            title.style.color = "#16a34a";
+          }
+          if (sub) sub.innerText = `Score: ${finalScore} | Next round in 3...`;
+
+          overlay.classList.remove('hidden');
+          overlay.style.opacity = '0';
+          setTimeout(() => overlay.style.opacity = '1', 50);
         }
 
         let countdown = 3;
@@ -321,83 +299,126 @@ async function finishTimeBasedRound() {
 
         setTimeout(() => {
             clearInterval(interval);
-            STATE.round++;
-            
-            if(title) {
-                title.innerText = `ROUND ${STATE.round}`;
-                title.style.color = "#2563eb"; 
+            STATE.roundInEpisode++;
+
+            if (title) {
+              title.innerText = `ROUND ${STATE.roundInEpisode}`;
+              title.style.color = "#2563eb";
             }
-            if(sub) sub.innerText = "GO!";
-            
-            startRound().then(() => {
+            if (sub) sub.innerText = "GO!";
+
+            startRound({ newEpisode: false }).then(() => {
+              setTimeout(() => {
+                if (overlay) overlay.style.opacity = '0';
                 setTimeout(() => {
-                    if(overlay) overlay.style.opacity = '0';
-                    setTimeout(() => {
-                        if(overlay) overlay.classList.add('hidden');
-                    }, 500); 
-                }, 500); 
+                  if (overlay) overlay.classList.add('hidden');
+                }, 500);
+              }, 500);
             });
             
         }, 3000);
         
     } else {
-        // --- CASE B: PHASE COMPLETE ---
-        console.log(`Phase ${STATE.phase} Complete!`);
-        document.getElementById(overlayId)?.classList.add('hidden');
+        // --- CASE B: EPISODE COMPLETE ---
+        console.log(`Episode ${STATE.episodeIndex} Complete!`);
 
-        renderPhaseSummary(); 
-
-        if(STATE.phase === 1) {
-            showPage('page-phase-1-qs');
-        } else {
-            // End of Experiment
-            showPage('page-phase-2-qs'); 
+        if (overlay) {
+          if (title) {
+            title.innerText = `EPISODE ${STATE.episodeIndex} COMPLETE`;
+            title.style.color = "#16a34a";
+          }
+          if (sub) sub.innerText = "Short break...";
+          overlay.classList.remove('hidden');
+          overlay.style.opacity = '1';
         }
+
+        // Move to the break page immediately (no phase summary, no big questionnaire)
+        setTimeout(() => {
+          if (overlay) overlay.classList.add('hidden');
+          showEpisodeBreak();
+        }, 300);
     }
 }
 
-// F. SUMMARY TABLE
-function renderPhaseSummary() {
-    let tableId = (STATE.phase === 2) ? 'summary-table-body-2' : 'summary-table-body';
-    const tbody = document.getElementById(tableId);
-    if(!tbody) return;
 
-    tbody.innerHTML = '';
+// --- EPISODE BREAK (fixed 30s, auto-advance) ---
+let breakTimer = null;
+let breakTimeLeft = 0;
+let breakFinishedFired = false;
 
-    const rounds = DataManager.LOGS.rounds.filter(r => r.phase === STATE.phase);
-
-    rounds.forEach((round, index) => {
-
-        const score  = round.summary?.final_score ?? 0;
-        const dishes = round.summary?.dishes_served ?? 0;
-        const steps  = round.summary?.human_steps ?? 0;
-
-        const scoreCompat  = (round.finalScore  ?? score);
-        const dishesCompat = (round.dishesServed ?? dishes);
-        const stepsCompat  = (round.humanSteps ?? steps);
-
-        const displayRoundNum = index + 1;
-
-        const row = `
-            <tr style="border-bottom: 1px solid #eee;">
-                <td style="padding: 12px; font-weight: bold; color: #4b5563;">
-                    ${displayRoundNum}
-                </td>
-                <td style="padding: 12px; font-weight: bold; color: #16a34a;">
-                    ${scoreCompat}
-                </td>
-                <td style="padding: 12px;">
-                    ${dishesCompat}
-                </td>
-                <td style="padding: 12px; color: #2563eb;">
-                    ${stepsCompat}
-                </td>
-            </tr>
-        `;
-        tbody.innerHTML += row;
-    });
+function updateBreakCountdown() {
+  const el = document.getElementById('breakCountdown');
+  if (!el) return;
+  const m = Math.floor(breakTimeLeft / 60);
+  const s = breakTimeLeft % 60;
+  el.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
 }
 
+async function finishEpisodeBreak() {
+  if (breakFinishedFired) return;
+  breakFinishedFired = true;
+
+  const qEffort = document.querySelector('input[name="ep_effort"]:checked');
+  const qCoord = document.querySelector('input[name="ep_coord"]:checked');
+
+  DataManager.saveEpisodeSurvey(
+    STATE.episodeIndex,
+    STATE.episodePhase,
+    {
+      mental_effort: qEffort ? parseInt(qEffort.value) : null,
+      coordination_quality: qCoord ? parseInt(qCoord.value) : null
+    }
+  );
+
+  if (breakTimer) {
+    clearInterval(breakTimer);
+    breakTimer = null;
+  }
+
+  if (STATE.episodeIndex < CONFIG.TOTAL_EPISODES) {
+    await startEpisode(STATE.episodeIndex + 1);
+  } else {
+    await submitData();
+  }
+}
+
+function showEpisodeBreak() {
+  STATE.isPlaying = false;
+  STATE.gameOver = true;
+
+  showPage('page-episode-break');
+
+  // Reset form
+  document.querySelectorAll('input[name="ep_effort"], input[name="ep_coord"]').forEach(el => { el.checked = false; });
+
+  const epLabel = document.getElementById('breakEpisodeLabel');
+  if (epLabel) {
+    const next = (STATE.episodeIndex < CONFIG.TOTAL_EPISODES) ? (STATE.episodeIndex + 1) : null;
+    epLabel.innerText = next
+      ? `Episode ${STATE.episodeIndex} complete. Next: Episode ${next} will start automatically.`
+      : `Episode ${STATE.episodeIndex} complete. The study will finish automatically.`;
+  }
+
+  // Start fixed 30s timer (always full duration, auto-advance)
+  breakFinishedFired = false;
+  if (breakTimer) clearInterval(breakTimer);
+
+  breakTimeLeft = CONFIG.EPISODE_BREAK_SEC;
+  updateBreakCountdown();
+
+  breakTimer = setInterval(() => {
+    breakTimeLeft -= 1;
+    if (breakTimeLeft <= 0) {
+      breakTimeLeft = 0;
+      updateBreakCountdown();
+      clearInterval(breakTimer);
+      breakTimer = null;
+      finishEpisodeBreak().catch(console.error);
+      return;
+    }
+    updateBreakCountdown();
+  }, 1000);
+}
 
 // --- 5. KEYBOARD LISTENER ---
 document.addEventListener('keydown', async (e) => {
@@ -570,68 +591,10 @@ if (btnSubmitQuiz) {
 const btnStartTask = document.getElementById('start-task-1');
 if (btnStartTask) {
     btnStartTask.onclick = () => {
-        console.log("Starting Phase 1...");
-
-        if (!STATE.assignment || !STATE.assignment.layout) {
-            assignConditions();
-        }
-        // Start Phase 1
-        startPhase(1); 
+        console.log("Starting Episode 1...");
+        startEpisode(1);
     };
 }
-
-// --- 9. PHASE TRANSITIONS ---
-
-// A. Phase 1 Mid-Survey -> Start Phase 2
-document.getElementById('btn-submit-mid-survey')?.addEventListener('click', () => {
-    // 1. Validation
-    const qLoad = document.querySelector('input[name="mid_load"]:checked');
-    const qCollab = document.querySelector('input[name="mid_collab"]:checked');
-
-    if (!qLoad || !qCollab) {
-        alert("Please answer the required questions (Load & Cooperation).");
-        return;
-    }
-
-    // 2. Save Data to dataManager
-    const answers = {
-        cognitiveLoad: parseInt(qLoad.value),
-        collaboration: parseInt(qCollab.value),
-        strategy: document.querySelector('input[name="mid_strategy"]:checked')?.value,
-        predictability: document.querySelector('input[name="mid_predict"]:checked')?.value
-    };
-    
-    DataManager.saveQuestionnaire(1, answers);
-
-    // 3. Start Phase 2
-    startPhase(2);
-});
-
-// B. Submit Data
-document.getElementById('btn-submit-final-survey')?.addEventListener('click', async () => {
-    // 1. Validation
-    const qLoad = document.querySelector('input[name="post_load"]:checked');
-    const qCollab = document.querySelector('input[name="post_collab"]:checked');
-
-    if (!qLoad || !qCollab) {
-        alert("Please answer the required questions.");
-        return;
-    }
-
-    // 2. Save Data
-    const answers = {
-        cognitiveLoad: parseInt(qLoad.value),
-        collaboration: parseInt(qCollab.value),
-        strategy: document.querySelector('input[name="post_strategy"]:checked')?.value,
-        predictability: document.querySelector('input[name="post_predict"]:checked')?.value
-    };
-
-    DataManager.saveQuestionnaire(2, answers);
-    DataManager.saveFinalFeedback(document.getElementById('final-feedback')?.value || "");
-
-    // 3. Submit to Backend
-    await submitData();
-});
 
 // --- 10. FINAL SUBMISSION ---
 async function submitData() {

@@ -560,23 +560,20 @@
 
     <!--Phase 1-->
     <section id="page-phase-1" class="card hidden">
-      <h2 style="color:#2563eb; text-align:center;">Phase 1: Observation</h2>
-      <p class="muted" style="text-align:center;">The AI is learning your play style. Play naturally!</p>
+      <h2 style="color:#2563eb; text-align:center;">Main Task</h2>
+      <p class="muted" style="text-align:center;">Play with the AI teammate and try to deliver as many dishes as possible.</p>
       
       <div style="display:flex; justify-content:center; gap:20px; margin:20px 0;">
         <div class="pill">
-          <span>Phase <strong id="currentPhase">1</strong></span>
-        </div>
-        <div class="pill">
-          <span>Round <strong id="currentRound">1 / 6</strong></span>
+          <span>Episode <strong id="currentEpisode">1 / 11</strong></span>
         </div>
         
         <div class="pill">
-          <span>Time: <strong id="stepsLeft" style="color:#2563eb;">0:45</strong></span>
+          <span>Time: <strong id="timeRemaining" style="color:#2563eb;">0:45</strong></span>
         </div>
         
         <div class="pill" style="background:#f0fdf4; color:#15803d;">
-          <span>Dishes served: <strong id="dishesServed">0</strong></span>
+          <span>Dishes: <strong id="dishesServed">0</strong></span>
         </div>
 
         <div class="pill" style="background:#eff6ff; color:#880017;">
@@ -606,7 +603,72 @@
       </div>
     </section>
 
-    <!-- Questionnaire Phase 1-->
+    <!-- Between-episode break (15s + 2 questions) -->
+    <section id="page-episode-break" class="card hidden">
+      <h2 style="color:#2563eb; text-align:center;">Short Break</h2>
+
+      <p id="breakEpisodeLabel" class="muted" style="text-align:center; margin-top:6px;">
+        Episode complete. Take a short break.
+      </p>
+
+      <div class="center" style="margin:18px 0;">
+        <span class="pill">
+          Next start in <strong id="breakCountdown" style="color:#2563eb;">0:30</strong>
+        </span>
+      </div>
+
+      <div style="margin-top: 18px;">
+        <div style="margin-bottom:22px; padding:16px; background:#f9fafb; border-radius:12px;">
+          <p style="font-weight:700; margin:0 0 8px 0;">Mental Effort</p>
+          <p class="muted" style="margin:0 0 10px 0;">How mentally demanding was it to play with the AI teammate?</p>
+          <div class="likert-7" role="group" aria-label="Mental Effort">
+            <input type="radio" name="ep_effort" value="1" aria-label="1 Not demanding at all">
+            <input type="radio" name="ep_effort" value="2" aria-label="2">
+            <input type="radio" name="ep_effort" value="3" aria-label="3">
+            <input type="radio" name="ep_effort" value="4" aria-label="4">
+            <input type="radio" name="ep_effort" value="5" aria-label="5">
+            <input type="radio" name="ep_effort" value="6" aria-label="6">
+            <input type="radio" name="ep_effort" value="7" aria-label="7 Extremely demanding">
+
+            <div class="scale-label">Not demanding<br>at all</div>
+            <div class="scale-label"></div>
+            <div class="scale-label"></div>
+            <div class="scale-label"></div>
+            <div class="scale-label"></div>
+            <div class="scale-label"></div>
+            <div class="scale-label">Extremely<br>demanding</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:22px; padding:16px; background:#f9fafb; border-radius:12px;">
+          <p style="font-weight:700; margin:0 0 8px 0;">Coordination Quality</p>
+          <p class="muted" style="margin:0 0 10px 0;">How well did you and the AI coordinate as a team?</p>
+          <div class="likert-7" role="group" aria-label="Coordination Quality">
+            <input type="radio" name="ep_coord" value="1" aria-label="1 Not well at all">
+            <input type="radio" name="ep_coord" value="2" aria-label="2">
+            <input type="radio" name="ep_coord" value="3" aria-label="3">
+            <input type="radio" name="ep_coord" value="4" aria-label="4">
+            <input type="radio" name="ep_coord" value="5" aria-label="5">
+            <input type="radio" name="ep_coord" value="6" aria-label="6">
+            <input type="radio" name="ep_coord" value="7" aria-label="7 Extremely well">
+
+            <div class="scale-label">Not well<br>at all</div>
+            <div class="scale-label"></div>
+            <div class="scale-label"></div>
+            <div class="scale-label"></div>
+            <div class="scale-label"></div>
+            <div class="scale-label"></div>
+            <div class="scale-label">Extremely<br>well</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="center" style="margin-top: 10px;">
+        <p class="muted" style="margin-top:10px; font-size: 12px;">Next episode will start automatically when the countdown reaches 0.</p>
+      </div>
+    </section>
+
+    <!-- Questionnaire Phase 1
     <section id="page-phase-1-qs" class="container hidden" style="max-width: 800px; margin: 40px auto;">
       <div class="card">
         
@@ -701,7 +763,7 @@
       </div>
     </section>
 
-    <!-- Phase 2-->
+     Phase 2
     <section id="page-phase-2" class="card hidden">
       <h2 style="color:#16a34a; text-align:center;">Phase 2: Adaptation</h2>
       <p class="muted" style="text-align:center;">The AI has updated.  Keep playing along!</p>
@@ -717,7 +779,7 @@
           <span>Time: <strong id="stepsLeft_2" style="color:#2563eb;">0:45</strong></span>
         </div>
         <div class="pill" style="background:#f0fdf4; color:#15803d;">
-          <span>Dishes served: <strong id="dishesServed_2">0</strong></span>
+          <span>Dishes: <strong id="dishesServed_2">0</strong></span>
         </div>
         <div class="pill" style="background:#f0fdf4; color:#880017;">
           <span>Your steps: <strong id="humanSteps_2">0</strong></span>
@@ -746,7 +808,7 @@
       </div>
     </section>
 
-    <!-- Questionnaire Phase 2-->
+     Questionnaire Phase 2
     <section id="page-phase-2-qs" class="container hidden" style="max-width: 800px; margin: 40px auto;">
       <div class="card">
         
@@ -844,7 +906,7 @@
           </div>
         </div>
       </div>
-    </section>
+    </section>-->
 
     <!-- End page-->
     <section id="page-end" class="card hidden center" style="padding: 60px 20px;">

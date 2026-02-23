@@ -2,49 +2,48 @@
 
 const SERVER_URL = 'http://localhost:5000';
 
-// Configuration
+// Experiment Configuration
 const CONFIG = {
-    PRACTICE_SCORE: 200,
-    ROUNDS_PER_PHASE: 1, // to change with 10
-    ROUND_DURATION_SEC: 45
+  PRACTICE_SCORE: 200,
+  ROUND_DURATION_SEC: 5,
+
+  // Episode structure
+  ROUNDS_PER_EPISODE: 3,
+  EPISODES_SEED: 1, //put 3
+  EPISODES_BO: 1,   //put 5
+  EPISODES_STRESS: 1, //put 3
+
+  // Between-episode break
+  EPISODE_BREAK_SEC: 15
 };
+
+CONFIG.TOTAL_EPISODES = CONFIG.EPISODES_SEED + CONFIG.EPISODES_BO + CONFIG.EPISODES_STRESS;
 
 // Global State
 const STATE = {
-    sessionId: null,
-    prolificId: null,
-    phase: 0,
-    round: 1,
-    totalRounds: 0,
-    isPlaying: false,
-    gameOver: false,
-    practiceScore: 0,
-    configId: null,
-    assignment: {
-        layout: null,       
-        phase1Model: null,
-        phase2Model: null
-    }
-};
+  sessionId: null,
+  prolificId: null,
 
-/*
-// Logs to send to server at the end
-const LOGS = {
-    prolificId: "",
-    age: null,
-    gender: "",
-    assignment: {},
-    rounds: [],             // Array of round data
-    phase1Questionnaire: {},
-    phase2Questionnaire: {},
-    finalFeedback: ""
-};
+  // 0 = practice, 1 = main task
+  phase: 0,
 
-// Temporary buffer for current round
-let currentRoundData = {
-    roundNumber: 0,
-    phase: 0,
-    steps: [],
-    finalScore: 0,
-    humanSteps: 0
-};*/
+  // Main experiment loop
+  episodeIndex: 1,
+  roundInEpisode: 1,
+  episodePhase: 'seed',
+
+  // Gameplay flags
+  isPlaying: false,
+  gameOver: false,
+
+  // Practice
+  practiceScore: 0,
+
+  // Backend config id (backend currently ignores for main task)
+  configId: null,
+
+  // Condition assignment (kept for logging / future)
+  assignment: {
+    layout: null
+  }
+};

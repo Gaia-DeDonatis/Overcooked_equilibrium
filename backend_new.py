@@ -119,7 +119,7 @@ POLICY_POOL_DIR = os.path.join(current_dir, "policy_pool")
 
 # This function is used for randomly picking one policy from the AI policy pool.
 
-def _pick_random_policy_checkpoint():
+def _pick_random_policy_checkpoint(exclude_policy_names=None):
     """
     pick an model from /policy_pool/
     """
@@ -133,6 +133,13 @@ def _pick_random_policy_checkpoint():
     ]
     if not subdirs:
         raise FileNotFoundError(f"No subfolders found under: {POLICY_POOL_DIR}")
+
+    # Optional: sample without replacement (per-session) when possible.
+    if exclude_policy_names:
+        exclude_set = set(exclude_policy_names)
+        filtered = [d for d in subdirs if os.path.basename(d) not in exclude_set]
+        if filtered:
+            subdirs = filtered
 
     chosen_dir = random.choice(subdirs)
     ckpt_path = os.path.join(chosen_dir, "model_500000.zip")
@@ -242,6 +249,11 @@ class Session:
         self.lock = threading.RLock()
         self.chosen_policy_dir = None
         self.chosen_ckpt_path = None
+        # Experiment structure (episodes)
+        self.episode_index = None
+        self.round_in_episode = None
+        self.episode_phase = None
+        self.used_policy_names = []  # basenames of chosen policy dirs
 
 
 class SessionManager:
@@ -327,7 +339,7 @@ def _parse_config_id(layout_id: str = None, model_id: str = None, config_id: str
 
 
 
-def create_envs_for_session(sess: Session, config_id: str):
+def create_envs_for_session(sess: Session, config_id: str, choose_new_policy: bool = True):
 
     # Now, I use a fixed map, which is the circle (5*5). And for each time, I randomly load a model from the policy_pool
 
@@ -392,10 +404,20 @@ def create_envs_for_session(sess: Session, config_id: str):
         sess.chosen_ckpt_path = None
         sess.model = None
     else:
-        chosen_dir, ckpt_path = _pick_random_policy_checkpoint()
-        sess.chosen_policy_dir = chosen_dir
-        sess.chosen_ckpt_path = ckpt_path
-        sess.model = _load_or_get_model_by_ckpt_path(ckpt_path)
+        # Pick a new AI policy only when starting a new episode.
+        should_pick = bool(choose_new_policy) or (not sess.chosen_ckpt_path)
+
+        if should_pick:
+            chosen_dir, ckpt_path = _pick_random_policy_checkpoint(exclude_policy_names=sess.used_policy_names)
+            sess.chosen_policy_dir = chosen_dir
+            sess.chosen_ckpt_path = ckpt_path
+
+            policy_name = os.path.basename(chosen_dir)
+            if policy_name not in sess.used_policy_names:
+                sess.used_policy_names.append(policy_name)
+
+        # Always (re)load the model into the freshly created env.
+        sess.model = _load_or_get_model_by_ckpt_path(sess.chosen_ckpt_path)
 
 
     sess.obs = sess.wrapper.reset()
@@ -506,21 +528,59 @@ def reset():
         return jsonify(success=False, error="session_id is required"), 400
 
 
-    # Now, although I parse the config from the frontend, I never use them. I just use the fixed circle layout.
+    # Frontend may send episode metadata. We store it for logging and use it
+    # to decide whether to sample a new AI policy.
     layout_id = data.get('layout_id')
     model_id  = data.get('model_id')
     config_id = data.get('config_id')
 
+    # Episode metadata (optional)
+    episode_index = data.get('episode_index', None)
+    round_in_episode = data.get('round_in_episode', None)
+    episode_phase = data.get('episode_phase', None)
+    new_episode = data.get('new_episode', None)
+
+    try:
+        episode_index_int = int(episode_index) if episode_index is not None else None
+    except Exception:
+        episode_index_int = None
+    try:
+        round_in_episode_int = int(round_in_episode) if round_in_episode is not None else None
+    except Exception:
+        round_in_episode_int = None
+
+    if new_episode is None:
+        # Heuristic default: the first round in an episode is round 1.
+        new_episode = (round_in_episode_int == 1)
+
+    is_practice = ((config_id or "layout_practice") == "layout_practice")
+
     sess = SESSION_MGR.ensure(sid)
     with sess.lock:
         try:
-            create_envs_for_session(sess, config_id=(config_id or "IGNORED"))
+            # Force a new policy if the episode index changed.
+            episode_changed = (
+                episode_index_int is not None
+                and sess.episode_index is not None
+                and episode_index_int != sess.episode_index
+            )
+            choose_new_policy = (not is_practice) and (bool(new_episode) or episode_changed)
+
+            # Persist metadata in the session.
+            if episode_index_int is not None:
+                sess.episode_index = episode_index_int
+            sess.round_in_episode = round_in_episode_int
+            sess.episode_phase = episode_phase
+
+            create_envs_for_session(sess, config_id=(config_id or "IGNORED"), choose_new_policy=choose_new_policy)
         except Exception as e:
             return jsonify(success=False, error=str(e)), 400
 
         steps_left = MAX_STEPS
-        print(f"[RESET][{sid}] map_type={FIXED_MAP_TYPE} grid_dim={FIXED_GRID_DIM} "
-            f"chosen_policy_dir={sess.chosen_policy_dir} ckpt={sess.chosen_ckpt_path}")
+        print(
+            f"[RESET][{sid}] episode={sess.episode_index} round_in_episode={sess.round_in_episode} phase={sess.episode_phase} "
+            f"map_type={FIXED_MAP_TYPE} grid_dim={FIXED_GRID_DIM} policy={sess.current_model_id} ckpt={sess.chosen_ckpt_path}"
+        )
 
 
         return jsonify(
@@ -531,8 +591,12 @@ def reset():
             config_id=sess.config_id,
             layout_id=sess.current_layout_id,
             model_id=sess.current_model_id,
-            chosen_policy_dir=sess.current_model_id,
+            chosen_policy_dir=os.path.basename(sess.chosen_policy_dir) if sess.chosen_policy_dir else None,
             chosen_ckpt=os.path.basename(sess.chosen_ckpt_path) if sess.chosen_ckpt_path else None,
+
+            episode_index=sess.episode_index,
+            round_in_episode=sess.round_in_episode,
+            episode_phase=sess.episode_phase,
 
             map_type=FIXED_MAP_TYPE if config_id != "layout_practice" else "A",
             grid_dim=FIXED_GRID_DIM if config_id != "layout_practice" else [5, 5],

@@ -14,9 +14,8 @@ const DataManager = {
       startTimeISO: null
     },
 
-    // phase1/phase2 questionnaires + feedback
-    questionnaires: { phase1: {}, phase2: {} },
-    finalFeedback: "",
+    // Per-episode mini questionnaires (mental effort + coordination)
+    episodes: [],
 
     // rounds are ordered in time
     rounds: []
@@ -50,6 +49,11 @@ const DataManager = {
       configId,
       round_index: extraMeta.round_index ?? null,
 
+      // Episode structure
+      episode_index: extraMeta.episode_index ?? null,
+      round_in_episode: extraMeta.round_in_episode ?? null,
+      episode_phase: extraMeta.episode_phase ?? null,
+
       mapTopology: extraMeta.mapTopology ?? null,
       policyId: extraMeta.policyId ?? null,
       chosenCkpt: extraMeta.chosenCkpt ?? null,
@@ -77,6 +81,32 @@ const DataManager = {
     if (this.LOGS.meta.tick_ms == null && extraMeta.tick_ms != null) this.LOGS.meta.tick_ms = extraMeta.tick_ms;
     if (this.LOGS.meta.mapTopology == null && extraMeta.mapTopology != null) this.LOGS.meta.mapTopology = extraMeta.mapTopology;
   },
+
+  // --- Episode mini questionnaire ---
+  saveEpisodeSurvey(episode_index, episode_phase, answers) {
+    // overwrite if already exists for this episode
+    const idx = this.LOGS.episodes.findIndex(e => e.episode_index === episode_index);
+    const payload = {
+      episode_index,
+      episode_phase: episode_phase ?? null,
+      mental_effort: answers?.mental_effort ?? null,
+      coordination_quality: answers?.coordination_quality ?? null,
+      submittedAtISO: new Date().toISOString()
+    };
+    if (idx >= 0) this.LOGS.episodes[idx] = payload;
+    else this.LOGS.episodes.push(payload);
+  },
+
+  /*// Episode aggregates (for UI)
+  getEpisodeTotals(episode_index) {
+    const totals = { dishes_served: 0, human_steps: 0 };
+    for (const r of this.LOGS.rounds) {
+      if (r.episode_index !== episode_index) continue;
+      totals.dishes_served += (r.summary?.dishes_served ?? 0);
+      totals.human_steps += (r.summary?.human_steps ?? 0);
+    }
+    return totals;
+  },*/
 
   endRound(extra = {}) {
     const r = this.getCurrentRound();
@@ -158,7 +188,6 @@ const DataManager = {
 
 
     // ---- SPARSE EVENTS (CRC) ----
-    // If backend returns serverData.events = [{actor:"human|ai", event:"pick_plate"}...]
     if (Array.isArray(serverData.events) && serverData.events.length > 0) {
       for (const ev of serverData.events) {
         r.events.push({
@@ -169,16 +198,6 @@ const DataManager = {
         });
       }
     }
-  },
-
-  // 5) Questionnaires & feedback
-  saveQuestionnaire(phase, data) {
-    if (phase === 1) this.LOGS.questionnaires.phase1 = data;
-    if (phase === 2) this.LOGS.questionnaires.phase2 = data;
-  },
-
-  saveFinalFeedback(text) {
-    this.LOGS.finalFeedback = text;
   },
 
   // 6) Submission
