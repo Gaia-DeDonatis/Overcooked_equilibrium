@@ -174,9 +174,9 @@ async function startRound({ newEpisode = false } = {}) {
     }
 
     // Keep a first-seen policy id for convenience
-    if (DataManager.LOGS.meta.policy_id_phase1 == null && data.model_id != null) {
-      DataManager.LOGS.meta.policy_id_phase1 = data.model_id;
-    }
+    //if (DataManager.LOGS.meta.policy_id_phase1 == null && data.model_id != null) {
+    //  DataManager.LOGS.meta.policy_id_phase1 = data.model_id;
+    //}
 
     // START NEW ROUND
     DataManager.startNewRound(STATE.phase, STATE.configId, {
@@ -330,7 +330,7 @@ async function finishTimeBasedRound() {
           overlay.style.opacity = '1';
         }
 
-        // Move to the break page immediately (no phase summary, no big questionnaire)
+        // Move to the break page
         setTimeout(() => {
           if (overlay) overlay.classList.add('hidden');
           showEpisodeBreak();
@@ -339,7 +339,7 @@ async function finishTimeBasedRound() {
 }
 
 
-// --- EPISODE BREAK (fixed 30s, auto-advance) ---
+// --- EPISODE BREAK (fixed 15s, auto-advance) ---
 let breakTimer = null;
 let breakTimeLeft = 0;
 let breakFinishedFired = false;
@@ -397,7 +397,7 @@ function showEpisodeBreak() {
       : `Episode ${STATE.episodeIndex} complete. The study will finish automatically.`;
   }
 
-  // Start fixed 30s timer (always full duration, auto-advance)
+  // Start fixed 15s timer (always full duration, auto-advance)
   breakFinishedFired = false;
   if (breakTimer) clearInterval(breakTimer);
 
@@ -478,7 +478,9 @@ if(inputID) {
         
         assignConditions(); 
 
-        DataManager.initUser(STATE.prolificId, age, gender, STATE.assignment, {experience: experience});
+        DataManager.initUser(STATE.prolificId, age, gender, STATE.assignment, {
+            experience: experience,
+        });
 
         showPage('page-consent');
     };
@@ -533,7 +535,7 @@ function calculatePageErrors(questionNames) {
 
 // --- BUTTON LISTENERS ---
 
-// 1. Page 2a (Goal & Attention Check) -> Move to 2b
+// 1. Page 2a -> Move to 2b
 const btnNext2a = document.getElementById('btn-next-2a');
 if (btnNext2a) {
     btnNext2a.onclick = () => {
@@ -546,7 +548,7 @@ if (btnNext2a) {
     };
 }
 
-// 2. Page 2b (Structure & Observation) -> Move to 2c
+// 2. Page 2b -> Move to 2c
 const btnNext2b = document.getElementById('btn-next-2b');
 if (btnNext2b) {
     btnNext2b.onclick = () => {
@@ -558,7 +560,7 @@ if (btnNext2b) {
     };
 }
 
-// 3. Page 2c -> SUBMIT QUIZ & FILTER
+// 3. Page 2c -> SUBMIT QUIZ
 const btnSubmitQuiz = document.getElementById('btn-submit-quiz');
 if (btnSubmitQuiz) {
     btnSubmitQuiz.onclick = () => {

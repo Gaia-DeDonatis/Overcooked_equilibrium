@@ -1,146 +1,174 @@
 // static/js/dataManager.js
 
 const DataManager = {
-  // Top-level payload (backend expects `rounds` and optionally `prolificId` at top-level)
   LOGS: {
     prolificId: 'unknown',
-    age: null,
-    gender: null,
-    experience: null,
 
-    assignment: {
-      condition: null,
-      layout: null
-    },
-
+    //participant metadata
     meta: {
-      version: 'dm_v2',
-      startTimeISO: null,
-      tick_ms: null,
+      prolificId: 'unknown',
+      age: null,
+      gender: null,
+      experience: null,
 
-      // experiment parameters (optional; set by controller if you want)
-      rounds_per_episode: null,
-      round_duration_sec: null,
-      episode_break_sec: null,
-
-      // optionally record reward scheme id/name here
-      reward_scheme: null
+      assignment: {
+        condition: null, // "BO" or "STATIC"
+        map: null        // one of your 5 map labels (e.g. "asymmetric")
+      },
+      startTimeISO: null
     },
 
-    // One entry per episode: policy used + survey after episode
+    // Episodes in chronological order
     episodes: [],
 
-    // One entry per round (ordered in time)
+    // Rounds in chronological order (backend requires this)
     rounds: []
   },
 
   // ----------------------
   // 1) Participant/session
   // ----------------------
-  initUser(prolificId, age, gender, assigned, extraMeta = {}) {
-    this.LOGS.prolificId = prolificId || 'unknown';
-    this.LOGS.age = (age != null) ? age : null;
-    this.LOGS.gender = (gender != null) ? gender : null;
-    this.LOGS.experience = extraMeta.experience ?? null;
+  initUser(prolificId, age, gender, assigned = {}, extraMeta = {}) {
+    const pid = prolificId || 'unknown';
+    this.LOGS.prolificId = pid;
+    this.LOGS.meta.prolificId = pid;
+    this.LOGS.meta.age = (age != null) ? age : null;
+    this.LOGS.meta.gender = (gender != null) ? gender : null;
+    this.LOGS.meta.experience = extraMeta.experience ?? null;
     this.LOGS.meta.startTimeISO = new Date().toISOString();
 
     if (typeof assigned === 'string') {
-      this.LOGS.assignment.condition = assigned;
+      this.LOGS.meta.assignment.condition = assigned;
     } else if (assigned && typeof assigned === 'object') {
-      this.LOGS.assignment = {
-        ...this.LOGS.assignment,
-        ...assigned
-      };
+      const map = assigned.map ?? null;
+      const condition = assigned.condition ?? null;
+      if (map != null) this.LOGS.meta.assignment.map = map;
+      if (condition != null) this.LOGS.meta.assignment.condition = condition;
     }
 
     if (extraMeta.tick_ms != null) this.LOGS.meta.tick_ms = extraMeta.tick_ms;
-    if (extraMeta.rounds_per_episode != null) this.LOGS.meta.rounds_per_episode = extraMeta.rounds_per_episode;
     if (extraMeta.round_duration_sec != null) this.LOGS.meta.round_duration_sec = extraMeta.round_duration_sec;
-    if (extraMeta.episode_break_sec != null) this.LOGS.meta.episode_break_sec = extraMeta.episode_break_sec;
-    if (extraMeta.reward_scheme != null) this.LOGS.meta.reward_scheme = extraMeta.reward_scheme;
+    if (extraMeta.rounds_per_episode != null) this.LOGS.meta.rounds_per_episode = extraMeta.rounds_per_episode;
+
+    if (extraMeta.seed != null) this.LOGS.meta.seed = extraMeta.seed;
   },
 
   // ----------------------
-  // 2) Episode + round
+  // 2) Episode helpers
   // ----------------------
+  _getEpisode(episode_index) {
+    return this.LOGS.episodes.find(e => e.episode_index === episode_index) || null;
+  },
+
   _ensureEpisode(episode_index, episode_phase) {
     if (episode_index == null) return null;
-    const idx = this.LOGS.episodes.findIndex(e => e.episode_index === episode_index);
-    if (idx >= 0) {
-      if (episode_phase != null) this.LOGS.episodes[idx].episode_phase = episode_phase;
-      return this.LOGS.episodes[idx];
+
+    let ep = this._getEpisode(episode_index);
+    if (ep) {
+      if (episode_phase != null) ep.episode_phase = episode_phase;
+      return ep;
     }
 
-    const ep = {
+    ep = {
       episode_index,
-      episode_phase: episode_phase ?? null,
+      episode_phase: episode_phase ?? null, // e.g. "seed" | "bo" | "stress"
       policy_id: null,
-      mapTopology: null,
       startTimeISO: new Date().toISOString(),
-      survey: null
+
+      // only 2 questions per episode
+      feedback: {
+        mental_effort: null,
+        coordination_quality: null,
+        submittedAtISO: null
+      },
+
+      // nested rounds
+      rounds: []
     };
+
     this.LOGS.episodes.push(ep);
     return ep;
   },
 
+  // convenience (used by your UI to show episode totals)
+  getEpisodeTotals(episode_index) {
+    const totals = { dishes_served: 0, human_steps: 0, final_score_sum: 0 };
+    for (const r of this.LOGS.rounds) {
+      if (r.episode_index !== episode_index) continue;
+      totals.dishes_served += (r.summary?.dishes_served ?? 0);
+      totals.human_steps += (r.summary?.human_steps ?? 0);
+      totals.final_score_sum += (r.summary?.final_score ?? 0);
+    }
+    return totals;
+  },
+
+  // ----------------------
+  // 3) Round lifecycle
+  // ----------------------
   startNewRound(phase, configId, extraMeta = {}) {
-    // extraMeta should contain: episode_index, round_in_episode, episode_phase, policyId, mapTopology
+
     const episode_index = extraMeta.episode_index ?? null;
     const episode_phase = extraMeta.episode_phase ?? null;
     const round_in_episode = extraMeta.round_in_episode ?? null;
 
     const ep = this._ensureEpisode(episode_index, episode_phase);
-    if (ep) {
-      if (extraMeta.policyId != null) ep.policy_id = extraMeta.policyId;
-      if (extraMeta.mapTopology != null) ep.mapTopology = extraMeta.mapTopology;
+    if (ep && extraMeta.policyId != null) ep.policy_id = extraMeta.policyId;
+
+    if (this.LOGS.meta.tick_ms == null && extraMeta.tick_ms != null) {
+      this.LOGS.meta.tick_ms = extraMeta.tick_ms;
+    }
+
+    if (this.LOGS.meta.round_duration_sec == null && extraMeta.round_duration_sec != null) {
+      this.LOGS.meta.round_duration_sec = extraMeta.round_duration_sec;
+    }
+    if (this.LOGS.meta.rounds_per_episode == null && extraMeta.rounds_per_episode != null) {
+      this.LOGS.meta.rounds_per_episode = extraMeta.rounds_per_episode;
+    }
+    if (this.LOGS.meta.seed == null && extraMeta.seed != null) {
+      this.LOGS.meta.seed = extraMeta.seed;
+    }
+
+    const mapLabel = extraMeta.mapTopology ?? this.LOGS.meta.assignment.map ?? null;
+    if (mapLabel != null && (phase == null || Number(phase) !== 0)) {
+      this.LOGS.meta.assignment.map = mapLabel;
     }
 
     const round = {
-      // identifiers
+      round_index_global: this.LOGS.rounds.length + 1,
       phase: phase ?? null,
       configId: configId ?? null,
-      round_index_global: this.LOGS.rounds.length + 1,
 
-      // episode structure
+      // nesting keys
       episode_index,
       episode_phase,
       round_in_episode,
 
-      // environment / policy info
-      mapTopology: extraMeta.mapTopology ?? null,
+      // experiment variables
       policy_id: extraMeta.policyId ?? null,
+      map: mapLabel,
 
       startTimeISO: new Date().toISOString(),
       endTimeISO: null,
 
-      // store the map/items ONCE (we fill this lazily on first tick)
-      world: {
-        map: null,
-        items_initial: null
-      },
-
-      // Shared per-tick signals (reward, counters)
-      rewards: [],
-
-      // Separate agent streams
-      agents: {
-        human: {
-          ticks: []
-        },
-        ai: {
-          ticks: []
-        }
-      },
-
-      // round summary (PER ROUND)
+      // quick summary (PER ROUND)
       summary: {
         final_score: 0,
         dishes_served: 0,
         human_steps: 0
-      }
+      },
+
+      // ACTION LOGS (separate streams)
+      action_log: {
+        human: [],
+        ai: []
+      },
+
+      // sparse events from backend (helps CRC/equilibrium)
+      events: []
     };
 
     this.LOGS.rounds.push(round);
+    if (ep) ep.rounds.push(round);
   },
 
   getCurrentRound() {
@@ -150,118 +178,106 @@ const DataManager = {
   endRound(extra = {}) {
     const r = this.getCurrentRound();
     if (!r) return;
-
     r.endTimeISO = new Date().toISOString();
+
     if (extra.final_score != null) r.summary.final_score = extra.final_score;
     if (extra.dishes_served != null) r.summary.dishes_served = extra.dishes_served;
     if (extra.human_steps != null) r.summary.human_steps = extra.human_steps;
   },
 
   // ----------------------
-  // 3) Per-tick logging
+  // 4) Per-tick logging
   // ----------------------
+  _normalizeHumanAction(key) {
+    if (key === 'ArrowUp') return 'UP';
+    if (key === 'ArrowDown') return 'DOWN';
+    if (key === 'ArrowLeft') return 'LEFT';
+    if (key === 'ArrowRight') return 'RIGHT';
+    if (key === 'Stay') return 'STAY';
+    return key ?? null;
+  },
+
   _packHolding(agent) {
     if (!agent) return null;
     const h = agent.holding;
     if (h == null) return null;
-
     if (typeof h === 'string') {
-      return {
-        item: h,
-        containing: agent.holding_containing ?? null
-      };
+      return { item: h, containing: agent.holding_containing ?? null };
     }
     return h;
   },
 
-  //Log ONE applied environment step (one tick).
-  logStep(serverData, humanKey, timing = {}) {
+  logStep(serverData, humanKey, _timingIgnored = null) {
     const r = this.getCurrentRound();
     if (!r || !serverData) return;
 
     const state = serverData.state || {};
     const agents = Array.isArray(state.agents) ? state.agents : [];
 
-    // backend indexing: [0]=AI, [1]=Human
+    // Backend indexing: [0]=AI, [1]=Human
     const ai = agents[0] || {};
     const human = agents[1] || {};
 
-    const t = (typeof state.cur_step === 'number') ? state.cur_step : null;
+    const t = (typeof state.cur_step === 'number') ? state.cur_step : r.action_log.human.length;
+    const tick_ms = this.LOGS.meta.tick_ms;
+    const ms = (tick_ms != null && t != null) ? (t * tick_ms) : null;
 
-    // Capture the static world (map + initial items)
-    if (!r.world.map && state.map) {
-      r.world.map = state.map;
-    }
-    if (!r.world.items_initial && Array.isArray(state.items)) {
-      r.world.items_initial = state.items;
-    }
-
-    // Update per-round summary directly from backend counters (per-round in backend)
+    // Update per-round summary with backend counters
     if (typeof serverData.cumulative_reward === 'number') r.summary.final_score = serverData.cumulative_reward;
     if (typeof serverData.dishes_served === 'number') r.summary.dishes_served = serverData.dishes_served;
     if (humanKey !== 'Stay') r.summary.human_steps += 1;
 
-    // Human stream
-    const humanTick = {
-      t,
-      action: humanKey,
-      pos: (human.x != null && human.y != null) ? [human.x, human.y] : null,
-      holding: this._packHolding(human)
-    };
-    if (this.options.captureTiming) {
-      humanTick.human_press_ms = (typeof timing?.humanPressMs === 'number') ? timing.humanPressMs : null;
-    }
-    r.agents.human.ticks.push(humanTick);
+    const aiLast = serverData.robot_last_action || {};
+    const aiLow = (aiLast.low_level_action != null) ? aiLast.low_level_action : null;
 
-    // AI stream
-    const last = serverData.robot_last_action || {};
-    const aiTick = {
-      t,
-      low_level_action: (last.low_level_action != null) ? last.low_level_action : null,
-      macro_action: (last.ai_macro_action != null) ? last.ai_macro_action : null,
-      arrow: last.arrow ?? null,
-      pos: (ai.x != null && ai.y != null) ? [ai.x, ai.y] : null,
-      holding: this._packHolding(ai)
-    };
-    r.agents.ai.ticks.push(aiTick);
+    // HUMAN tick
+    r.action_log.human.push({t, ms,  action: this._normalizeHumanAction(humanKey),  pos: (human.x != null && human.y != null) ? [human.x, human.y] : null,  holding: this._packHolding(human)
+    });
 
-    // Shared reward stream
-    const rewardTick = {
-      t,
-      raw_reward: (typeof serverData.raw_reward === 'number') ? serverData.raw_reward : null,
-      adjusted_reward: (typeof serverData.adjusted_reward === 'number') ? serverData.adjusted_reward : null,
-      cumulative_reward: (typeof serverData.cumulative_reward === 'number') ? serverData.cumulative_reward : null,
-      dishes_served: (typeof serverData.dishes_served === 'number') ? serverData.dishes_served : null,
-      steps_left: (typeof serverData.steps_left === 'number') ? serverData.steps_left : null
-    };
-    if (this.options.captureTiming) {
-      rewardTick.applied_ms = (typeof timing?.appliedMs === 'number') ? timing.appliedMs : null;
+    // AI tick
+    r.action_log.ai.push({t,  ms, action: aiLow, pos: (ai.x != null && ai.y != null) ? [ai.x, ai.y] : null, holding: this._packHolding(ai)
+    });
+
+    // Sparse backend events (optional but useful)
+    if (Array.isArray(serverData.events) && serverData.events.length > 0) {
+      for (const ev of serverData.events) {
+        r.events.push({
+          t,
+          ms,
+          actor: ev.actor ?? null,
+          event: ev.event ?? null,
+          payload: ev.payload ?? null
+        });
+      }
     }
-    r.rewards.push(rewardTick);
   },
 
   // ----------------------
-  // 4) Episode break survey
+  // 5) Episode feedback
   // ----------------------
   saveEpisodeSurvey(episode_index, episode_phase, answers) {
     const ep = this._ensureEpisode(episode_index, episode_phase);
     if (!ep) return;
-    ep.survey = {
+    ep.feedback = {
       mental_effort: (answers?.mental_effort != null) ? answers.mental_effort : null,
       coordination_quality: (answers?.coordination_quality != null) ? answers.coordination_quality : null,
       submittedAtISO: new Date().toISOString()
     };
   },
 
+  // backwards-compat (in case older pages still call these)
+  saveQuestionnaire(_phase, _answers) {},
+  saveFinalFeedback(_text) {},
+
   // ----------------------
-  // 5) Submission
+  // 6) Submission
   // ----------------------
   async submitToServer() {
-    console.log('Submitting Data...', this.LOGS);
-    return await fetch(`${SERVER_URL}/submit_log`, {
+    const res = await fetch(`${SERVER_URL}/submit_log`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ log: this.LOGS })
-    }).then(res => res.json());
+    });
+    return await res.json();
   }
 };

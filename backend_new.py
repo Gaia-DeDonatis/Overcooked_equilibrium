@@ -764,7 +764,7 @@ def submit_log():
         os.makedirs('submissions', exist_ok=True)
         ts = dt.datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
         prolific = (log_payload.get('prolificId') or 'anon').strip().replace('/', '_')
-        filename = f"submissions/{ts}_{prolific}_{completion_code}.json"
+        filename = f"submissions/{prolific}_{completion_code}.json"
         with open(filename, 'w', encoding='utf-8') as f:
             json.dump(log_payload, f, ensure_ascii=False, indent=2)
 
