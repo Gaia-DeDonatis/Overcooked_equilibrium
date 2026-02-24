@@ -67,7 +67,7 @@ let gameTimer = null;
 let timeLeft = 0;
 let aiTickTimer = null;
 let aiTickInFlight = false;
-const AI_TICK_MS = 300;
+const AI_TICK_MS = 250;
 
 let bufferedHumanKey = 'Stay';
 let roundStartPerfMs = 0;
@@ -144,8 +144,6 @@ async function startEpisode(episodeIndex) {
   STATE.roundInEpisode = 1;
   STATE.episodePhase = getEpisodePhase(episodeIndex);
   STATE.gameOver = false;
-
-  // Backend currently ignores config_id for main task, but we keep something stable.
   STATE.configId = `${STATE.assignment.layout}_experiment`;
 
   showPage('page-phase-1');

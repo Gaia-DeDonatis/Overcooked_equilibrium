@@ -528,13 +528,12 @@ def reset():
         return jsonify(success=False, error="session_id is required"), 400
 
 
-    # Frontend may send episode metadata. We store it for logging and use it
-    # to decide whether to sample a new AI policy.
+    # Frontend episode metadata
     layout_id = data.get('layout_id')
     model_id  = data.get('model_id')
     config_id = data.get('config_id')
 
-    # Episode metadata (optional)
+    # metadata (optional)
     episode_index = data.get('episode_index', None)
     round_in_episode = data.get('round_in_episode', None)
     episode_phase = data.get('episode_phase', None)
