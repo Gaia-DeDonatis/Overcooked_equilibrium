@@ -72,7 +72,9 @@ const DataManager = {
     ep = {
       episode_index,
       episode_phase: episode_phase ?? null, // e.g. "seed" | "bo" | "stress"
+      experiment_phase: null,               // 1 or 2 — set on first round of episode
       policy_id: null,
+      optimal_policy_id: null,
       startTimeISO: new Date().toISOString(),
 
       // only 2 questions per episode
@@ -109,10 +111,17 @@ const DataManager = {
 
     const episode_index = extraMeta.episode_index ?? null;
     const episode_phase = extraMeta.episode_phase ?? null;
+    const experiment_phase = extraMeta.experiment_phase ?? null;
     const round_in_episode = extraMeta.round_in_episode ?? null;
 
     const ep = this._ensureEpisode(episode_index, episode_phase);
     if (ep && extraMeta.policyId != null) ep.policy_id = extraMeta.policyId;
+    if (ep && experiment_phase != null) ep.experiment_phase = experiment_phase;
+
+    // For stress episodes, record which policy was the optimal reference and how far the current (neighboring) policy is from it.
+    if (episode_phase === 'stress') {
+      if (extraMeta.optimalPolicyId != null && ep) ep.optimal_policy_id = extraMeta.optimalPolicyId ?? ep.optimal_policy_id ?? null;
+    }
 
     if (this.LOGS.meta.tick_ms == null && extraMeta.tick_ms != null) {
       this.LOGS.meta.tick_ms = extraMeta.tick_ms;
@@ -141,11 +150,15 @@ const DataManager = {
       // nesting keys
       episode_index,
       episode_phase,
+      experiment_phase,
       round_in_episode,
 
       // experiment variables
       policy_id: extraMeta.policyId ?? null,
       map: mapLabel,
+
+      // distance from optimal policy (to set via backend)
+      stress_policy_distance: extraMeta.stressPolicyDistance ?? null,
 
       startTimeISO: new Date().toISOString(),
       endTimeISO: null,
@@ -164,7 +177,10 @@ const DataManager = {
       },
 
       // sparse events from backend (helps CRC/equilibrium)
-      events: []
+      events: [],
+
+    // wall-clock timestamp at round start (ms)
+      _roundStartWallMs: Date.now()
     };
 
     this.LOGS.rounds.push(round);
@@ -197,6 +213,11 @@ const DataManager = {
     return key ?? null;
   },
 
+  _normalizeAiAction(a) {
+    const map = { 0: 'RIGHT', 1: 'DOWN', 2: 'LEFT', 3: 'UP', 4: 'STAY' };
+    return (a != null) ? (map[a] ?? String(a)) : null;
+  },
+
   _packHolding(agent) {
     if (!agent) return null;
     const h = agent.holding;
@@ -207,7 +228,7 @@ const DataManager = {
     return h;
   },
 
-  logStep(serverData, humanKey, _timingIgnored = null) {
+  logStep(serverData, humanKey, timing = null) {
     const r = this.getCurrentRound();
     if (!r || !serverData) return;
 
@@ -219,8 +240,7 @@ const DataManager = {
     const human = agents[1] || {};
 
     const t = (typeof state.cur_step === 'number') ? state.cur_step : r.action_log.human.length;
-    const tick_ms = this.LOGS.meta.tick_ms;
-    const ms = (tick_ms != null && t != null) ? (t * tick_ms) : null;
+    const wall_ms = (r._roundStartWallMs != null) ? (Date.now() - r._roundStartWallMs) : null;
 
     // Update per-round summary with backend counters
     if (typeof serverData.cumulative_reward === 'number') r.summary.final_score = serverData.cumulative_reward;
@@ -230,20 +250,33 @@ const DataManager = {
     const aiLast = serverData.robot_last_action || {};
     const aiLow = (aiLast.low_level_action != null) ? aiLast.low_level_action : null;
 
-    // HUMAN tick
-    r.action_log.human.push({t, ms,  action: this._normalizeHumanAction(humanKey),  pos: (human.x != null && human.y != null) ? [human.x, human.y] : null,  holding: this._packHolding(human)
-    });
+     const humanHolding = this._packHolding(human);
+    const aiHolding = this._packHolding(ai);
 
-    // AI tick
-    r.action_log.ai.push({t,  ms, action: aiLow, pos: (ai.x != null && ai.y != null) ? [ai.x, ai.y] : null, holding: this._packHolding(ai)
-    });
+    const humanEntry = {
+      t,
+      wall_ms,
+      action: this._normalizeHumanAction(humanKey),
+      pos: (human.x != null && human.y != null) ? [human.x, human.y] : null,
+    };
+    if (humanHolding != null) humanEntry.holding = humanHolding;
+    r.action_log.human.push(humanEntry);
+
+    const aiEntry = {
+      t,
+      wall_ms,
+      action: this._normalizeAiAction(aiLow),
+      pos: (ai.x != null && ai.y != null) ? [ai.x, ai.y] : null,
+    };
+    if (aiHolding != null) aiEntry.holding = aiHolding;
+    r.action_log.ai.push(aiEntry);
 
     // Sparse backend events (optional but useful)
     if (Array.isArray(serverData.events) && serverData.events.length > 0) {
       for (const ev of serverData.events) {
         r.events.push({
           t,
-          ms,
+          wall_ms,
           actor: ev.actor ?? null,
           event: ev.event ?? null,
           payload: ev.payload ?? null
@@ -273,10 +306,22 @@ const DataManager = {
   // 6) Submission
   // ----------------------
   async submitToServer() {
+    // deep-clone logs and strip internal-only fields before sending
+    const payload = JSON.parse(JSON.stringify(this.LOGS));
+    for (const r of payload.rounds) {
+      delete r._roundStartWallMs;
+    }
+    // strip from nested episode.rounds
+    for (const ep of payload.episodes) {
+      for (const r of ep.rounds) {
+        delete r._roundStartWallMs;
+      }
+    }
+
     const res = await fetch(`${SERVER_URL}/submit_log`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ log: this.LOGS })
+      body: JSON.stringify({ log: payload })
     });
     return await res.json();
   }

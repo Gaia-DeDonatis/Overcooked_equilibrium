@@ -35,7 +35,7 @@ function showPage(pageId) {
     const pages = [
         'page-intro', 'page-consent', 'page-instruction-1',
         'page-instruction-2a','page-instruction-2b','page-instruction-2c',
-        'page-phase-1', 'page-episode-break',
+        'page-game', 'page-episode-break',
         'page-end'
     ];
     
@@ -49,18 +49,21 @@ function showPage(pageId) {
     window.scrollTo(0,0);
 
     // Only set isPlaying for game pages
-    const gamePages = ['page-phase-1', 'page-instruction-1'];
+    const gamePages = ['page-game', 'page-instruction-1'];
     if (!gamePages.includes(pageId)) {
         STATE.isPlaying = false;
     }
 }
 
 // --- 4. GAME INITIALIZATION (TIME-BASED) ---
-
 function getEpisodePhase(episodeIndex) {
   if (episodeIndex <= CONFIG.EPISODES_SEED) return 'seed';
-  if (episodeIndex <= CONFIG.EPISODES_SEED + CONFIG.EPISODES_BO) return 'bo';
+  if (episodeIndex <= CONFIG.PHASE_1_EPISODES) return 'bo';
   return 'stress';
+}
+
+function getExperimentPhase(episodeIndex) {
+  return episodeIndex <= CONFIG.PHASE_1_EPISODES ? 1 : 2;
 }
 
 let gameTimer = null;
@@ -123,15 +126,10 @@ async function doOneTick() {
   }
 }
 
-
-
 function startAiTick() {
   stopAiTick();
   aiTickTimer = setInterval(doOneTick, AI_TICK_MS);
 }
-
-
-
 
 // A. START EPISODE (3 rounds each)
 async function startEpisode(episodeIndex) {
@@ -143,10 +141,11 @@ async function startEpisode(episodeIndex) {
   STATE.episodeIndex = episodeIndex;
   STATE.roundInEpisode = 1;
   STATE.episodePhase = getEpisodePhase(episodeIndex);
+  STATE.experimentPhase = getExperimentPhase(episodeIndex);
   STATE.gameOver = false;
-  STATE.configId = `${STATE.assignment.layout}_experiment`;
+  STATE.configId = 'experiment';
 
-  showPage('page-phase-1');
+  showPage('page-game');
   updateGameUI();
   await startRound({ newEpisode: true });
 }
@@ -169,24 +168,28 @@ async function startRound({ newEpisode = false } = {}) {
     bufferedHumanKey = 'Stay';
     aiTickInFlight = false;
 
+    if (data.map_type) {
+      STATE.assignment.layout = data.map_type;
+      STATE.configId = data.map_type + '_experiment';
+    }
+
     if (DataManager.LOGS.meta.tick_ms == null) {
       DataManager.LOGS.meta.tick_ms = AI_TICK_MS;
     }
-
-    // Keep a first-seen policy id for convenience
-    //if (DataManager.LOGS.meta.policy_id_phase1 == null && data.model_id != null) {
-    //  DataManager.LOGS.meta.policy_id_phase1 = data.model_id;
-    //}
 
     // START NEW ROUND
     DataManager.startNewRound(STATE.phase, STATE.configId, {
       mapTopology: `${data.map_type}_${data.grid_dim}`,
       policyId: data.model_id,
-      chosenCkpt: data.chosen_ckpt
-      ,
+      chosenCkpt: data.chosen_ckpt,
+
       episode_index: STATE.episodeIndex,
       round_in_episode: STATE.roundInEpisode,
-      episode_phase: STATE.episodePhase
+      episode_phase: STATE.episodePhase,
+      experiment_phase: STATE.experimentPhase,  // 1 or 2
+
+      stressPolicyDistance: data.stress_policy_distance ?? null,
+      optimalPolicyId: data.optimal_policy_id ?? null
     });
 
     if (data.state) {
@@ -213,8 +216,6 @@ async function startRound({ newEpisode = false } = {}) {
     alert("Failed to start round. Please refresh.");
   }
 }
-
-
 
 // C. TIMER LOGIC
 function startTimer(duration) {
@@ -441,7 +442,7 @@ document.addEventListener('keydown', async (e) => {
             //alert("Practice Complete! You delivered the salad.");
         }
     } 
-    // B. MAIN TASK LOGIC (Phase 1 or 2)
+    // B. MAIN TASK LOGIC (Phase 1 and 2)
     else {
         bufferedHumanKey = e.key;
         lastHumanPressMs = performance.now() - roundStartPerfMs;
