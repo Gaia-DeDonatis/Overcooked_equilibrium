@@ -2,7 +2,7 @@ from BayesOptUtils import *
 import pandas as pd
 import numpy as np
 from scipy.spatial.distance import cdist
-
+from ax.api.client import Client
 
 class BayesOptimizer:
     def __init__(self, parameters: list, preexisting_trials = [], n_init =3, verbose=True) -> None:
@@ -113,6 +113,9 @@ class BayesOptimizer:
 
     def save(self, filepath):
         self.client.save_to_json_file(filepath)
+    
+    def load(self, filepath):
+        self.cleint = Client.load_from_json_file(filepath = filepath)
 
     def print_generator_config(self):
         """Print the Bayesian Optimization model configuration."""
@@ -469,4 +472,9 @@ class TSNEBayesOptimizer:
     def save(self, filepath):
         """Save optimizer state."""
         self._optimizer.save(filepath)
-
+        
+    def load(self, filepath):
+        self._optimizer.load(filepath)
+    
+    def close(self):
+        self._optimizer.close()

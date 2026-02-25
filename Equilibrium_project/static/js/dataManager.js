@@ -323,6 +323,14 @@ const DataManager = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ log: payload })
     });
+
+
+     const _res = await fetch(`${SERVER_URL}/close_optimizer`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prolificId: STATE.prolificId})
+    });
+    
     return await res.json();
   }
 };

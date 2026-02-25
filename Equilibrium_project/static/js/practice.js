@@ -15,7 +15,10 @@ async function startPracticeRound() {
     try {
         // 2. Tell the server to reset for practice
         console.log("Calling /reset with config_id: layout_practice");
-        const data = await api('/reset', { config_id: 'layout_practice' });
+        const data = await api('/reset', { 
+            config_id: 'layout_practice', 
+            prolificId: STATE.prolificId             
+         });
         
         console.log("Reset response:", data);
         

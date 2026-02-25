@@ -163,6 +163,7 @@ async function startRound({ newEpisode = false } = {}) {
       episode_index: STATE.episodeIndex,
       round_in_episode: STATE.roundInEpisode,
       episode_phase: STATE.episodePhase,
+      prolificId: STATE.prolificId,
       new_episode: !!newEpisode
     });
     bufferedHumanKey = 'Stay';
@@ -270,6 +271,8 @@ async function finishTimeBasedRound() {
     // 2. Final Score
     const r = DataManager.getCurrentRound();
     const finalScore = Math.floor(r?.summary?.final_score ?? 0);
+
+    STATE.episodeScore += finalScore;
     
     const overlay = document.getElementById('round-overlay');
     const title   = document.getElementById('overlay-title');
@@ -320,6 +323,11 @@ async function finishTimeBasedRound() {
     } else {
         // --- CASE B: EPISODE COMPLETE ---
         console.log(`Episode ${STATE.episodeIndex} Complete!`);
+
+        const data = await api('/tell', {
+          prolificId: STATE.prolificId,
+          score: finalScore
+        });
 
         if (overlay) {
           if (title) {

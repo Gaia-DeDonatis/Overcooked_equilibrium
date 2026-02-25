@@ -18,6 +18,11 @@ os.environ["NUMEXPR_NUM_THREADS"] = "1"
 
 os.environ["PYTHONHASHSEED"] = "0"
 
+# Prevent pygame/SDL from trying to initialize display on macOS
+# This is required because Flask handles requests in background threads,
+# and SDL2 cannot set the main menu from a non-main thread on macOS
+os.environ["SDL_VIDEODRIVER"] = "dummy"
+
 
 
 
@@ -323,7 +328,7 @@ OPTIMIZER_MGR = OptimizerManager()
 _model_cache_by_path = {}
 
 def _pick_policy_checkpoint(policy:str):
-    policy = "[equilibrium]"+policy
+    policy = "[equilibrium]agent0_"+policy #TODO check where it is agent1 or agent0
     chosen_dir = os.path.join(POLICY_POOL_DIR, policy)
     ckpt_pth = os.path.join(chosen_dir, "model_500000.zip")
     return chosen_dir, ckpt_pth
@@ -332,9 +337,12 @@ def _pick_policy_checkpoint(policy:str):
 def _load_or_get_model_by_ckpt_path(ckpt_path: str):
 
     if ckpt_path in _model_cache_by_path:
+        print("ckpt found in cache")
         return _model_cache_by_path[ckpt_path]
 
+    print("trying to load ckpt_path")
     m = PPO.load(ckpt_path, device="cpu")
+    print("loaded PPO Model")
     try:
         m.policy.set_training_mode(False)
     except Exception:
@@ -343,7 +351,7 @@ def _load_or_get_model_by_ckpt_path(ckpt_path: str):
         m.policy.eval()
     except Exception:
         pass
-
+    
     _model_cache_by_path[ckpt_path] = m
     return m
 
@@ -554,7 +562,10 @@ def new_session():
 def reset():
     data = request.get_json(silent=True) or {}
     sid = data.get('session_id')
-    prolific = data.get('prolificId').strip().replace('/', '_')
+    prolific_raw = data.get('prolificId')
+    if not prolific_raw:
+        return jsonify(success=False, error="prolificId is required"), 400
+    prolific = prolific_raw.strip().replace('/', '_')
 
     if not sid:
         return jsonify(success=False, error="session_id is required"), 400
@@ -771,18 +782,22 @@ def key_event():
 @app.route('/tell', methods=['POST'])
 def tell():
     data = request.get_json(silent=True) or {}
-    score = float(data.get('score'))
-    prolific = (data.get('prolificId') or 'anon').strip().replace('/', '_')
-   
-    if not score:
-        return jsonify(success=False, error="score is required"), 400
 
-    if not prolific:
+    score_raw = data.get('score')
+    if score_raw is None:
+        return jsonify(success=False, error="score is required"), 400
+    score = float(score_raw)
+
+    prolific_raw = data.get('prolificId')
+    if not prolific_raw:
         return jsonify(success=False, error="prolific_id is required"), 400
+    prolific = prolific_raw.strip().replace('/', '_')
 
     
     trial_idx = OPTIMIZER_MGR.optimizers[prolific]._actual_trial_idx
     OPTIMIZER_MGR.optimizers[prolific].tell({trial_idx: score})
+    return jsonify(success=True)
+
 
 @app.route('/close_optimizer', methods=['POST'])
 def close_optimizer():
@@ -791,6 +806,8 @@ def close_optimizer():
     if not prolific:
         return jsonify(success=False, error="prolific_id is required"), 400
     OPTIMIZER_MGR.optimizers[prolific].close()
+    return jsonify(success=True)
+
 
 @app.route('/get_state', methods=['GET', 'POST'])
 def get_state():
@@ -821,17 +838,27 @@ def submit_log():
         if not isinstance(log_payload, dict) or 'rounds' not in log_payload:
             return jsonify(success=False, error="Invalid payload: 'rounds' missing"), 400
 
-
         # Prolific completion code.
         completion_code = "CK4KW637"
 
+        prolific = log_payload.get('prolificId').strip().replace('/', '_')
 
-        os.makedirs('submissions', exist_ok=True)
-        ts = dt.datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
-        prolific = (log_payload.get('prolificId') or 'anon').strip().replace('/', '_')
-        filename = f"submissions/{prolific}_{completion_code}.json"
-        with open(filename, 'w', encoding='utf-8') as f:
+        # Create a folder for this participant
+        participant_dir = os.path.join('submissions', prolific)
+        os.makedirs(participant_dir, exist_ok=True)
+
+        # Save final_result.json in the participant's folder
+        result_filename = os.path.join(participant_dir, 'final_result.json')
+        with open(result_filename, 'w', encoding='utf-8') as f:
             json.dump(log_payload, f, ensure_ascii=False, indent=2)
+
+        # Save BayesOpt state for this participant if optimizer exists
+        if OPTIMIZER_MGR.optimizer_exists(prolific):
+            optimizer_filename = os.path.join(participant_dir, 'bayesopt_state.json')
+            try:
+                OPTIMIZER_MGR.optimizers[prolific].save(optimizer_filename)
+            except Exception as e:
+                print(f"Warning: Could not save BayesOpt state for {prolific}: {e}")
 
         return jsonify(success=True, completion_code=completion_code)
     except Exception as e:
