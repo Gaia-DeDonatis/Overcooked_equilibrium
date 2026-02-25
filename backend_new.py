@@ -328,7 +328,7 @@ OPTIMIZER_MGR = OptimizerManager()
 _model_cache_by_path = {}
 
 def _pick_policy_checkpoint(policy:str):
-    policy = "[equilibrium]agent0_"+policy #TODO check where it is agent1 or agent0
+    policy = "[equilibrium]agent0_"+policy
     chosen_dir = os.path.join(POLICY_POOL_DIR, policy)
     ckpt_pth = os.path.join(chosen_dir, "model_500000.zip")
     return chosen_dir, ckpt_pth
