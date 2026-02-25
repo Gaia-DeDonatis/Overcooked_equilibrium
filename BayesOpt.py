@@ -115,7 +115,7 @@ class BayesOptimizer:
         self.client.save_to_json_file(filepath)
     
     def load(self, filepath):
-        self.cleint = Client.load_from_json_file(filepath = filepath)
+        self.client = Client.load_from_json_file(filepath=filepath)
 
     def print_generator_config(self):
         """Print the Bayesian Optimization model configuration."""
