@@ -1,5 +1,14 @@
 # -*- coding: utf-8 -*-
 import os
+
+# MUST set environment variables BEFORE importing any libraries that use GUI
+os.environ['MPLBACKEND'] = 'Agg'
+os.environ['QT_QPA_PLATFORM'] = 'offscreen'
+os.environ['SDL_VIDEODRIVER'] = 'dummy'  # Prevent pygame/SDL2 from initializing display
+
+import matplotlib
+matplotlib.use('Agg')
+
 import numpy as np
 import sys
 from BayesOpt import TSNEBayesOptimizer
@@ -91,7 +100,12 @@ def _seed_env_everything(env, seed: int):
     try:
         env.reset(seed=seed)
     except TypeError:
-        env.seed(seed)
+        # Environment doesn't accept seed in reset()
+        try:
+            env.seed(seed)
+        except AttributeError:
+            # Environment doesn't have a seed() method either - skip seeding
+            pass
         env.reset()
     try: env.action_space.seed(seed)
     except: pass
@@ -120,7 +134,7 @@ POLICY_POOL_DIR = os.path.join(current_dir, "policy_pool")
 
 # This function is used for randomly picking one policy from the AI policy pool.
 
-def _pick_random_policy_checkpoint(exclude_policy_names=None):
+def _pick_random_policy_checkpoint():
     """
     pick an model from /policy_pool/
     """
@@ -135,13 +149,6 @@ def _pick_random_policy_checkpoint(exclude_policy_names=None):
     if not subdirs:
         raise FileNotFoundError(f"No subfolders found under: {POLICY_POOL_DIR}")
 
-    # Optional: sample without replacement (per-session) when possible.
-    if exclude_policy_names:
-        exclude_set = set(exclude_policy_names)
-        filtered = [d for d in subdirs if os.path.basename(d) not in exclude_set]
-        if filtered:
-            subdirs = filtered
-
     chosen_dir = random.choice(subdirs)
     ckpt_path = os.path.join(chosen_dir, "model_500000.zip")
     if not os.path.isfile(ckpt_path):
@@ -149,9 +156,12 @@ def _pick_random_policy_checkpoint(exclude_policy_names=None):
 
     return chosen_dir, ckpt_path
 
-
-
-
+def _pick_policy_checkpoint(policy:str):
+    policy = "[equilibrium]"+policy
+    chosen_dir = os.path.join(POLICY_POOL_DIR, policy)
+    ckpt_pth = os.path.join(chosen_dir, "model_500000.zip")
+    return chosen_dir, ckpt_pth
+    
 rewardList = [{
     "minitask finished": 0,
     "minitask failed": 0,
@@ -205,15 +215,15 @@ class SingleAgentWrapper_accept_keyboard_action(_gym.Wrapper):
     def step(self, action, keyboard_action):
         actions = [action, keyboard_action]
         self.obs, rewards, dones, info = self.env.step(actions)
-        self.obs = self.env._get_macro_obs()
+        self.obs = self.env.unwrapped._get_macro_obs()
 
         self.env_reset_step += 1
 
         if self.env_reset_step % self.reset_step == 0:
-            self.env.soft_reset_obs_only()
-            self.env.macroAgent[0].cur_macro_action_done = True
-            self.env.macroAgent[1].cur_macro_action_done = True
-            self.obs = self.env._get_macro_obs()
+            self.env.unwrapped.soft_reset_obs_only()
+            self.env.unwrapped.macroAgent[0].cur_macro_action_done = True
+            self.env.unwrapped.macroAgent[1].cur_macro_action_done = True
+            self.obs = self.env.unwrapped._get_macro_obs()
 
         return self.obs[self.agent_index], rewards[self.agent_index] + rewards[1 - self.agent_index], dones, info
 
@@ -250,12 +260,6 @@ class Session:
         self.lock = threading.RLock()
         self.chosen_policy_dir = None
         self.chosen_ckpt_path = None
-       
-        # Experiment structure (episodes)
-        self.episode_index = None
-        self.round_in_episode = None
-        self.episode_phase = None
-        self.used_policy_names = []  # basenames of chosen policy dirs
 
 
 class SessionManager:
@@ -302,6 +306,8 @@ class SessionManager:
 
 SESSION_MGR = SessionManager(ttl_seconds=3600)
 
+
+
 class OptimizerManager:
     def __init__(self) -> None:
         self.optimizers = {}
@@ -316,17 +322,9 @@ class OptimizerManager:
     
         
 OPTIMIZER_MGR = OptimizerManager()
-
-
-
-
 _model_cache_by_path = {}
 
-def _pick_policy_checkpoint(policy:str):
-    policy = "[equilibrium]"+policy
-    chosen_dir = os.path.join(POLICY_POOL_DIR, policy)
-    ckpt_pth = os.path.join(chosen_dir, "model_500000.zip")
-    return chosen_dir, ckpt_pth
+
 
 # This function is used for loading an AI model or getting an existing AI model.
 def _load_or_get_model_by_ckpt_path(ckpt_path: str):
@@ -348,6 +346,8 @@ def _load_or_get_model_by_ckpt_path(ckpt_path: str):
     return m
 
 
+
+
 def _parse_config_id(layout_id: str = None, model_id: str = None, config_id: str = None) -> str:
     if config_id:
         return config_id
@@ -357,7 +357,9 @@ def _parse_config_id(layout_id: str = None, model_id: str = None, config_id: str
 
 
 
-def create_envs_for_session(sess: Session, config_id: str, choose_new_policy: bool = True, optimizer: TSNEBayesOptimizer = None):
+
+
+def create_envs_for_session(sess: Session, config_id: str, optimizer: TSNEBayesOptimizer = None):
 
     # Now, I use a fixed map, which is the circle (5*5). And for each time, I randomly load a model from the policy_pool
 
@@ -411,7 +413,7 @@ def create_envs_for_session(sess: Session, config_id: str, choose_new_policy: bo
     _seed_env_everything(sess.env_mac, SEED)
 
     # wrapper the env
-    reset_step = 10000
+    reset_step = 100
     sess.wrapper = SingleAgentWrapper_accept_keyboard_action(
         sess.env_mac, agent_index=0, reset_step=reset_step
     )
@@ -422,33 +424,21 @@ def create_envs_for_session(sess: Session, config_id: str, choose_new_policy: bo
         sess.chosen_ckpt_path = None
         sess.model = None
     else:
-        # Pick a new AI policy only when starting a new episode.
-        should_pick = bool(choose_new_policy) or (not sess.chosen_ckpt_path)
-
-        if should_pick:
-            if optimizer is not None:
-                mapped_trials = optimizer.ask()
-                checkpoint = mapped_trials[optimizer._actual_trial_idx]['policy']
-                print("sampled model", checkpoint)
-                chosen_dir, ckpt_path = _pick_policy_checkpoint(checkpoint)
-                sess.chosen_policy_dir = chosen_dir
-                sess.chosen_ckpt_path = ckpt_path
-                print("loading", ckpt_path)
-                sess.model = _load_or_get_model_by_ckpt_path(ckpt_path)
-                print("model loaded")
-                 
-            else:
-                chosen_dir, ckpt_path = _pick_random_policy_checkpoint(exclude_policy_names=sess.used_policy_names)
-                sess.chosen_policy_dir = chosen_dir
-                sess.chosen_ckpt_path = ckpt_path
-
-            policy_name = os.path.basename(chosen_dir)
-            if policy_name not in sess.used_policy_names:
-                sess.used_policy_names.append(policy_name)
-
-        # Always (re)load the model into the freshly created env.
-        sess.model = _load_or_get_model_by_ckpt_path(sess.chosen_ckpt_path)
-
+        if optimizer is not None:
+            mapped_trials = optimizer.ask()
+            checkpoint = mapped_trials[optimizer._actual_trial_idx]['policy']
+            print("sampled model", checkpoint)
+            chosen_dir, ckpt_path = _pick_policy_checkpoint(checkpoint)
+            sess.chosen_policy_dir = chosen_dir
+            sess.chosen_ckpt_path = ckpt_path
+            print("loading", ckpt_path)
+            sess.model = _load_or_get_model_by_ckpt_path(ckpt_path)
+            print("model loaded")
+        else:
+            chosen_dir, ckpt_path = _pick_random_policy_checkpoint()
+            sess.chosen_policy_dir = chosen_dir
+            sess.chosen_ckpt_path = ckpt_path
+            sess.model = _load_or_get_model_by_ckpt_path(ckpt_path)
 
     sess.obs = sess.wrapper.reset()
 
@@ -554,74 +544,37 @@ def new_session():
 def reset():
     data = request.get_json(silent=True) or {}
     sid = data.get('session_id')
-    prolific = data.get('prolificId').strip().replace('/', '_')
-
+    prolific = (data.get('prolificId') or 'anon').strip().replace('/', '_')
+    
     if not sid:
         return jsonify(success=False, error="session_id is required"), 400
 
+    if not prolific:
+        return jsonify(success=False, error="prolific_id is required"), 400
 
-    # Frontend episode metadata
-    layout_id = data.get('layout_id')
-    model_id  = data.get('model_id')
-    config_id = data.get('config_id')
-
-    # metadata (optional)
-    episode_index = data.get('episode_index', None)
-    round_in_episode = data.get('round_in_episode', None)
-    episode_phase = data.get('episode_phase', None)
-    new_episode = data.get('new_episode', None)
-
-    try:
-        episode_index_int = int(episode_index) if episode_index is not None else None
-    except Exception:
-        episode_index_int = None
-    try:
-        round_in_episode_int = int(round_in_episode) if round_in_episode is not None else None
-    except Exception:
-        round_in_episode_int = None
-
-    if new_episode is None:
-        # Heuristic default: the first round in an episode is round 1.
-        new_episode = (round_in_episode_int == 1)
-
-    is_practice = ((config_id or "layout_practice") == "layout_practice")
-
-    sess = SESSION_MGR.ensure(sid)
-    
     if not OPTIMIZER_MGR.optimizer_exists(prolific):
         OPTIMIZER_MGR.create_optimizer(prolific)
         print("OPTIMZER CONFIGURED")
         
     optimizer = OPTIMIZER_MGR.optimizers[prolific]
 
-    
+    # Now, although I parse the config from the frontend, I never use them. I just use the fixed circle layout.
+    layout_id = data.get('layout_id')
+    model_id  = data.get('model_id')
+    config_id = data.get('config_id')
+
+    sess = SESSION_MGR.ensure(sid)
     with sess.lock:
         try:
-            # Force a new policy if the episode index changed.
-            episode_changed = (
-                episode_index_int is not None
-                and sess.episode_index is not None
-                and episode_index_int != sess.episode_index
-            )
-            choose_new_policy = (not is_practice) and (bool(new_episode) or episode_changed)
-
-            # Persist metadata in the session.
-            if episode_index_int is not None:
-                sess.episode_index = episode_index_int
-            sess.round_in_episode = round_in_episode_int
-            sess.episode_phase = episode_phase
-            create_envs_for_session(sess, config_id=(config_id or "IGNORED"), choose_new_policy=choose_new_policy, optimizer=optimizer)
-        
+            create_envs_for_session(sess, optimizer=optimizer, config_id=(config_id or "IGNORED"))
+            print("Creating Env")
         except Exception as e:
             return jsonify(success=False, error=str(e)), 400
 
         steps_left = MAX_STEPS
-        print(
-            f"[RESET][{sid}] episode={sess.episode_index} round_in_episode={sess.round_in_episode} phase={sess.episode_phase} "
-            f"map_type={FIXED_MAP_TYPE} grid_dim={FIXED_GRID_DIM} policy={sess.current_model_id} ckpt={sess.chosen_ckpt_path}"
-        )
-
-
+        print(f"[RESET][{sid}] map_type={FIXED_MAP_TYPE} grid_dim={FIXED_GRID_DIM} "
+            f"chosen_policy_dir={sess.chosen_policy_dir} ckpt={sess.chosen_ckpt_path}")
+        
         return jsonify(
             success=True,
             state=extract_state(sess),
@@ -630,18 +583,37 @@ def reset():
             config_id=sess.config_id,
             layout_id=sess.current_layout_id,
             model_id=sess.current_model_id,
-            chosen_policy_dir=os.path.basename(sess.chosen_policy_dir) if sess.chosen_policy_dir else None,
+            chosen_policy_dir=sess.current_model_id,
             chosen_ckpt=os.path.basename(sess.chosen_ckpt_path) if sess.chosen_ckpt_path else None,
-
-            episode_index=sess.episode_index,
-            round_in_episode=sess.round_in_episode,
-            episode_phase=sess.episode_phase,
-
+            trial_idx = optimizer._actual_trial_idx,
             map_type=FIXED_MAP_TYPE if config_id != "layout_practice" else "A",
             grid_dim=FIXED_GRID_DIM if config_id != "layout_practice" else [5, 5],
             policy_id=sess.current_model_id
         )
 
+@app.route('/tell', methods=['POST'])
+def tell():
+    data = request.get_json(silent=True) or {}
+    score = float(data.get('score'))
+    prolific = (data.get('prolificId') or 'anon').strip().replace('/', '_')
+   
+    if not score:
+        return jsonify(success=False, error="score is required"), 400
+
+    if not prolific:
+        return jsonify(success=False, error="prolific_id is required"), 400
+
+    
+    trial_idx = OPTIMIZER_MGR.optimizers[prolific]._actual_trial_idx
+    OPTIMIZER_MGR.optimizers[prolific].tell({trial_idx: score})
+
+@app.route('/close_optimizer', methods=['POST'])
+def close_optimizer():
+    data = request.get_json(silent=True) or {}
+    prolific = (data.get('prolificId') or 'anon').strip().replace('/', '_')
+    if not prolific:
+        return jsonify(success=False, error="prolific_id is required"), 400
+    OPTIMIZER_MGR.optimizers[prolific].close()
 
 @app.route('/key_event', methods=['POST'])
 def key_event():
@@ -767,31 +739,6 @@ def key_event():
             robot_last_action=(sess.robot_steps[-1] if sess.robot_steps else None)
         )
 
-
-@app.route('/tell', methods=['POST'])
-def tell():
-    data = request.get_json(silent=True) or {}
-    score = float(data.get('score'))
-    prolific = (data.get('prolificId') or 'anon').strip().replace('/', '_')
-   
-    if not score:
-        return jsonify(success=False, error="score is required"), 400
-
-    if not prolific:
-        return jsonify(success=False, error="prolific_id is required"), 400
-
-    
-    trial_idx = OPTIMIZER_MGR.optimizers[prolific]._actual_trial_idx
-    OPTIMIZER_MGR.optimizers[prolific].tell({trial_idx: score})
-
-@app.route('/close_optimizer', methods=['POST'])
-def close_optimizer():
-    data = request.get_json(silent=True) or {}
-    prolific = (data.get('prolificId') or 'anon').strip().replace('/', '_')
-    if not prolific:
-        return jsonify(success=False, error="prolific_id is required"), 400
-    OPTIMIZER_MGR.optimizers[prolific].close()
-
 @app.route('/get_state', methods=['GET', 'POST'])
 def get_state():
     sid = None
@@ -829,7 +776,7 @@ def submit_log():
         os.makedirs('submissions', exist_ok=True)
         ts = dt.datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
         prolific = (log_payload.get('prolificId') or 'anon').strip().replace('/', '_')
-        filename = f"submissions/{prolific}_{completion_code}.json"
+        filename = f"submissions/{ts}_{prolific}_{completion_code}.json"
         with open(filename, 'w', encoding='utf-8') as f:
             json.dump(log_payload, f, ensure_ascii=False, indent=2)
 
