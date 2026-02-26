@@ -23,7 +23,7 @@ class BayesOptimizer:
 
         for parameters, data in preexisting_trials:
             trial_index = self.client.attach_trial(parameters=parameters)
-            self.client.complete_trial(trial_index=trial_index, raw_data=utlity)
+            self.client.complete_trial(trial_index=trial_index, raw_data=data)
 
     
     def tell(self, trials):

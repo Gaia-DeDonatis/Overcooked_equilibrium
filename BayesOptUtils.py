@@ -19,7 +19,7 @@ from typing import final
 
 from ax.adapter.base import Adapter
 from ax.analysis.analysis import Analysis, ErrorAnalysisCard
-from ax.analysis.analysis_card import AnalysisCardGroup
+from ax.analysis.analysis import AnalysisCardGroup
 # from ax.analysis.diagnostics import DiagnosticAnalysis  # Temporarily disabled
 from ax.analysis.healthcheck.can_generate_candidates import (
     CanGenerateCandidatesAnalysis,
