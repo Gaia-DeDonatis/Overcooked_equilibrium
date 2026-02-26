@@ -746,7 +746,7 @@ def key_event():
 
                 r_adjusted = r_env
                 if ai_low == 4:
-                    r_adjusted += (-step_pen_ai)   # add back +1 if penalty is -1
+                   r_adjusted += (-step_pen_ai) # add back +1 if penalty is -1
                 if human_low == 4:
                     r_adjusted += (-step_pen_hu)
 

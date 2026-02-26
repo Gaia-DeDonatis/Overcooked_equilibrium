@@ -398,12 +398,18 @@ function showEpisodeBreak() {
   // Reset form
   document.querySelectorAll('input[name="ep_effort"], input[name="ep_coord"]').forEach(el => { el.checked = false; });
 
+  const btn = document.getElementById('breakContinueBtn');
+  const hint = document.getElementById('breakContinueHint');
+  if (btn) btn.disabled = true;
+  if (hint) hint.innerText = "You can continue when the timer reaches 0.";
+  if (btn) btn.onclick = () => finishEpisodeBreak().catch(console.error);
+
   const epLabel = document.getElementById('breakEpisodeLabel');
   if (epLabel) {
     const next = (STATE.episodeIndex < CONFIG.TOTAL_EPISODES) ? (STATE.episodeIndex + 1) : null;
     epLabel.innerText = next
-      ? `Episode ${STATE.episodeIndex} complete. Next: Episode ${next} will start automatically.`
-      : `Episode ${STATE.episodeIndex} complete. The study will finish automatically.`;
+      ? `Episode ${STATE.episodeIndex} complete. Next: Episode ${next}.`
+      : `Episode ${STATE.episodeIndex} complete. You can finish when the countdown reaches 0.`;
   }
 
   // Start fixed 15s timer (always full duration, auto-advance)
@@ -420,7 +426,11 @@ function showEpisodeBreak() {
       updateBreakCountdown();
       clearInterval(breakTimer);
       breakTimer = null;
-      finishEpisodeBreak().catch(console.error);
+
+      const btn = document.getElementById('breakContinueBtn');
+      const hint = document.getElementById('breakContinueHint');
+      if (btn) btn.disabled = false;
+      if (hint) hint.innerText = "Break finished — click Continue when ready.";
       return;
     }
     updateBreakCountdown();

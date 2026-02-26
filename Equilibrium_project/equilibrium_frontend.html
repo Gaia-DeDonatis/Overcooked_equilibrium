@@ -613,7 +613,7 @@
 
       <div class="center" style="margin:18px 0;">
         <span class="pill">
-          Next start in <strong id="breakCountdown" style="color:#2563eb;">0:30</strong>
+          Time remaining: <strong id="breakCountdown">0:15</strong>
         </span>
       </div>
 
@@ -664,7 +664,12 @@
       </div>
 
       <div class="center" style="margin-top: 10px;">
-        <p class="muted" style="margin-top:10px; font-size: 12px;">Next episode will start automatically when the countdown reaches 0.</p>
+        <button id="breakContinueBtn" class="btn" disabled style="width: 220px;">
+          Continue
+        </button>
+        <p id="breakContinueHint" class="muted" style="margin-top:10px; font-size: 12px;">
+          You can continue when the timer reaches 0.
+        </p>
       </div>
     </section>
 
