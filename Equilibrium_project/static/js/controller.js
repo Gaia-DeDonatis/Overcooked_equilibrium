@@ -156,7 +156,6 @@ async function startRound({ newEpisode = false } = {}) {
   STATE.gameOver = false;
 
   if (gameTimer) clearInterval(gameTimer);
-
   try {
     const data = await api('/reset', {
       config_id: STATE.configId,
@@ -164,6 +163,9 @@ async function startRound({ newEpisode = false } = {}) {
       round_in_episode: STATE.roundInEpisode,
       episode_phase: STATE.episodePhase,
       prolificId: STATE.prolificId,
+      n_init: CONFIG.EPISODES_SEED,
+      n_bo:   CONFIG.EPISODES_BO,
+      n_knn: CONFIG.EPISODES_STRESS,
       new_episode: !!newEpisode
     });
     bufferedHumanKey = 'Stay';

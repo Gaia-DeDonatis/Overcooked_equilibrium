@@ -63,12 +63,18 @@ except Exception:
 
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
+import logging
+
+# Suppress Flask/Werkzeug request logs
+logging.getLogger('werkzeug').setLevel(logging.ERROR)
+
+from logging_utils import backend_logger as logger
 from stable_baselines3 import PPO
 from stable_baselines3.common.save_util import load_from_zip_file
 import random
 import gym_macro_overcooked
 
-print("--> Loaded gym_macro_overcooked (Environments: Overcooked-equilibrium-v0)")
+logger.info("[ENV - INIT] loaded gym_macro_overcooked (Environments: Overcooked-equilibrium-v0)")
 
 from gym_macro_overcooked.items import Tomato, Lettuce, Onion, Plate, Knife, Delivery, Agent, Food, DirtyPlate
 
@@ -315,10 +321,10 @@ class OptimizerManager:
     def optimizer_exists(self, prolofic_id):
         return prolofic_id in self.optimizers
            
-    def create_optimizer(self, prolific_id):
+    def create_optimizer(self, prolific_id, n_init, n_bo, n_knn):
         if self.optimizer_exists(prolific_id):
             return jsonify(success=False, error="Optimizer already created for participant"), 400
-        self.optimizers[prolific_id] =TSNEBayesOptimizer(embedding_csv="tsnt.csv", n_init=3, verbose=True)
+        self.optimizers[prolific_id] =TSNEBayesOptimizer(embedding_csv="tsnt.csv", n_init=n_init, n_bo=n_bo, n_knn=n_knn, verbose=True)
     
         
 OPTIMIZER_MGR = OptimizerManager()
@@ -425,13 +431,13 @@ def create_envs_for_session(sess: Session, config_id: str, choose_new_policy: bo
         sess.chosen_policy_dir = None
         sess.chosen_ckpt_path = None
         sess.model = None
+   
     else:
         # Pick a new AI policy only when starting a new episode.
         should_pick = bool(choose_new_policy) or (not sess.chosen_ckpt_path)
-
         if should_pick:
             if optimizer is not None:
-                print("Picking policy using BO pipeline")
+                logger.info("[POLICY - PICK] picking policy using optimization pipeline")
                 mapped_trials = optimizer.ask()
                 checkpoint = mapped_trials[optimizer._actual_trial_idx]['policy']
                 chosen_dir, ckpt_path = _pick_policy_checkpoint(checkpoint)
@@ -440,7 +446,7 @@ def create_envs_for_session(sess: Session, config_id: str, choose_new_policy: bo
                 sess.model = _load_or_get_model_by_ckpt_path(ckpt_path)
                  
             else:
-                print("Picking a random policy")
+                logger.info("[POLICY - PICK] picking a random policy")
                 chosen_dir, ckpt_path = _pick_random_policy_checkpoint(exclude_policy_names=sess.used_policy_names)
                 sess.chosen_policy_dir = chosen_dir
                 sess.chosen_ckpt_path = ckpt_path
@@ -594,11 +600,16 @@ def reset():
 
     sess = SESSION_MGR.ensure(sid)
     
-    if not OPTIMIZER_MGR.optimizer_exists(prolific):
-        OPTIMIZER_MGR.create_optimizer(prolific)
-        print("OPTIMZER CONFIGURED")
-        
-    optimizer = OPTIMIZER_MGR.optimizers[prolific]
+    if is_practice:
+        optimizer = None
+    else:
+        n_init = int(data.get('n_init'))
+        n_bo = int(data.get('n_bo'))
+        n_knn = int(data.get('n_knn'))
+        if not OPTIMIZER_MGR.optimizer_exists(prolific):
+            OPTIMIZER_MGR.create_optimizer(prolific, n_init=n_init, n_bo=n_bo, n_knn=n_knn)
+            logger.info(f"[BACKEND - RESET] optimizer configured for prolific_id={prolific}")    
+        optimizer = OPTIMIZER_MGR.optimizers[prolific]
 
     
     with sess.lock:
@@ -622,9 +633,9 @@ def reset():
             return jsonify(success=False, error=str(e)), 400
 
         steps_left = MAX_STEPS
-        print(
-            f"[RESET][{sid}] episode={sess.episode_index} round_in_episode={sess.round_in_episode} phase={sess.episode_phase} "
-            f"map_type={FIXED_MAP_TYPE} grid_dim={FIXED_GRID_DIM} policy={sess.current_model_id} ckpt={sess.chosen_ckpt_path}"
+        logger.info(
+            f"[BACKEND - RESET] sid={sid}, episode={sess.episode_index}, round={sess.round_in_episode}, "
+            f"phase={sess.episode_phase}, map={FIXED_MAP_TYPE}, grid={FIXED_GRID_DIM}, policy={sess.current_model_id}"
         )
 
 
@@ -672,7 +683,7 @@ def key_event():
                 target_cfg_id = _parse_config_id(layout_id=layout_id, model_id=model_id, config_id=config_id)
                 if target_cfg_id != sess.config_id:
                     create_envs_for_session(sess, target_cfg_id)
-                    print(f"[HOT-SWITCH][{sid}] -> {target_cfg_id}")
+                    logger.info(f"[BACKEND - HOT_SWITCH] sid={sid}, config={target_cfg_id}")
             except Exception as e:
                 return jsonify(success=False, error=f"hot switch failed: {e}"), 400
             
@@ -750,10 +761,10 @@ def key_event():
                 # dish served detection
                 if r_env >= 150:
                     sess.dishes_served += 1
-                    print(f"[{sid}] DISH SERVED! Total: {sess.dishes_served}")
+                    logger.info(f"[BACKEND - KEY_EVENT] sid={sid}, dish_served! total={sess.dishes_served}")
 
             except Exception as e:
-                print(f"Error updating rewards: {e}")
+                logger.info(f"[BACKEND - KEY_EVENT] error updating rewards: {e}")
                 
             sess.cur_step += 1
 
@@ -853,7 +864,7 @@ def submit_log():
             try:
                 OPTIMIZER_MGR.optimizers[prolific].save(optimizer_filename)
             except Exception as e:
-                print(f"Warning: Could not save BayesOpt state for {prolific}: {e}")
+                logger.info(f"[BACKEND - SUBMIT] warning: could not save BayesOpt state for {prolific}: {e}")
 
         return jsonify(success=True, completion_code=completion_code)
     except Exception as e:
