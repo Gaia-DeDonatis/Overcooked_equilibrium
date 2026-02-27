@@ -336,6 +336,7 @@ def _pick_policy_checkpoint(policy:str):
 
 # This function is used for loading an AI model or getting an existing AI model.
 def _load_or_get_model_by_ckpt_path(ckpt_path: str):
+    assert "agent0" in ckpt_path, "loading agent1 somwhere"
     if ckpt_path in _model_cache_by_path:
         return _model_cache_by_path[ckpt_path]
     m = PPO.load(ckpt_path, device="cpu")
@@ -448,7 +449,6 @@ def create_envs_for_session(sess: Session, config_id: str, choose_new_policy: bo
             if policy_name not in sess.used_policy_names:
                 sess.used_policy_names.append(policy_name)
         
-        assert "agent0" in ckpt_path, "loading agent1 somwhere"
         # Always (re)load the model into the freshly created env.
         sess.model = _load_or_get_model_by_ckpt_path(sess.chosen_ckpt_path)
 
