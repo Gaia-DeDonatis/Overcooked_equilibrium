@@ -147,6 +147,7 @@ def _pick_random_policy_checkpoint(exclude_policy_names=None):
         if filtered:
             subdirs = filtered
 
+    chosen_dir = [d for d in subdirs if "agent0" in d]
     chosen_dir = random.choice(subdirs)
     ckpt_path = os.path.join(chosen_dir, "model_500000.zip")
     if not os.path.isfile(ckpt_path):
@@ -335,14 +336,9 @@ def _pick_policy_checkpoint(policy:str):
 
 # This function is used for loading an AI model or getting an existing AI model.
 def _load_or_get_model_by_ckpt_path(ckpt_path: str):
-
     if ckpt_path in _model_cache_by_path:
-        print("ckpt found in cache")
         return _model_cache_by_path[ckpt_path]
-
-    print("trying to load ckpt_path")
     m = PPO.load(ckpt_path, device="cpu")
-    print("loaded PPO Model")
     try:
         m.policy.set_training_mode(False)
     except Exception:
@@ -351,7 +347,6 @@ def _load_or_get_model_by_ckpt_path(ckpt_path: str):
         m.policy.eval()
     except Exception:
         pass
-    
     _model_cache_by_path[ckpt_path] = m
     return m
 
@@ -435,17 +430,16 @@ def create_envs_for_session(sess: Session, config_id: str, choose_new_policy: bo
 
         if should_pick:
             if optimizer is not None:
+                print("Picking policy using BO pipeline")
                 mapped_trials = optimizer.ask()
                 checkpoint = mapped_trials[optimizer._actual_trial_idx]['policy']
-                print("sampled model", checkpoint)
                 chosen_dir, ckpt_path = _pick_policy_checkpoint(checkpoint)
                 sess.chosen_policy_dir = chosen_dir
                 sess.chosen_ckpt_path = ckpt_path
-                print("loading", ckpt_path)
                 sess.model = _load_or_get_model_by_ckpt_path(ckpt_path)
-                print("model loaded")
                  
             else:
+                print("Picking a random policy")
                 chosen_dir, ckpt_path = _pick_random_policy_checkpoint(exclude_policy_names=sess.used_policy_names)
                 sess.chosen_policy_dir = chosen_dir
                 sess.chosen_ckpt_path = ckpt_path
@@ -453,7 +447,8 @@ def create_envs_for_session(sess: Session, config_id: str, choose_new_policy: bo
             policy_name = os.path.basename(chosen_dir)
             if policy_name not in sess.used_policy_names:
                 sess.used_policy_names.append(policy_name)
-
+        
+        assert "agent0" in ckpt_path, "loading agent1 somwhere"
         # Always (re)load the model into the freshly created env.
         sess.model = _load_or_get_model_by_ckpt_path(sess.chosen_ckpt_path)
 
