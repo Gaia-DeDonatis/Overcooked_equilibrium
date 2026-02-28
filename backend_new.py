@@ -367,7 +367,7 @@ def _parse_config_id(layout_id: str = None, model_id: str = None, config_id: str
 
 
 
-def create_envs_for_session(sess: Session, config_id: str, choose_new_policy: bool = True, optimizer: TSNEBayesOptimizer = None):
+def create_envs_for_session(sess: Session, config_id: str, choose_new_policy: bool = True, optimizer: TSNEBayesOptimizer | None = None):
 
     # Now, I use a fixed map, which is the circle (5*5). And for each time, I randomly load a model from the policy_pool
 
@@ -858,13 +858,21 @@ def submit_log():
         with open(result_filename, 'w', encoding='utf-8') as f:
             json.dump(log_payload, f, ensure_ascii=False, indent=2)
 
-        # Save BayesOpt state for this participant if optimizer exists
+        # Save BayesOpt state and generate final visualizations if optimizer exists
         if OPTIMIZER_MGR.optimizer_exists(prolific):
+            optimizer = OPTIMIZER_MGR.optimizers[prolific]
             optimizer_filename = os.path.join(participant_dir, 'bayesopt_state.json')
             try:
-                OPTIMIZER_MGR.optimizers[prolific].save(optimizer_filename)
+                optimizer.save(optimizer_filename)
             except Exception as e:
                 logger.info(f"[BACKEND - SUBMIT] warning: could not save BayesOpt state for {prolific}: {e}")
+
+            # # Generate final visualizations (embedding trajectory with GP, slice/contour plots)
+            # try:
+            #     optimizer.generate_final_visualizations(prolific)
+            #     logger.info(f"[BACKEND - SUBMIT] generated final visualizations for {prolific}")
+            # except Exception as e:
+            #     logger.info(f"[BACKEND - SUBMIT] warning: could not generate visualizations for {prolific}: {e}")
 
         return jsonify(success=True, completion_code=completion_code)
     except Exception as e:

@@ -3,6 +3,11 @@ import pandas as pd
 import numpy as np
 import logging
 import json
+import os
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+from matplotlib import patheffects
 from scipy.spatial.distance import cdist
 from ax.api.client import Client
 from ax.storage.json_store.encoder import object_to_json
@@ -19,7 +24,76 @@ from KNNGenerationNode import (
     knn_generation_node_from_dict,
 )
 from logging_utils import opt_logger as logger
+from botorch.models import SingleTaskGP
+from ax.generators.torch.botorch_modular.surrogate import SurrogateSpec
+from ax.generators.torch.botorch_modular.utils import ModelConfig
+from gpytorch.constraints import Interval
+from gpytorch.kernels import ScaleKernel, MaternKernel, RBFKernel
+from botorch.acquisition import qNoisyExpectedImprovement, qExpectedImprovement, qUpperConfidenceBound
 
+
+def create_surrogate_spec(
+    noise_variance: float = 0.1,
+    kernel: str = "matern",
+    nu: float = 2.5,
+    ard: bool = True,
+) -> SurrogateSpec:
+    """
+    Create a SurrogateSpec with explicit kernel and noise configuration.
+
+    Args:
+        noise_variance: Observation noise variance. Lower = trust observations more.
+                       Default 0.1 is typical for noisy human feedback.
+                       Use 0.01 for cleaner HITL feedback.
+        kernel: Kernel type - "matern" (default) or "rbf".
+        nu: Matern smoothness parameter (0.5, 1.5, or 2.5). Only used if kernel="matern".
+              - 0.5: rough, equivalent to exponential kernel
+              - 1.5: once differentiable
+              - 2.5: twice differentiable (default, smooth)
+        ard: If True, use Automatic Relevance Determination (separate lengthscale per dim).
+
+    Returns:
+        SurrogateSpec configured for SingleTaskGP with specified kernel.
+    """
+    # Build kernel options
+    n_dims = 2  # emb_x, emb_y
+    if kernel == "matern":
+        base_kernel_class = MaternKernel
+        base_kernel_options = {"nu": nu}
+        if ard:
+            base_kernel_options["ard_num_dims"] = n_dims
+    elif kernel == "rbf":
+        base_kernel_class = RBFKernel
+        base_kernel_options = {}
+        if ard:
+            base_kernel_options["ard_num_dims"] = n_dims
+    else:
+        raise ValueError(f"Unknown kernel: {kernel}. Use 'matern' or 'rbf'.")
+
+    return SurrogateSpec(
+        model_configs=[
+            ModelConfig(
+                botorch_model_class=SingleTaskGP,
+                covar_module_class=ScaleKernel,
+                covar_module_options={
+                    "base_kernel": base_kernel_class(**base_kernel_options),
+                },
+                likelihood_options={
+                    "noise_constraint": Interval(
+                        lower_bound=noise_variance * 0.5,
+                        upper_bound=noise_variance * 2.0,
+                        initial_value=noise_variance,
+                    ),
+                },
+            )
+        ]
+    )
+
+
+# Alias for backwards compatibility
+def create_low_noise_surrogate_spec(noise_variance: float = 0.01) -> SurrogateSpec:
+    """Create a low-noise surrogate spec. See create_surrogate_spec for more options."""
+    return create_surrogate_spec(noise_variance=noise_variance)
 
 def _get_knn_encoder_registry():
     """Get encoder registry with KNNGenerationNode registered."""
@@ -54,7 +128,6 @@ class BayesOptimizer:
 
         self.generation_strategy = self._construct_generation_strategy()
         self.client.set_generation_strategy(generation_strategy=self.generation_strategy)
-
         self.client.configure_optimization(objective="performance") #maximizes, "-performance" to minimize
 
         self.verbose = verbose
@@ -176,19 +249,34 @@ class TSNEBayesOptimizer:
     Maps continuous BO suggestions to nearest unevaluated discrete policies.
     """
 
-    def __init__(self, embedding_csv: str, n_init=3, n_bo=10, n_knn=10, verbose=True):
+    def __init__(self, embedding_csv: str, n_init=3, n_bo=10, n_knn=10,
+                 surrogate_spec: SurrogateSpec | None = None,
+                 acqf_class=qNoisyExpectedImprovement,
+                 acqf_options: dict | None = None,
+                 verbose=True):
         """
         Args:
             embedding_csv: Path to CSV with columns ['policy', 'x', 'y']
             n_init: Number of initial random trials before BO kicks in
             n_bo_trials: Number of BO trials before switching to kNN
             n_knn_neighbors: Number of nearest neighbors to explore in kNN phase
+            surrogate_spec: Custom SurrogateSpec for the GP model. Use
+                           create_surrogate_spec() to configure kernel and noise.
+            acqf_class: Acquisition function class. Options:
+                       - qNoisyExpectedImprovement (default): handles noisy observations
+                       - qExpectedImprovement: assumes noiseless observations
+                       - qUpperConfidenceBound: tunable exploration via beta parameter
+            acqf_options: Dict of options for the acquisition function.
+                         e.g., {"beta": 2.0} for qUpperConfidenceBound
             verbose: Print debug information
         """
         self.verbose = verbose
         self.n_init = n_init
         self.n_bo_trials = n_bo
         self.n_knn_neighbors = n_knn
+        self.surrogate_spec = surrogate_spec
+        self.acqf_class = acqf_class
+        self.acqf_options = acqf_options or {}
 
         # Load and normalize embeddings
         self.policies_df = pd.read_csv(embedding_csv)
@@ -253,6 +341,9 @@ class TSNEBayesOptimizer:
     def ask(self, n_trials=1):
         """
         Get next trial(s) to evaluate.
+
+        Args:
+            n_trials: Number of trials to generate.
 
         Returns:
             dict: {trial_idx: {'policy': policy_name, 'emb_x': x, 'emb_y': y}}
@@ -431,6 +522,15 @@ class TSNEBayesOptimizer:
         loaded_evaluated_policies = set(tsne_state.get('evaluated_policies', []))
         self.trial_to_policy = {int(k): v for k, v in tsne_state.get('trial_to_policy', {}).items()}
 
+        # Restore config values (n_init, n_bo_trials, n_knn_neighbors)
+        config = tsne_state.get('config', {})
+        if 'n_init' in config:
+            self.n_init = config['n_init']
+        if 'n_bo_trials' in config:
+            self.n_bo_trials = config['n_bo_trials']
+        if 'n_knn_neighbors' in config:
+            self.n_knn_neighbors = config['n_knn_neighbors']
+
         # Deserialize experiment
         experiment = object_from_json(
             state.get("experiment"),
@@ -468,26 +568,55 @@ class TSNEBayesOptimizer:
         self.evaluated_policies.clear()
         self.evaluated_policies.update(loaded_evaluated_policies)
 
-        logger.info(f"[OPT - LOAD] loaded state from {filepath} ({len(self.evaluated_policies)} evaluated policies)")
+        logger.info(f"[OPT - LOAD] loaded state from {filepath} ({len(self.evaluated_policies)} evaluated policies, n_init={self.n_init}, n_bo={self.n_bo_trials}, n_knn={self.n_knn_neighbors})")
 
     def _construct_generation_strategy_with_knn(self):
         """
         Construct generation strategy: Center -> Sobol -> BO -> kNN
+
+        Uses configured surrogate_spec (kernel, noise) and acqf_class (acquisition function).
         """
+        # Build model_kwargs with surrogate_spec if provided
+        model_kwargs = {}
+        if self.surrogate_spec is not None:
+            model_kwargs["surrogate_spec"] = self.surrogate_spec
+
+        # Build generator_kwargs with acquisition function
+        generator_kwargs = {
+            "botorch_acqf_class": self.acqf_class,
+        }
+        if self.acqf_options:
+            generator_kwargs["acqf_options"] = self.acqf_options
+
+        # Log configuration
+        kernel_info = "default (Matern 2.5)"
+        if self.surrogate_spec is not None and self.surrogate_spec.model_configs:
+            mc = self.surrogate_spec.model_configs[0]
+            if mc.covar_module_options and "base_kernel" in mc.covar_module_options:
+                kernel_info = str(type(mc.covar_module_options["base_kernel"]).__name__)
+        logger.info(f"[OPT - INIT] kernel={kernel_info}, acqf={self.acqf_class.__name__}, acqf_options={self.acqf_options}")
+
         # kNN node - samples nearest neighbors from best point
         knn_node = KNNGenerationNode(
             coords=np.asarray(self._coords),
             policy_names=np.asarray(self._policy_names),
             n_neighbors=self.n_knn_neighbors,
             evaluated_policies=self.evaluated_policies,  # Shared reference
-            generator_specs=[GeneratorSpec(generator_enum=Generators.BOTORCH_MODULAR)],
-            
+            generator_specs=[GeneratorSpec(
+                generator_enum=Generators.BOTORCH_MODULAR,
+                model_kwargs=model_kwargs if model_kwargs else None,
+                generator_kwargs=generator_kwargs,
+            )],
         )
 
         # BoTorch node for Bayesian Optimization
         botorch_node = GenerationNode(
             name="Modular BoTorch",
-            generator_specs=[GeneratorSpec(generator_enum=Generators.BOTORCH_MODULAR)],
+            generator_specs=[GeneratorSpec(
+                generator_enum=Generators.BOTORCH_MODULAR,
+                model_kwargs=model_kwargs if model_kwargs else None,
+                generator_kwargs=generator_kwargs,
+            )],
             transition_criteria=[
                 MinTrials(
                     threshold=self.n_init + self.n_bo_trials,
@@ -519,6 +648,249 @@ class TSNEBayesOptimizer:
             name="Center+Sobol+BO+kNN",
             nodes=[center_node, sobol_node, botorch_node, knn_node],
         )
+
+    def generate_final_visualizations(self, prolific_id: str) -> None:
+        """
+        Generate final PDF visualizations at experiment completion.
+
+        Call this at the end of the experiment to save:
+        - Embedding trajectory with GP heatmap background and sample order
+        - Ax slice plots for each parameter
+        - Ax contour plot with sample order overlay
+
+        Args:
+            prolific_id: Participant ID for the save directory.
+        """
+        save_dir = os.path.join("submissions", prolific_id)
+        os.makedirs(save_dir, exist_ok=True)
+
+        logger.info(f"[OPT - VIZ] Generating final visualizations in {save_dir}")
+
+        # Ensure the model is fitted for visualization
+        self._ensure_model_fitted()
+
+        # 1. Generate embedding trajectory with GP heatmap
+        self._plot_embedding_with_gp_heatmap(save_dir)
+
+        # 2. Generate Ax slice/contour plots
+        self._plot_ax_surfaces(save_dir)
+
+        logger.info(f"[OPT - VIZ] Completed generating final visualizations")
+
+    def _ensure_model_fitted(self) -> None:
+        """Ensure the current node has a fitted model for visualization."""
+        try:
+            gs = self._optimizer.generation_strategy
+            experiment = self._optimizer.client._experiment
+            if gs.adapter is None:
+                gs._curr._fit(experiment=experiment)
+                logger.info("[OPT - VIZ] Fitted model for visualization")
+        except Exception as e:
+            logger.warning(f"[OPT - VIZ] Could not fit model: {e}")
+
+    def _plot_embedding_with_gp_heatmap(self, save_dir: str) -> None:
+        """Plot t-SNE embedding with GP heatmap background and sample order annotations."""
+        try:
+            from matplotlib.patches import Patch
+
+            fig, ax = plt.subplots(figsize=(14, 12))
+
+            # Try to get GP predictions for heatmap
+            heatmap_added = False
+            try:
+                gs = self._optimizer.generation_strategy
+                adapter = gs.adapter
+                if adapter is not None and hasattr(adapter, 'model'):
+                    # Create grid for heatmap
+                    grid_size = 50
+                    x_grid = np.linspace(-1, 1, grid_size)
+                    y_grid = np.linspace(-1, 1, grid_size)
+                    xx, yy = np.meshgrid(x_grid, y_grid)
+                    grid_points = np.column_stack([xx.ravel(), yy.ravel()])
+
+                    # Get predictions from the model
+                    from ax.core.observation import ObservationFeatures
+                    obs_features = [
+                        ObservationFeatures(parameters={"emb_x": float(p[0]), "emb_y": float(p[1])})
+                        for p in grid_points
+                    ]
+                    predictions = adapter.predict(obs_features)
+                    # predictions is (means_dict, covariances_dict)
+                    metric_name = list(predictions[0].keys())[0]
+                    means = np.array(predictions[0][metric_name]).reshape(grid_size, grid_size)
+
+                    # Plot heatmap
+                    im = ax.contourf(xx, yy, means, levels=20, cmap='RdYlGn', alpha=0.6)
+                    cbar = plt.colorbar(im, ax=ax, label='Predicted Performance')
+                    heatmap_added = True
+                    logger.info("[OPT - VIZ] Added GP heatmap to embedding plot")
+            except Exception as e:
+                logger.warning(f"[OPT - VIZ] Could not add GP heatmap: {e}")
+
+            # Plot all policies (gray background if no heatmap, white otherwise)
+            bg_color = 'white' if heatmap_added else 'lightgray'
+            ax.scatter(self._coords[:, 0], self._coords[:, 1], c=bg_color, alpha=0.3, s=30,
+                      edgecolors='gray', linewidths=0.3)
+
+            # Plot evaluated policies with order numbers and color by phase
+            for i, (trial_idx, policy) in enumerate(sorted(self.trial_to_policy.items())):
+                idx_arr = np.where(self._policy_names == policy)[0]
+                if len(idx_arr) > 0:
+                    coords = self._coords[idx_arr[0]]
+                    # Color by phase: green=Sobol, blue=BO, red=kNN
+                    if i < self.n_init:
+                        color = 'green'
+                    elif i < self.n_init + self.n_bo_trials:
+                        color = 'blue'
+                    else:
+                        color = 'red'
+                    ax.scatter(coords[0], coords[1], c=color, s=120, zorder=5,
+                              edgecolors='black', linewidths=1)
+                    ax.annotate(str(i+1), (coords[0], coords[1]), fontsize=9, ha='center', va='center',
+                               fontweight='bold', color='white',
+                               path_effects=[patheffects.withStroke(linewidth=2, foreground='black')])
+
+            ax.set_xlabel('t-SNE Dimension 1 (emb_x)', fontsize=12)
+            ax.set_ylabel('t-SNE Dimension 2 (emb_y)', fontsize=12)
+            title = 'Optimization Trajectory in Embedding Space'
+            if heatmap_added:
+                title += '\n(Background: GP Predicted Performance)'
+            ax.set_title(title, fontsize=14)
+            ax.set_xlim(-1.1, 1.1)
+            ax.set_ylim(-1.1, 1.1)
+
+            # Add legend
+            legend_elements = [
+                Patch(facecolor='green', edgecolor='black', label=f'Sobol (1-{self.n_init})'),
+                Patch(facecolor='blue', edgecolor='black', label=f'BO ({self.n_init+1}-{self.n_init + self.n_bo_trials})'),
+                Patch(facecolor='red', edgecolor='black', label=f'kNN ({self.n_init + self.n_bo_trials + 1}+)'),
+            ]
+            ax.legend(handles=legend_elements, loc='upper right', fontsize=10)
+
+            plt.tight_layout()
+            plt.savefig(os.path.join(save_dir, "embedding_trajectory_with_gp.pdf"), bbox_inches='tight', dpi=150)
+            plt.close()
+            logger.info(f"[OPT - VIZ] Saved embedding_trajectory_with_gp.pdf")
+        except Exception as e:
+            logger.warning(f"[OPT - VIZ] Failed to generate embedding trajectory plot: {e}")
+            import traceback
+            traceback.print_exc()
+
+    def _plot_ax_surfaces(self, save_dir: str) -> None:
+        """Generate Ax slice and contour plots using the fitted surrogate model."""
+        try:
+            from ax.analysis.plotly.surface.slice import SlicePlot
+            from ax.analysis.plotly.surface.contour import ContourPlot
+
+            experiment = self._optimizer.client._experiment
+            generation_strategy = self._optimizer.generation_strategy
+
+            # Check if we have a fitted adapter
+            adapter = generation_strategy.adapter
+            if adapter is None:
+                logger.warning("[OPT - VIZ] No fitted adapter available for Ax surface plots")
+                return
+
+            # Slice plots for each parameter
+            for param in ["emb_x", "emb_y"]:
+                try:
+                    card = SlicePlot(parameter_name=param).compute(
+                        experiment=experiment,
+                        generation_strategy=generation_strategy,
+                    )
+                    # Add sample order annotations to the plot
+                    fig = card.get_figure()
+                    self._add_sample_annotations_to_plotly(fig, param)
+                    fig.write_image(os.path.join(save_dir, f"slice_{param}.pdf"))
+                    logger.info(f"[OPT - VIZ] Saved slice_{param}.pdf")
+                except Exception as e:
+                    logger.warning(f"[OPT - VIZ] SlicePlot for {param} failed: {e}")
+
+            # Contour plot with sample annotations
+            try:
+                card = ContourPlot(
+                    x_parameter_name="emb_x",
+                    y_parameter_name="emb_y",
+                ).compute(
+                    experiment=experiment,
+                    generation_strategy=generation_strategy,
+                )
+                # Add sample order annotations to the contour plot
+                fig = card.get_figure()
+                self._add_sample_annotations_to_contour(fig)
+                fig.write_image(os.path.join(save_dir, "contour_with_samples.pdf"))
+                logger.info(f"[OPT - VIZ] Saved contour_with_samples.pdf")
+            except Exception as e:
+                logger.warning(f"[OPT - VIZ] ContourPlot failed: {e}")
+
+        except ImportError as e:
+            logger.warning(f"[OPT - VIZ] Could not import Ax plotting modules: {e}")
+        except Exception as e:
+            logger.warning(f"[OPT - VIZ] Failed to generate Ax surface plots: {e}")
+
+    def _add_sample_annotations_to_plotly(self, fig, param: str) -> None:
+        """Add sample order annotations to a plotly figure."""
+        try:
+            import plotly.graph_objects as go
+            for i, (trial_idx, policy) in enumerate(sorted(self.trial_to_policy.items())):
+                idx_arr = np.where(self._policy_names == policy)[0]
+                if len(idx_arr) > 0:
+                    coords = self._coords[idx_arr[0]]
+                    param_val = coords[0] if param == "emb_x" else coords[1]
+                    # Color by phase
+                    if i < self.n_init:
+                        color = 'green'
+                    elif i < self.n_init + self.n_bo_trials:
+                        color = 'blue'
+                    else:
+                        color = 'red'
+                    fig.add_annotation(
+                        x=param_val, y=0,
+                        text=str(i+1),
+                        showarrow=True,
+                        arrowhead=2,
+                        arrowsize=1,
+                        arrowwidth=1,
+                        arrowcolor=color,
+                        font=dict(size=10, color=color),
+                        yshift=20
+                    )
+        except Exception as e:
+            logger.warning(f"[OPT - VIZ] Could not add annotations to slice plot: {e}")
+
+    def _add_sample_annotations_to_contour(self, fig) -> None:
+        """Add sample order annotations to a contour plot."""
+        try:
+            import plotly.graph_objects as go
+            # Add scatter points with sample numbers
+            x_vals, y_vals, texts, colors = [], [], [], []
+            for i, (trial_idx, policy) in enumerate(sorted(self.trial_to_policy.items())):
+                idx_arr = np.where(self._policy_names == policy)[0]
+                if len(idx_arr) > 0:
+                    coords = self._coords[idx_arr[0]]
+                    x_vals.append(coords[0])
+                    y_vals.append(coords[1])
+                    texts.append(str(i+1))
+                    # Color by phase
+                    if i < self.n_init:
+                        colors.append('green')
+                    elif i < self.n_init + self.n_bo_trials:
+                        colors.append('blue')
+                    else:
+                        colors.append('red')
+
+            fig.add_trace(go.Scatter(
+                x=x_vals, y=y_vals,
+                mode='markers+text',
+                marker=dict(size=12, color=colors, line=dict(width=1, color='black')),
+                text=texts,
+                textposition='top center',
+                textfont=dict(size=10, color='black'),
+                name='Samples',
+                showlegend=True
+            ))
+        except Exception as e:
+            logger.warning(f"[OPT - VIZ] Could not add annotations to contour plot: {e}")
 
     def close(self):
         self._optimizer.close()

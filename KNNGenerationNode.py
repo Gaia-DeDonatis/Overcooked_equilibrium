@@ -6,14 +6,25 @@ Designed to be used after Bayesian Optimization for local exploitation.
 """
 
 from typing import Any
+from collections.abc import Sequence
 import numpy as np
 from scipy.spatial.distance import cdist
 
 from ax.generation_strategy.external_generation_node import ExternalGenerationNode
+from ax.generation_strategy.generator_spec import GeneratorSpec
+from ax.generation_strategy.transition_criterion import TransitionCriterion
 from ax.core.experiment import Experiment
 from ax.core.data import Data
 from ax.core.types import TParameterization
 from ax.core.trial_status import TrialStatus
+from ax.storage.json_store.encoder import object_to_json
+from ax.storage.json_store.decoder import object_from_json
+from ax.storage.json_store.registry import (
+    CORE_ENCODER_REGISTRY,
+    CORE_CLASS_ENCODER_REGISTRY,
+    CORE_DECODER_REGISTRY,
+    CORE_CLASS_DECODER_REGISTRY,
+)
 
 from logging_utils import opt_logger as logger
 
@@ -24,6 +35,15 @@ def knn_generation_node_to_dict(node: "KNNGenerationNode") -> dict[str, Any]:
 
     Converts numpy arrays to lists and sets to lists for JSON compatibility.
     """
+    # Serialize the visualization generator spec if present
+    visualization_spec_json = None
+    if node._visualization_generator_spec is not None:
+        visualization_spec_json = object_to_json(
+            node._visualization_generator_spec,
+            encoder_registry=CORE_ENCODER_REGISTRY,
+            class_encoder_registry=CORE_CLASS_ENCODER_REGISTRY,
+        )
+
     return {
         "__type": "KNNGenerationNode",
         "name": node.name,
@@ -40,9 +60,8 @@ def knn_generation_node_to_dict(node: "KNNGenerationNode") -> dict[str, Any]:
             for name, coords, dist in node.neighbor_queue
         ],
         "minimize": node.minimize,
-        # ExternalGenerationNode fields
-        "generator_specs": node.generator_specs,
-        "transition_criteria": node.transition_criteria,
+        # Visualization generator spec for surrogate model
+        "visualization_generator_spec": visualization_spec_json,
     }
 
 
@@ -53,11 +72,30 @@ def knn_generation_node_from_dict(**kwargs) -> "KNNGenerationNode":
     Reconstructs numpy arrays from lists and sets from lists.
     Ax calls this with keyword arguments extracted from the JSON dict.
     """
+    # Deserialize visualization generator spec if present
+    visualization_spec = None
+    viz_spec_data = kwargs.get("visualization_generator_spec")
+    if viz_spec_data is not None:
+        # Check if already deserialized (Ax may have done this already)
+        if isinstance(viz_spec_data, GeneratorSpec):
+            visualization_spec = viz_spec_data
+        elif isinstance(viz_spec_data, dict):
+            visualization_spec = object_from_json(
+                viz_spec_data,
+                decoder_registry=CORE_DECODER_REGISTRY,
+                class_decoder_registry=CORE_CLASS_DECODER_REGISTRY,
+            )
+        else:
+            logger.warning(f"[OPT - KNN] Unexpected visualization_generator_spec type: {type(viz_spec_data)}")
+
+    generator_specs = [visualization_spec] if visualization_spec else None
+
     node = KNNGenerationNode(
         coords=np.array(kwargs["coords"]),
         policy_names=np.array(kwargs["policy_names"]),
         n_neighbors=kwargs["n_neighbors"],
         evaluated_policies=set(kwargs.get("evaluated_policies", [])),
+        generator_specs=generator_specs,
     )
 
     # Restore runtime state
@@ -81,6 +119,9 @@ class KNNGenerationNode(ExternalGenerationNode):
 
     This node is designed to be used after Bayesian Optimization to exploit
     the region around the best point by systematically sampling nearby points.
+
+    Additionally maintains a surrogate model (via generator_specs) for visualization
+    purposes, while still using KNN logic for candidate generation.
     """
 
     def __init__(
@@ -89,6 +130,8 @@ class KNNGenerationNode(ExternalGenerationNode):
         policy_names: np.ndarray,
         n_neighbors: int = 10,
         evaluated_policies: set = None,
+        generator_specs: list[GeneratorSpec] | None = None,
+        transition_criteria: Sequence[TransitionCriterion] | None = None,
     ) -> None:
         """
         Initialize the kNN generation node.
@@ -98,8 +141,18 @@ class KNNGenerationNode(ExternalGenerationNode):
             policy_names: Array of policy names corresponding to each coordinate.
             n_neighbors: Number of nearest neighbors to sample from.
             evaluated_policies: Set of already evaluated policy names (shared reference).
+            generator_specs: Optional list of GeneratorSpecs. The first spec will be
+                fitted as a surrogate model for visualization purposes.
+            transition_criteria: Optional transition criteria for the generation strategy.
         """
-        super().__init__(name="kNN")
+        # Store the visualization generator spec BEFORE calling parent init
+        # (parent passes generator_specs=[] to its parent, so we need to keep our own)
+        self._visualization_generator_spec: GeneratorSpec | None = (
+            generator_specs[0] if generator_specs and len(generator_specs) > 0 else None
+        )
+
+        super().__init__(name="kNN", transition_criteria=transition_criteria)
+
         self.coords = coords
         self.policy_names = policy_names
         self.n_neighbors = n_neighbors
@@ -111,6 +164,45 @@ class KNNGenerationNode(ExternalGenerationNode):
         self.best_value: float | None = None
         self.neighbor_queue: list[tuple[str, np.ndarray, float]] = []  # (policy_name, coords, distance)
         self.minimize: bool = False
+
+    @property
+    def _fitted_adapter(self):
+        """
+        Return the fitted adapter from the visualization generator spec.
+
+        This enables Ax visualizations (SlicePlot, ContourPlot) to work
+        even though KNN uses its own generation logic.
+        """
+        if self._visualization_generator_spec is not None:
+            return self._visualization_generator_spec._fitted_adapter
+        return None
+
+    def _fit(
+        self,
+        experiment: Experiment,
+        data: Data | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """
+        Fit the node state and optionally the visualization surrogate model.
+
+        Calls parent's _fit (which invokes update_generator_state for KNN logic),
+        then additionally fits the visualization generator spec if present.
+        """
+        # Call parent's _fit which calls update_generator_state
+        super()._fit(experiment=experiment, data=data)
+
+        # Additionally fit the visualization surrogate model for plotting
+        if self._visualization_generator_spec is not None:
+            try:
+                actual_data = data if data is not None else experiment.lookup_data()
+                self._visualization_generator_spec.fit(
+                    experiment=experiment,
+                    data=actual_data,
+                )
+                logger.info("[OPT - KNN] Fitted visualization surrogate model for plots")
+            except Exception as e:
+                logger.warning(f"[OPT - KNN] Failed to fit visualization surrogate: {e}")
 
     def update_generator_state(self, experiment: Experiment, data: Data) -> None:
         """

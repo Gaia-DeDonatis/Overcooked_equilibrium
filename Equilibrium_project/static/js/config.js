@@ -5,13 +5,13 @@ const SERVER_URL = 'http://localhost:5000';
 // Experiment Configuration
 const CONFIG = {
   PRACTICE_SCORE: 200,
-  ROUND_DURATION_SEC: 2, //put 45
+  ROUND_DURATION_SEC: 30, //put 45
 
   // Episode structure
-  ROUNDS_PER_EPISODE: 2, //3
-  EPISODES_SEED: 2, //put 3 mid+sobol
-  EPISODES_BO: 2,   //put 5 BO
-  EPISODES_STRESS: 1, //put 3 kNN
+  ROUNDS_PER_EPISODE: 1, //3
+  EPISODES_SEED: 3, //put 3 mid+sobol
+  EPISODES_BO: 5,   //put 5 BO
+  EPISODES_STRESS: 3, //put 3 kNN
 
   // Between-episode break
   EPISODE_BREAK_SEC: 1 //15
