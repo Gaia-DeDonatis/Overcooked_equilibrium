@@ -351,6 +351,63 @@ async function finishTimeBasedRound() {
 
 
 // --- EPISODE BREAK (fixed 15s, auto-advance) ---
+let breakTimerFinished = false;
+
+
+function _isTouched(el){ return !!el && (el.getAttribute('data-touched') === 'true'); }
+
+function _setRangePct(el){
+  if(!el) return;
+  const min = parseInt(el.min || '1', 10);
+  const max = parseInt(el.max || '20', 10);
+  const v = parseInt(el.value || String(Math.round((min + max) / 2)), 10);
+  const pct = ((v - min) * 100) / (max - min);
+  el.style.setProperty('--pct', `${pct}%`);
+}
+
+function _setUntouched(el, chip, valueSpan){
+  if(el){
+    el.value = el.value || 10;
+    el.setAttribute('data-touched', 'false');
+    el.classList.add('untouched');
+    _setRangePct(el);
+  }
+  if(chip) chip.classList.add('untouched');
+  if(valueSpan) valueSpan.innerText = '—';
+}
+
+function _markTouched(el, chip, valueSpan){
+  if(el){
+    el.setAttribute('data-touched', 'true');
+    el.classList.remove('untouched');
+    _setRangePct(el);
+  }
+  if(chip) chip.classList.remove('untouched');
+  if(valueSpan && el) valueSpan.innerText = el.value;
+}
+
+
+function updateBreakContinueState() {
+  const btn = document.getElementById('breakContinueBtn');
+  const hint = document.getElementById('breakContinueHint');
+  const md = document.getElementById('ep_mental_demand');
+  const pf = document.getElementById('ep_performance');
+
+  const answered = _isTouched(md) && _isTouched(pf);
+  const canContinue = breakTimerFinished && answered;
+
+  if (btn) btn.disabled = !canContinue;
+
+  if (hint) {
+    if (!breakTimerFinished) {
+      hint.innerText = "You can continue when the timer reaches 0.";
+    } else if (!answered) {
+      hint.innerText = "Please rate both questions to continue.";
+    } else {
+      hint.innerText = "Break finished — click Continue when ready.";
+    }
+  }
+}
 let breakTimer = null;
 let breakTimeLeft = 0;
 let breakFinishedFired = false;
@@ -367,15 +424,25 @@ async function finishEpisodeBreak() {
   if (breakFinishedFired) return;
   breakFinishedFired = true;
 
-  const qEffort = document.querySelector('input[name="ep_effort"]:checked');
-  const qCoord = document.querySelector('input[name="ep_coord"]:checked');
+  const md = document.getElementById('ep_mental_demand');
+  const pf = document.getElementById('ep_performance');
+
+  // Require an explicit interaction so we don't record the default slider position
+  const mental_demand = _isTouched(md) ? parseInt(md.value) : null;
+  const performance = _isTouched(pf) ? parseInt(pf.value) : null;
+
+  if (mental_demand == null || performance == null) {
+    alert("Please answer both questions before continuing.");
+    breakFinishedFired = false;
+    return;
+  }
 
   DataManager.saveEpisodeSurvey(
     STATE.episodeIndex,
     STATE.episodePhase,
     {
-      mental_effort: qEffort ? parseInt(qEffort.value) : null,
-      coordination_quality: qCoord ? parseInt(qCoord.value) : null
+      mental_demand,
+      performance
     }
   );
 
@@ -397,14 +464,36 @@ function showEpisodeBreak() {
 
   showPage('page-episode-break');
 
-  // Reset form
-  document.querySelectorAll('input[name="ep_effort"], input[name="ep_coord"]').forEach(el => { el.checked = false; });
+  // Reset TLX sliders
+  const md = document.getElementById('ep_mental_demand');
+  const pf = document.getElementById('ep_performance');
+  const mdV = document.getElementById('ep_mental_demand_value');
+  const pfV = document.getElementById('ep_performance_value');
+
+  const mdChip = document.getElementById('ep_mental_demand_chip');
+  const pfChip = document.getElementById('ep_performance_chip');
+
+  if (md) md.value = 10;
+  if (pf) pf.value = 10;
+
+  _setUntouched(md, mdChip, mdV);
+  _setUntouched(pf, pfChip, pfV);
+
+  if (md) md.oninput = () => {
+    _markTouched(md, mdChip, mdV);
+    updateBreakContinueState();
+  };
+  if (pf) pf.oninput = () => {
+    _markTouched(pf, pfChip, pfV);
+    updateBreakContinueState();
+  };
 
   const btn = document.getElementById('breakContinueBtn');
-  const hint = document.getElementById('breakContinueHint');
-  if (btn) btn.disabled = true;
-  if (hint) hint.innerText = "You can continue when the timer reaches 0.";
   if (btn) btn.onclick = () => finishEpisodeBreak().catch(console.error);
+
+  // gating: timer must finish + both answers must be provided
+  breakTimerFinished = false;
+  updateBreakContinueState();
 
   const epLabel = document.getElementById('breakEpisodeLabel');
   if (epLabel) {
@@ -429,10 +518,8 @@ function showEpisodeBreak() {
       clearInterval(breakTimer);
       breakTimer = null;
 
-      const btn = document.getElementById('breakContinueBtn');
-      const hint = document.getElementById('breakContinueHint');
-      if (btn) btn.disabled = false;
-      if (hint) hint.innerText = "Break finished — click Continue when ready.";
+      breakTimerFinished = true;
+      updateBreakContinueState();
       return;
     }
     updateBreakCountdown();

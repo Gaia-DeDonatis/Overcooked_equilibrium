@@ -79,8 +79,9 @@ const DataManager = {
 
       // only 2 questions per episode
       feedback: {
-        mental_effort: null,
-        coordination_quality: null,
+        scale: "tlx_20",
+        mental_demand: null,
+        performance: null,
         submittedAtISO: null
       },
 

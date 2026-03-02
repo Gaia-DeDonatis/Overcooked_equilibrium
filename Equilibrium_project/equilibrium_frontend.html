@@ -153,6 +153,145 @@
       clip:rect(0 0 0 0);overflow:hidden;
     }
 
+    /* --- NASA TLX-style 1–20 sliders (episode break) --- */
+    .tlx-block{
+      margin-bottom:16px;
+      padding:18px 18px 16px;
+      background:#ffffff;
+      border:1px solid #e5e7eb;
+      border-radius:14px;
+      box-shadow:0 6px 16px rgba(0,0,0,0.06);
+    }
+    .tlx-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:14px;
+      margin-bottom:12px;
+    }
+    .tlx-title{
+      font-weight:800;
+      font-size:16px;
+      margin:0;
+    }
+    .tlx-question{
+      margin:4px 0 0 0;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.35;
+    }
+    .tlx-note{
+      margin:6px 0 0 0;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.35;
+    }
+    .tlx-chip{
+      flex:0 0 auto;
+      min-width:74px;
+      text-align:center;
+      padding:7px 12px;
+      border-radius:999px;
+      font-weight:800;
+      background:#eef2ff;
+      color:#1e3a8a;
+      box-shadow:0 2px 8px rgba(37,99,235,.12);
+      user-select:none;
+      white-space:nowrap;
+    }
+    .tlx-chip.untouched{
+      background:#f3f4f6;
+      color:#6b7280;
+      box-shadow:none;
+      font-weight:700;
+    }
+    .tlx-chip .suffix{
+      font-weight:700;
+      opacity:.75;
+      margin-left:2px;
+      font-size:12px;
+    }
+
+    /* Range input – consistent, filled track, big thumb */
+    input[type="range"].tlx-range{
+      --pct: 50%;
+      -webkit-appearance:none;
+      appearance:none;
+      width:100%;
+      height:28px;
+      background:transparent;
+      outline:none;
+      margin:2px 0 0;
+      cursor:pointer;
+    }
+    input[type="range"].tlx-range::-webkit-slider-runnable-track{
+      height:10px;
+      border-radius:999px;
+      background: linear-gradient(90deg, var(--brand) 0 var(--pct), #e5e7eb var(--pct) 100%);
+    }
+    input[type="range"].tlx-range.untouched::-webkit-slider-runnable-track{
+      background:#e5e7eb;
+    }
+    input[type="range"].tlx-range::-webkit-slider-thumb{
+      -webkit-appearance:none;
+      appearance:none;
+      width:20px;
+      height:20px;
+      border-radius:50%;
+      background:var(--brand);
+      border:3px solid #ffffff;
+      box-shadow:0 6px 14px rgba(0,0,0,0.18);
+      margin-top:-5px;
+    }
+    input[type="range"].tlx-range:focus-visible::-webkit-slider-thumb{
+      box-shadow:0 0 0 6px rgba(37,99,235,.18), 0 6px 14px rgba(0,0,0,0.18);
+    }
+
+    input[type="range"].tlx-range::-moz-range-track{
+      height:10px;
+      border-radius:999px;
+      background:#e5e7eb;
+    }
+    input[type="range"].tlx-range::-moz-range-progress{
+      height:10px;
+      border-radius:999px;
+      background:var(--brand);
+    }
+    input[type="range"].tlx-range.untouched::-moz-range-progress{
+      background:#e5e7eb;
+    }
+    input[type="range"].tlx-range::-moz-range-thumb{
+      width:20px;
+      height:20px;
+      border-radius:50%;
+      background:var(--brand);
+      border:3px solid #ffffff;
+      box-shadow:0 6px 14px rgba(0,0,0,0.18);
+    }
+
+    .tlx-labels{
+      display:flex;
+      justify-content:space-between;
+      gap:14px;
+      margin-top:10px;
+      color:#6b7280;
+      font-size:12px;
+      line-height:1.2;
+    }
+    .tlx-labels .right{ text-align:right; }
+    .tlx-labels .num{
+      font-weight:800;
+      color:#111827;
+      margin-right:6px;
+    }
+    @media (max-width: 640px){
+      .tlx-head{ align-items:flex-start; }
+      .tlx-chip{ min-width:66px; }
+      .tlx-labels{ flex-direction:column; gap:6px; }
+      .tlx-labels .right{ text-align:left; }
+    }
+
+
   </style>
 </head>
 
@@ -618,57 +757,75 @@
       </div>
 
       <div style="margin-top: 18px;">
-        <div style="margin-bottom:22px; padding:16px; background:#f9fafb; border-radius:12px;">
-          <p style="font-weight:700; margin:0 0 8px 0;">Mental Effort</p>
-          <p class="muted" style="margin:0 0 10px 0;">How mentally demanding was it to play with the AI teammate?</p>
-          <div class="likert-7" role="group" aria-label="Mental Effort">
-            <input type="radio" name="ep_effort" value="1" aria-label="1 Not demanding at all">
-            <input type="radio" name="ep_effort" value="2" aria-label="2">
-            <input type="radio" name="ep_effort" value="3" aria-label="3">
-            <input type="radio" name="ep_effort" value="4" aria-label="4">
-            <input type="radio" name="ep_effort" value="5" aria-label="5">
-            <input type="radio" name="ep_effort" value="6" aria-label="6">
-            <input type="radio" name="ep_effort" value="7" aria-label="7 Extremely demanding">
+        <div class="tlx-block">
+          <div class="tlx-head">
+            <div>
+              <div class="tlx-title">Mental Demand</div>
+              <p class="tlx-question">How mentally demanding was it to play with the AI teammate?</p>
+            </div>
+            <div id="ep_mental_demand_chip" class="tlx-chip untouched" aria-live="polite">
+              <span id="ep_mental_demand_value">—</span><span class="suffix">/20</span>
+            </div>
+          </div>
 
-            <div class="scale-label">Not demanding<br>at all</div>
-            <div class="scale-label"></div>
-            <div class="scale-label"></div>
-            <div class="scale-label"></div>
-            <div class="scale-label"></div>
-            <div class="scale-label"></div>
-            <div class="scale-label">Extremely<br>demanding</div>
+          <input
+            id="ep_mental_demand"
+            class="tlx-range untouched"
+            type="range"
+            min="1"
+            max="20"
+            step="1"
+            value="10"
+            aria-label="Mental Demand (1 not demanding at all, 20 extremely demanding)"
+            data-touched="false"
+          />
+
+          <div class="tlx-labels" aria-hidden="true">
+            <div><span class="num">1</span>Not demanding at all</div>
+            <div class="right"><span class="num">20</span>Extremely demanding</div>
           </div>
         </div>
 
-        <div style="margin-bottom:22px; padding:16px; background:#f9fafb; border-radius:12px;">
-          <p style="font-weight:700; margin:0 0 8px 0;">Coordination Quality</p>
-          <p class="muted" style="margin:0 0 10px 0;">How well did you and the AI coordinate as a team?</p>
-          <div class="likert-7" role="group" aria-label="Coordination Quality">
-            <input type="radio" name="ep_coord" value="1" aria-label="1 Not well at all">
-            <input type="radio" name="ep_coord" value="2" aria-label="2">
-            <input type="radio" name="ep_coord" value="3" aria-label="3">
-            <input type="radio" name="ep_coord" value="4" aria-label="4">
-            <input type="radio" name="ep_coord" value="5" aria-label="5">
-            <input type="radio" name="ep_coord" value="6" aria-label="6">
-            <input type="radio" name="ep_coord" value="7" aria-label="7 Extremely well">
+        <div class="tlx-block">
+          <div class="tlx-head">
+            <div>
+              <div class="tlx-title">Performance</div>
+              <p class="tlx-question">
+                How successful were you and your teammate in accomplishing the goal (serve as many dishes as possible while minimizing your own effort/steps)?
+              </p>
+              <p class="tlx-note">Note: lower numbers mean better performance.</p>
+            </div>
+            <div id="ep_performance_chip" class="tlx-chip untouched" aria-live="polite">
+              <span id="ep_performance_value">—</span><span class="suffix">/20</span>
+            </div>
+          </div>
 
-            <div class="scale-label">Not well<br>at all</div>
-            <div class="scale-label"></div>
-            <div class="scale-label"></div>
-            <div class="scale-label"></div>
-            <div class="scale-label"></div>
-            <div class="scale-label"></div>
-            <div class="scale-label">Extremely<br>well</div>
+          <input
+            id="ep_performance"
+            class="tlx-range untouched"
+            type="range"
+            min="1"
+            max="20"
+            step="1"
+            value="10"
+            aria-label="Performance (1 extremely well, 20 not well at all)"
+            data-touched="false"
+          />
+
+          <div class="tlx-labels" aria-hidden="true">
+            <div><span class="num">1</span>Extremely well (Good)</div>
+            <div class="right"><span class="num">20</span>Not well at all (Poor)</div>
           </div>
         </div>
       </div>
+
 
       <div class="center" style="margin-top: 10px;">
         <button id="breakContinueBtn" class="btn" disabled style="width: 220px;">
           Continue
         </button>
         <p id="breakContinueHint" class="muted" style="margin-top:10px; font-size: 12px;">
-          You can continue when the timer reaches 0.
+          You can continue when the timer reaches 0 and you have answered both questions.
         </p>
       </div>
     </section>

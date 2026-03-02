@@ -5,7 +5,7 @@ const SERVER_URL = 'http://localhost:5000';
 // Experiment Configuration
 const CONFIG = {
   PRACTICE_SCORE: 200,
-  ROUND_DURATION_SEC: 30, //put 45
+  ROUND_DURATION_SEC: 10, //put 45
 
   // Episode structure
   ROUNDS_PER_EPISODE: 1, //3
