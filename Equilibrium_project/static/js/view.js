@@ -9,19 +9,34 @@ const TILE_MAP = {
 };
 
 // 1. Image Loading
+// 1. Image Loading
 function preloadImages(callback) {
-    const names = [
-        "space.png", "counter.png", "FreshTomato.png", "ChoppedTomato.png",
-        "FreshLettuce.png", "ChoppedLettuce.png", "plate.png", "cutboard.png",
-        "delivery.png", "FreshOnion.png", "ChoppedOnion.png", "dirtyplate.png",
-        "BadLettuce.png", "agent-red.png", "agent-blue.png", "agent-robot.png"
-    ];
-    let loaded = 0;
-    names.forEach(n => {
-        images[n] = new Image();
-        images[n].src = `static/images/${n}`;
-        images[n].onload = () => { if (++loaded === names.length) callback(); };
-    });
+  const baseNames = [
+    "space.png", "counter.png", "FreshTomato.png", "ChoppedTomato.png",
+    "FreshLettuce.png", "ChoppedLettuce.png", "plate.png", "cutboard.png",
+    "delivery.png", "FreshOnion.png", "ChoppedOnion.png", "dirtyplate.png",
+    "BadLettuce.png", "agent-red.png", "agent-blue.png"
+  ];
+  
+  const robotNames = (typeof ROBOT_SKINS !== "undefined" && Array.isArray(ROBOT_SKINS))
+    ? ROBOT_SKINS
+    : ["agent-robot.png"];
+
+  const names = [...baseNames, ...robotNames];
+
+  let loaded = 0;
+  const done = (n, ok) => {
+    loaded += 1;
+    if (!ok) console.warn(`Image failed to load: ${n}`);
+    if (loaded === names.length) callback();
+  };
+
+  names.forEach(n => {
+    images[n] = new Image();
+    images[n].src = `static/images/${n}`;
+    images[n].onload = () => done(n, true);
+    images[n].onerror = () => done(n, false);
+  });
 }
 
 // 2. Name Resolver (Fixes "lettuce" vs "FreshLettuce.png")
@@ -128,8 +143,14 @@ function drawGame(state, canvasId) {
         // Agent Image
         let agentImg = null;
         if (agent.color === "robot") {
-            // Using your skin logic logic
-            agentImg = images["agent-robot.png"]; 
+            // Rotate robot skin by episode so participants can see different AI teammates.
+            // Uses STATE.episodeIndex (1-based). Falls back gracefully if assets are missing.
+            const skins = (typeof ROBOT_SKINS !== 'undefined' && Array.isArray(ROBOT_SKINS) && ROBOT_SKINS.length)
+              ? ROBOT_SKINS
+              : ["agent-robot.png"]; 
+            const idx = Math.max(0, (STATE?.episodeIndex ?? 1) - 1) % skins.length;
+            const skinName = skins[idx];
+            agentImg = images[skinName] || images["agent-robot.png"]; 
         } else {
             agentImg = images[`agent-${agent.color}.png`];
         }

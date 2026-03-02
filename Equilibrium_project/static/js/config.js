@@ -5,11 +5,11 @@ const SERVER_URL = 'http://localhost:5000';
 // Experiment Configuration
 const CONFIG = {
   PRACTICE_SCORE: 200,
-  ROUND_DURATION_SEC: 10, //put 45
+  ROUND_DURATION_SEC: 5, //put 45
 
   // Episode structure
   ROUNDS_PER_EPISODE: 1, //3
-  EPISODES_SEED: 3, //put 3 mid+sobol
+  EPISODES_SEED: 5, //put 5 mid+sobol
   EPISODES_BO: 5,   //put 5 BO
   EPISODES_STRESS: 3, //put 3 kNN
 
@@ -51,3 +51,20 @@ const STATE = {
     layout: null
   }
 };
+
+const ROBOT_SKINS = [
+  'agent-robot.png',
+  'agent-robot2.png',
+  'agent-robot3.png',
+  'agent-robot4.png',
+  'agent-robot5.png',
+  'agent-robot6.png',
+  'agent-robot7.png',
+  'agent-robot8.png',
+  'agent-robot9.png',
+  'agent-robot10.png',
+  'agent-robot11.png',
+  'agent-robot12.png',
+  'agent-robot13.png',
+  'agent-robot14.png'
+];
