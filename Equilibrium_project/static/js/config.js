@@ -5,22 +5,75 @@ const SERVER_URL = 'http://localhost:5000';
 // Experiment Configuration
 const CONFIG = {
   PRACTICE_SCORE: 200,
-  ROUND_DURATION_SEC: 5, //put 45
+  ROUND_DURATION_SEC: 5, // put 45
 
   // Episode structure
-  ROUNDS_PER_EPISODE: 1, //3
-  EPISODES_SEED: 5, //put 5 mid+sobol
-  EPISODES_BO: 5,   //put 5 BO
-  EPISODES_STRESS: 3, //put 3 kNN
+  ROUNDS_PER_EPISODE: 1, // 3
+  EPISODES_SEED: 5,      // put 5 mid+sobol
+  EPISODES_BO: 5,        // put 5 BO
+  EPISODES_BO_SOLO: 2,
+  BO_SOLO_POSITIONS: [3, 5],
+  EPISODES_STRESS: 3,    // put 3 kNN
 
-  // Between-episode break
-  EPISODE_BREAK_SEC: 1 //15
+  EPISODE_BREAK_SEC: 1   // 15
 };
 
-CONFIG.TOTAL_EPISODES = CONFIG.EPISODES_SEED + CONFIG.EPISODES_BO + CONFIG.EPISODES_STRESS;
+// Total BO length shown to participants (AI BO episodes + solo "day off" episodes)
+CONFIG.EPISODES_BO_TOTAL = CONFIG.EPISODES_BO + CONFIG.EPISODES_BO_SOLO;
 
-CONFIG.PHASE_1_EPISODES = CONFIG.EPISODES_SEED + CONFIG.EPISODES_BO;
+// Total episodes shown to participants
+CONFIG.TOTAL_EPISODES = CONFIG.EPISODES_SEED + CONFIG.EPISODES_BO_TOTAL + CONFIG.EPISODES_STRESS;
+
+// Phase boundaries used by controller.js
+CONFIG.PHASE_1_EPISODES = CONFIG.EPISODES_SEED + CONFIG.EPISODES_BO_TOTAL;
 CONFIG.PHASE_2_EPISODES = CONFIG.EPISODES_STRESS;
+
+// --- Solo episode scheduling helpers ---
+
+function _normalizeSoloPositions() {
+  const total = CONFIG.EPISODES_BO_TOTAL;
+  let pos = Array.isArray(CONFIG.BO_SOLO_POSITIONS) ? CONFIG.BO_SOLO_POSITIONS.slice() : [];
+
+  // If the list is missing/wrong length, default to first N positions.
+  if (pos.length !== CONFIG.EPISODES_BO_SOLO) {
+    pos = Array.from({ length: CONFIG.EPISODES_BO_SOLO }, (_, i) => i + 1);
+  }
+
+  // Keep only valid unique ints within [1, BO_TOTAL]
+  pos = [...new Set(pos.map(x => parseInt(x, 10)).filter(x => Number.isFinite(x) && x >= 1 && x <= total))].sort((a,b) => a-b);
+
+  // If trimming caused fewer positions than needed, fill from the start.
+  while (pos.length < CONFIG.EPISODES_BO_SOLO) {
+    const candidate = pos.length ? pos[pos.length - 1] + 1 : 1;
+    if (candidate <= total) pos.push(candidate);
+    else break;
+  }
+
+  CONFIG.BO_SOLO_POSITIONS = pos;
+}
+
+_normalizeSoloPositions();
+
+function isSoloEpisode(episodeIndex) {
+  const boStart = CONFIG.EPISODES_SEED + 1;
+  const boEnd = boStart + CONFIG.EPISODES_BO_TOTAL - 1;
+  if (episodeIndex < boStart || episodeIndex > boEnd) return false;
+
+  const boPos = episodeIndex - boStart + 1;
+  return CONFIG.BO_SOLO_POSITIONS.includes(boPos);
+}
+
+function countSoloBeforeEpisode(episodeIndex) {
+  const boStart = CONFIG.EPISODES_SEED + 1;
+  const boEnd = boStart + CONFIG.EPISODES_BO_TOTAL - 1;
+
+  if (episodeIndex < boStart) return 0;
+
+  if (episodeIndex > boEnd) return CONFIG.BO_SOLO_POSITIONS.length;
+
+  const boPos = episodeIndex - boStart + 1;
+  return CONFIG.BO_SOLO_POSITIONS.filter(p => p < boPos).length;
+}
 
 // Global State
 const STATE = {

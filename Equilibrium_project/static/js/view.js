@@ -9,7 +9,6 @@ const TILE_MAP = {
 };
 
 // 1. Image Loading
-// 1. Image Loading
 function preloadImages(callback) {
   const baseNames = [
     "space.png", "counter.png", "FreshTomato.png", "ChoppedTomato.png",
@@ -17,7 +16,7 @@ function preloadImages(callback) {
     "delivery.png", "FreshOnion.png", "ChoppedOnion.png", "dirtyplate.png",
     "BadLettuce.png", "agent-red.png", "agent-blue.png"
   ];
-  
+
   const robotNames = (typeof ROBOT_SKINS !== "undefined" && Array.isArray(ROBOT_SKINS))
     ? ROBOT_SKINS
     : ["agent-robot.png"];
@@ -38,6 +37,7 @@ function preloadImages(callback) {
     images[n].onerror = () => done(n, false);
   });
 }
+
 
 // 2. Name Resolver (Fixes "lettuce" vs "FreshLettuce.png")
 function resolveImage(name) {
@@ -139,16 +139,26 @@ function drawGame(state, canvasId) {
     });
 
     // === Agents ===
-    (state.agents||[]).forEach(agent => {
+    (state.agents||[]).forEach((agent, agentIdx) => {
+        // If this is a solo BO episode, don't draw the AI teammate (agent 0)
+        const epNum = (STATE && STATE.episodeIndex) ? STATE.episodeIndex : 1;
+        if (agentIdx === 0 && (typeof isSoloEpisode === 'function') && isSoloEpisode(epNum)) return;
         // Agent Image
         let agentImg = null;
         if (agent.color === "robot") {
-            // Rotate robot skin by episode so participants can see different AI teammates.
-            // Uses STATE.episodeIndex (1-based). Falls back gracefully if assets are missing.
+            // Solo BO episodes: hide the AI teammate entirely
+            const epNum = (STATE && STATE.episodeIndex) ? STATE.episodeIndex : 1;
+            const soloNow = (typeof isSoloEpisode === 'function') ? isSoloEpisode(epNum) : false;
+            if (soloNow) return;
+
+            // Rotate robot skin by AI-episode ordinal so solo episodes don't "consume" a color.
             const skins = (typeof ROBOT_SKINS !== 'undefined' && Array.isArray(ROBOT_SKINS) && ROBOT_SKINS.length)
               ? ROBOT_SKINS
               : ["agent-robot.png"]; 
-            const idx = Math.max(0, (STATE?.episodeIndex ?? 1) - 1) % skins.length;
+
+            const soloBefore = (typeof countSoloBeforeEpisode === 'function') ? countSoloBeforeEpisode(epNum) : 0;
+            const aiOrdinal = Math.max(1, epNum - soloBefore);
+            const idx = Math.max(0, aiOrdinal - 1) % skins.length;
             const skinName = skins[idx];
             agentImg = images[skinName] || images["agent-robot.png"]; 
         } else {

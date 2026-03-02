@@ -166,6 +166,8 @@ async function startRound({ newEpisode = false } = {}) {
       n_init: CONFIG.EPISODES_SEED,
       n_bo:   CONFIG.EPISODES_BO,
       n_knn: CONFIG.EPISODES_STRESS,
+      // Solo episodes happen during BO (AI day off)
+      solo_episode: (typeof isSoloEpisode === 'function') ? isSoloEpisode(STATE.episodeIndex) : false,
       new_episode: !!newEpisode
     });
     bufferedHumanKey = 'Stay';
@@ -181,16 +183,17 @@ async function startRound({ newEpisode = false } = {}) {
     }
 
     // START NEW ROUND
+    const solo = isSoloEpisode(STATE.episodeIndex);
+    const policyIdForLog = solo ? "no_ai" : data.model_id;
+
     DataManager.startNewRound(STATE.phase, STATE.configId, {
       mapTopology: `${data.map_type}_${data.grid_dim}`,
-      policyId: data.model_id,
+      policyId: policyIdForLog,
       chosenCkpt: data.chosen_ckpt,
-
       episode_index: STATE.episodeIndex,
       round_in_episode: STATE.roundInEpisode,
       episode_phase: STATE.episodePhase,
-      experiment_phase: STATE.experimentPhase,  // 1 or 2
-
+      experiment_phase: STATE.experimentPhase,
       stressPolicyDistance: data.stress_policy_distance ?? null,
       optimalPolicyId: data.optimal_policy_id ?? null
     });
@@ -326,12 +329,14 @@ async function finishTimeBasedRound() {
         // --- CASE B: EPISODE COMPLETE ---
         console.log(`Episode ${STATE.episodeIndex} Complete!`);
 
-        const data = await api('/tell', {
-          prolificId: STATE.prolificId,
-          score: finalScore
-        });
-
-        if (overlay) {
+                const soloNow = (typeof isSoloEpisode === 'function') ? isSoloEpisode(STATE.episodeIndex) : false;
+        if (!soloNow) {
+          const data = await api('/tell', {
+                    prolificId: STATE.prolificId,
+                    score: finalScore
+                  });
+        }
+if (overlay) {
           if (title) {
             title.innerText = `EPISODE ${STATE.episodeIndex} COMPLETE`;
             title.style.color = "#16a34a";
@@ -350,10 +355,21 @@ async function finishTimeBasedRound() {
 }
 
 
-// --- EPISODE BREAK (fixed 15s, auto-advance) ---
+// --- EPISODE BREAK (fixed timer + TLX sliders) ---
+let breakTimer = null;
+let breakTimeLeft = 0;
+let breakFinishedFired = false;
 let breakTimerFinished = false;
 
+function updateBreakCountdown() {
+  const el = document.getElementById('breakCountdown');
+  if (!el) return;
+  const m = Math.floor(breakTimeLeft / 60);
+  const s = breakTimeLeft % 60;
+  el.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+}
 
+// --- TLX slider helpers ---
 function _isTouched(el){ return !!el && (el.getAttribute('data-touched') === 'true'); }
 
 function _setRangePct(el){
@@ -386,14 +402,23 @@ function _markTouched(el, chip, valueSpan){
   if(valueSpan && el) valueSpan.innerText = el.value;
 }
 
-
 function updateBreakContinueState() {
   const btn = document.getElementById('breakContinueBtn');
   const hint = document.getElementById('breakContinueHint');
+
+  // Prefer TLX sliders if present; otherwise fall back to radio buttons.
   const md = document.getElementById('ep_mental_demand');
   const pf = document.getElementById('ep_performance');
 
-  const answered = _isTouched(md) && _isTouched(pf);
+  let answered = false;
+  if (md && pf) {
+    answered = _isTouched(md) && _isTouched(pf);
+  } else {
+    const qEffort = document.querySelector('input[name="ep_effort"]:checked');
+    const qCoord  = document.querySelector('input[name="ep_coord"]:checked');
+    answered = !!qEffort && !!qCoord;
+  }
+
   const canContinue = breakTimerFinished && answered;
 
   if (btn) btn.disabled = !canContinue;
@@ -408,42 +433,38 @@ function updateBreakContinueState() {
     }
   }
 }
-let breakTimer = null;
-let breakTimeLeft = 0;
-let breakFinishedFired = false;
-
-function updateBreakCountdown() {
-  const el = document.getElementById('breakCountdown');
-  if (!el) return;
-  const m = Math.floor(breakTimeLeft / 60);
-  const s = breakTimeLeft % 60;
-  el.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
-}
 
 async function finishEpisodeBreak() {
   if (breakFinishedFired) return;
   breakFinishedFired = true;
 
+  // Prefer TLX sliders if present; otherwise fall back to radio buttons.
   const md = document.getElementById('ep_mental_demand');
   const pf = document.getElementById('ep_performance');
 
-  // Require an explicit interaction so we don't record the default slider position
-  const mental_demand = _isTouched(md) ? parseInt(md.value) : null;
-  const performance = _isTouched(pf) ? parseInt(pf.value) : null;
+  let mental_demand = null;
+  let performance = null;
 
-  if (mental_demand == null || performance == null) {
-    alert("Please answer both questions before continuing.");
-    breakFinishedFired = false;
-    return;
+  if (md && pf) {
+    mental_demand = _isTouched(md) ? parseInt(md.value) : null;
+    performance   = _isTouched(pf) ? parseInt(pf.value) : null;
+
+    if (mental_demand == null || performance == null) {
+      alert("Please answer both questions before continuing.");
+      breakFinishedFired = false;
+      return;
+    }
+  } else {
+    const qEffort = document.querySelector('input[name="ep_effort"]:checked');
+    const qCoord  = document.querySelector('input[name="ep_coord"]:checked');
+    mental_demand = qEffort ? parseInt(qEffort.value) : null;
+    performance   = qCoord ? parseInt(qCoord.value) : null;
   }
 
   DataManager.saveEpisodeSurvey(
     STATE.episodeIndex,
     STATE.episodePhase,
-    {
-      mental_demand,
-      performance
-    }
+    { mental_demand, performance }
   );
 
   if (breakTimer) {
@@ -464,29 +485,84 @@ function showEpisodeBreak() {
 
   showPage('page-episode-break');
 
-  // Reset TLX sliders
+  // --- Banner (make solo episodes obvious) ---
+  const banner = document.getElementById('aiDayOffBanner');
+  const bannerText = document.getElementById('aiDayOffBannerText');
+
+  const next = (STATE.episodeIndex < CONFIG.TOTAL_EPISODES) ? (STATE.episodeIndex + 1) : null;
+  const soloNext = next && (typeof isSoloEpisode === 'function') ? isSoloEpisode(next) : false;
+  const soloNow  = (typeof isSoloEpisode === 'function') ? isSoloEpisode(STATE.episodeIndex) : false;
+
+  if (banner) {
+    if (soloNext) {
+      banner.classList.remove('hidden');
+      if (bannerText) bannerText.innerText = `Next episode: your AI teammate has to charge its battery — you will play on your own.`;
+    } else if (soloNow) {
+      banner.classList.remove('hidden');
+      if (bannerText) bannerText.innerText = `Next episode: your AI teammate is back.`;
+    } else {
+      banner.classList.add('hidden');
+      if (bannerText) bannerText.innerText = '';
+    }
+  }
+
+  // --- Update the short label text ---
+  const epLabel = document.getElementById('breakEpisodeLabel');
+  if (epLabel) {
+    if (!next) {
+      epLabel.innerText = `Episode ${STATE.episodeIndex} complete. You can finish when the countdown reaches 0.`;
+    } else if (soloNext) {
+      epLabel.innerText = `Episode ${STATE.episodeIndex} complete. Next: Episode ${next}.`;
+    } else if (soloNow) {
+      epLabel.innerText = `Episode ${STATE.episodeIndex} complete (solo). Next: Episode ${next}.`;
+    } else {
+      epLabel.innerText = `Episode ${STATE.episodeIndex} complete. Next: Episode ${next}.`;
+    }
+  }
+
+  // --- Switch question wording for solo episodes ---
+  const qMental = document.getElementById('tlx_q_mental');
+  const qPerf   = document.getElementById('tlx_q_perf');
+  if (qMental) {
+    qMental.innerText = soloNow
+      ? "How mentally demanding was it to play on your own?"
+      : "How mentally demanding was it to play with the AI teammate?";
+  }
+  if (qPerf) {
+    qPerf.innerText = soloNow
+      ? "How successful were you in accomplishing the goal (serve as many dishes as possible while minimizing your own effort/steps)?"
+      : "How successful were you and your teammate in accomplishing the goal (serve as many dishes as possible while minimizing your own effort/steps)?";
+  }
+
+  // --- Reset TLX sliders if present ---
   const md = document.getElementById('ep_mental_demand');
   const pf = document.getElementById('ep_performance');
   const mdV = document.getElementById('ep_mental_demand_value');
   const pfV = document.getElementById('ep_performance_value');
-
   const mdChip = document.getElementById('ep_mental_demand_chip');
   const pfChip = document.getElementById('ep_performance_chip');
 
-  if (md) md.value = 10;
-  if (pf) pf.value = 10;
+  if (md && pf) {
+    if (md) md.value = 10;
+    if (pf) pf.value = 10;
 
-  _setUntouched(md, mdChip, mdV);
-  _setUntouched(pf, pfChip, pfV);
+    _setUntouched(md, mdChip, mdV);
+    _setUntouched(pf, pfChip, pfV);
 
-  if (md) md.oninput = () => {
-    _markTouched(md, mdChip, mdV);
-    updateBreakContinueState();
-  };
-  if (pf) pf.oninput = () => {
-    _markTouched(pf, pfChip, pfV);
-    updateBreakContinueState();
-  };
+    const onMd = () => { _markTouched(md, mdChip, mdV); updateBreakContinueState(); };
+    const onPf = () => { _markTouched(pf, pfChip, pfV); updateBreakContinueState(); };
+
+    md.oninput = onMd;
+    pf.oninput = onPf;
+    md.onchange = onMd;
+    pf.onchange = onPf;
+  } else {
+    // If using radio buttons, reset them
+    document.querySelectorAll('input[name="ep_effort"], input[name="ep_coord"]').forEach(el => { el.checked = false; });
+    document.querySelectorAll('input[name="ep_effort"], input[name="ep_coord"]').forEach(el => {
+      el.onchange = () => updateBreakContinueState();
+    });
+  }
 
   const btn = document.getElementById('breakContinueBtn');
   if (btn) btn.onclick = () => finishEpisodeBreak().catch(console.error);
@@ -495,15 +571,7 @@ function showEpisodeBreak() {
   breakTimerFinished = false;
   updateBreakContinueState();
 
-  const epLabel = document.getElementById('breakEpisodeLabel');
-  if (epLabel) {
-    const next = (STATE.episodeIndex < CONFIG.TOTAL_EPISODES) ? (STATE.episodeIndex + 1) : null;
-    epLabel.innerText = next
-      ? `Episode ${STATE.episodeIndex} complete. Next: Episode ${next}.`
-      : `Episode ${STATE.episodeIndex} complete. You can finish when the countdown reaches 0.`;
-  }
-
-  // Start fixed 15s timer (always full duration, auto-advance)
+  // Start fixed break timer
   breakFinishedFired = false;
   if (breakTimer) clearInterval(breakTimer);
 

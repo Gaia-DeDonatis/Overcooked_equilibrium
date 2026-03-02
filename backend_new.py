@@ -268,6 +268,7 @@ class Session:
         self.round_in_episode = None
         self.episode_phase = None
         self.used_policy_names = []  # basenames of chosen policy dirs
+        self.solo_episode = False  # if True, freeze/hide AI teammate
 
 
 class SessionManager:
@@ -367,7 +368,7 @@ def _parse_config_id(layout_id: str = None, model_id: str = None, config_id: str
 
 
 
-def create_envs_for_session(sess: Session, config_id: str, choose_new_policy: bool = True, optimizer: TSNEBayesOptimizer | None = None):
+def create_envs_for_session(sess: Session, config_id: str, choose_new_policy: bool = True, optimizer: TSNEBayesOptimizer | None = None, is_solo: bool | None = None):
 
     # Now, I use a fixed map, which is the circle (5*5). And for each time, I randomly load a model from the policy_pool
 
@@ -380,6 +381,7 @@ def create_envs_for_session(sess: Session, config_id: str, choose_new_policy: bo
 
     # Judge whether the current phase is the practicing phase
     is_practice = (config_id == "layout_practice")
+    is_solo = bool(getattr(sess, "solo_episode", False)) if is_solo is None else bool(is_solo)
     if is_practice:
         env_params = {
             'grid_dim': [5, 5],
@@ -427,7 +429,7 @@ def create_envs_for_session(sess: Session, config_id: str, choose_new_policy: bo
     )
 
     # load the model
-    if is_practice:
+    if is_practice or is_solo:
         sess.chosen_policy_dir = None
         sess.chosen_ckpt_path = None
         sess.model = None
@@ -466,6 +468,10 @@ def create_envs_for_session(sess: Session, config_id: str, choose_new_policy: bo
         sess.config_id = "layout_practice"
         sess.current_layout_id = "layout_practice"
         sess.current_model_id  = "none"
+    elif is_solo:
+        sess.config_id = config_id
+        sess.current_layout_id = "fixed_cramped_5x5"
+        sess.current_model_id  = "solo"
     else:
         sess.config_id = config_id
         sess.current_layout_id = "fixed_cramped_5x5"
@@ -582,6 +588,7 @@ def reset():
     round_in_episode = data.get('round_in_episode', None)
     episode_phase = data.get('episode_phase', None)
     new_episode = data.get('new_episode', None)
+    solo_episode = bool(data.get('solo_episode', False)) or (episode_phase == 'solo')
 
     try:
         episode_index_int = int(episode_index) if episode_index is not None else None
@@ -599,8 +606,10 @@ def reset():
     is_practice = ((config_id or "layout_practice") == "layout_practice")
 
     sess = SESSION_MGR.ensure(sid)
-    
-    if is_practice:
+    # persist solo flag in the session
+    sess.solo_episode = bool(solo_episode)
+
+    if is_practice or sess.solo_episode:
         optimizer = None
     else:
         n_init = int(data.get('n_init'))
@@ -620,14 +629,14 @@ def reset():
                 and sess.episode_index is not None
                 and episode_index_int != sess.episode_index
             )
-            choose_new_policy = (not is_practice) and (bool(new_episode) or episode_changed)
+            choose_new_policy = (not is_practice) and (not sess.solo_episode) and (bool(new_episode) or episode_changed)
 
             # Persist metadata in the session.
             if episode_index_int is not None:
                 sess.episode_index = episode_index_int
             sess.round_in_episode = round_in_episode_int
             sess.episode_phase = episode_phase
-            create_envs_for_session(sess, config_id=(config_id or "IGNORED"), choose_new_policy=choose_new_policy, optimizer=optimizer)
+            create_envs_for_session(sess, config_id=(config_id or "IGNORED"), choose_new_policy=choose_new_policy, optimizer=optimizer, is_solo=sess.solo_episode)
         
         except Exception as e:
             return jsonify(success=False, error=str(e)), 400
@@ -682,7 +691,7 @@ def key_event():
             try:
                 target_cfg_id = _parse_config_id(layout_id=layout_id, model_id=model_id, config_id=config_id)
                 if target_cfg_id != sess.config_id:
-                    create_envs_for_session(sess, target_cfg_id)
+                    create_envs_for_session(sess, target_cfg_id, is_solo=getattr(sess, 'solo_episode', False))
                     logger.info(f"[BACKEND - HOT_SWITCH] sid={sid}, config={target_cfg_id}")
             except Exception as e:
                 return jsonify(success=False, error=f"hot switch failed: {e}"), 400
