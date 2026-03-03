@@ -53,7 +53,7 @@ class AStarAgent(object):
 
 
 # 里面多了一些从macro到primitive action的转化，以及一些函数的重写。具体的如何step，还是转化为执行low level action。此外，还制作了一个Wrapper，让gym env可以调用
-class Overcooked_MA_equilibrium(Overcooked_equilibrium):
+class Overcooked_MA_equilibrium_cramped(Overcooked_equilibrium):
 
     """
     Overcooked Domain Description
@@ -232,8 +232,6 @@ class Overcooked_MA_equilibrium(Overcooked_equilibrium):
         real_execute_macro_actions = []
 
         primitive_actions = []
-
-        action_dones = []
         
         counter_x = 10
         
@@ -243,7 +241,6 @@ class Overcooked_MA_equilibrium(Overcooked_equilibrium):
 
 
             # print("done " + str(idx), self.macroAgent[idx].cur_macro_action_done)
-            action_dones.append(self.macroAgent[idx].cur_macro_action_done)
 
             """下面是判断是否done的操作，我试着允许打断，允许打断的话，那就先注释掉"""
 
@@ -629,7 +626,7 @@ class Overcooked_MA_equilibrium(Overcooked_equilibrium):
             # print(self.macroAgent[idx].cur_macro_action_done)
             # 返回的其实只是两个agent下一个step要做的primitive action，而不是一个primitive action序列
             primitive_actions.append(primitive_action)
-        return primitive_actions, real_execute_macro_actions, action_dones
+        return primitive_actions, real_execute_macro_actions
 
 
 

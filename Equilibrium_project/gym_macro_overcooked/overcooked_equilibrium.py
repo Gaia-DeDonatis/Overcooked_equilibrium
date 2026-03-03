@@ -121,12 +121,21 @@ class Overcooked_equilibrium(gym.Env):
                             [7, 2, 6],
                             [1, 5, 2]]
         elif self.xlen == 5 and self.ylen == 5:
-            if self.n_agent == 2:
+            if self.n_agent == 1:
+                # ITEMIDX= {"space": 0, "counter": 1, "agent": 2, "tomato": 3, "lettuce": 4, "plate": 5, "knife": 6, "delivery": 7, "onion": 8}
+                if self.mapType == "circle":
+                    map =  [[1, 1, 1, 6, 1],
+                            [1, 0, 0, 0, 5],
+                            [1, 0, 1, 0, 5],
+                            [4, 2, 0, 0, 1],
+                            [1, 4, 7, 1, 1]] 
+                    
+            elif self.n_agent == 2:
                 if self.mapType == "A":
                     map =  [[1, 1, 1, 1, 1],
-                            [6, 0, 0, 2, 1],
-                            [4, 0, 0, 0, 1],
-                            [7, 0, 0, 2, 1],
+                            [6, 2, 0, 2, 1],
+                            [3, 0, 0, 0, 1],
+                            [7, 0, 0, 0, 1],
                             [1, 5, 1, 1, 1]] 
                 elif self.mapType == "B":
                     map =  [[1, 8, 1, 1, 1],
@@ -141,14 +150,14 @@ class Overcooked_equilibrium(gym.Env):
                             [7, 0, 0, 0, 1],
                             [1, 1, 1, 1, 1]] 
                 # ITEMIDX= {"space": 0, "counter": 1, "agent": 2, "tomato": 3, "lettuce": 4, "plate": 5, "knife": 6, "delivery": 7, "onion": 8}
-                elif self.mapType == "cramped":
+                elif self.mapType == "circle":
                     map =  [[1, 1, 1, 6, 1],
                             [1, 0, 0, 2, 5],
                             [1, 0, 1, 0, 5],
                             [4, 2, 0, 0, 1],
                             [1, 4, 7, 1, 1]] 
                     
-                elif self.mapType == "cramped2":
+                elif self.mapType == "circle2":
                     map =  [[1, 1, 1, 7, 1],
                             [1, 0, 0, 2, 5],
                             [6, 0, 1, 0, 5],
@@ -1565,13 +1574,13 @@ class Overcooked_equilibrium(gym.Env):
                                     [1, 0, 1, 0, 1],
                                     [1, 0, 0, 0, 1],
                                     [1, 1, 1, 1, 1]]
-                elif self.mapType == "cramped":
+                elif self.mapType == "circle":
                     agent.pomap =  [[1, 1, 1, 1, 1],
                                     [1, 0, 0, 0, 1],
                                     [1, 0, 1, 0, 1],
                                     [1, 0, 0, 0, 1],
                                     [1, 1, 1, 1, 1]]
-                elif self.mapType == "cramped2":
+                elif self.mapType == "circle2":
                     agent.pomap =  [[1, 1, 1, 1, 1],
                                     [1, 0, 0, 0, 1],
                                     [1, 0, 1, 0, 1],
