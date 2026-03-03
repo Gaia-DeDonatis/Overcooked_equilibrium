@@ -262,11 +262,6 @@ class Session:
         self.lock = threading.RLock()
         self.chosen_policy_dir = None
         self.chosen_ckpt_path = None
-
-        # Track the final policy used during the BO phase (for Phase 4 replay)
-        self.last_bo_policy_dir = None
-        self.last_bo_ckpt_path = None
-        self.last_bo_model_id = None
        
         # Experiment structure (episodes)
         self.episode_index = None
@@ -387,8 +382,6 @@ def create_envs_for_session(sess: Session, config_id: str, choose_new_policy: bo
     # Judge whether the current phase is the practicing phase
     is_practice = (config_id == "layout_practice")
     is_solo = bool(getattr(sess, "solo_episode", False)) if is_solo is None else bool(is_solo)
-    episode_phase = getattr(sess, "episode_phase", None)
-    is_replay_optimal = (episode_phase == "replay_optimal")
     if is_practice:
         env_params = {
             'grid_dim': [5, 5],
@@ -440,23 +433,7 @@ def create_envs_for_session(sess: Session, config_id: str, choose_new_policy: bo
         sess.chosen_policy_dir = None
         sess.chosen_ckpt_path = None
         sess.model = None
-
-    elif is_replay_optimal:
-        # Phase 4: replay the last BO policy (treated as "optimal" in the study flow)
-        if getattr(sess, "last_bo_ckpt_path", None):
-            sess.chosen_policy_dir = sess.last_bo_policy_dir
-            sess.chosen_ckpt_path = sess.last_bo_ckpt_path
-            sess.model = _load_or_get_model_by_ckpt_path(sess.chosen_ckpt_path)
-        else:
-            # Safety fallback: if we somehow didn't cache the BO policy, just keep the current one or sample a random policy.
-            if sess.chosen_ckpt_path and os.path.isfile(sess.chosen_ckpt_path):
-                sess.model = _load_or_get_model_by_ckpt_path(sess.chosen_ckpt_path)
-            else:
-                chosen_dir, ckpt_path = _pick_random_policy_checkpoint(exclude_policy_names=sess.used_policy_names)
-                sess.chosen_policy_dir = chosen_dir
-                sess.chosen_ckpt_path = ckpt_path
-                sess.model = _load_or_get_model_by_ckpt_path(ckpt_path)
-
+   
     else:
         # Pick a new AI policy only when starting a new episode.
         should_pick = bool(choose_new_policy) or (not sess.chosen_ckpt_path)
@@ -499,12 +476,6 @@ def create_envs_for_session(sess: Session, config_id: str, choose_new_policy: bo
         sess.config_id = config_id
         sess.current_layout_id = "fixed_cramped_5x5"
         sess.current_model_id  = os.path.basename(sess.chosen_policy_dir)
-
-    # Cache last BO policy for Phase 4 replay (only when the AI is active)
-    if (getattr(sess, "episode_phase", None) == "bo") and (not is_practice) and (not is_solo):
-        sess.last_bo_policy_dir = sess.chosen_policy_dir
-        sess.last_bo_ckpt_path = sess.chosen_ckpt_path
-        sess.last_bo_model_id = sess.current_model_id
 
     # reset the step count and reward
     sess.cur_step = 0
@@ -638,10 +609,7 @@ def reset():
     # persist solo flag in the session
     sess.solo_episode = bool(solo_episode)
 
-    # Phase 4: replay the "optimal" (last BO) policy — do NOT advance the optimizer here
-    is_replay_optimal = (episode_phase == "replay_optimal")
-
-    if is_practice or sess.solo_episode or is_replay_optimal:
+    if is_practice or sess.solo_episode:
         optimizer = None
     else:
         n_init = int(data.get('n_init'))
@@ -652,6 +620,7 @@ def reset():
             logger.info(f"[BACKEND - RESET] optimizer configured for prolific_id={prolific}")    
         optimizer = OPTIMIZER_MGR.optimizers[prolific]
 
+    
     with sess.lock:
         try:
             # Force a new policy if the episode index changed.
@@ -748,7 +717,13 @@ def key_event():
                 if ai_action_int == 4:
                     primitive_action = [4] * sess.env.n_agent
                 else:
-                    primitive_action, _ = sess.env_mac._computeLowLevelActions([ai_action_int, 0])
+                    _ll_ret = sess.env_mac._computeLowLevelActions([ai_action_int, 0])
+                    # Newer env versions may return more than 2 values (e.g., (primitive_action, info, ...)).
+                    # We only need the first element: the primitive action list.
+                    if isinstance(_ll_ret, (tuple, list)):
+                        primitive_action = _ll_ret[0]
+                    else:
+                        primitive_action = _ll_ret
             else:
                 primitive_action = [4] * sess.env.n_agent
 
@@ -906,13 +881,6 @@ def submit_log():
                 optimizer.save(optimizer_filename)
             except Exception as e:
                 logger.info(f"[BACKEND - SUBMIT] warning: could not save BayesOpt state for {prolific}: {e}")
-
-            # # Generate final visualizations (embedding trajectory with GP, slice/contour plots)
-            # try:
-            #     optimizer.generate_final_visualizations(prolific)
-            #     logger.info(f"[BACKEND - SUBMIT] generated final visualizations for {prolific}")
-            # except Exception as e:
-            #     logger.info(f"[BACKEND - SUBMIT] warning: could not generate visualizations for {prolific}: {e}")
 
         return jsonify(success=True, completion_code=completion_code)
     except Exception as e:
