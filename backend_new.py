@@ -123,7 +123,7 @@ MAX_STEPS = 200
 # =========================
 # fixed map, random AI policy
 # =========================
-FIXED_MAP_TYPE = "cramped"
+FIXED_MAP_TYPE = "ring"
 FIXED_GRID_DIM = [5, 5]
 
 POLICY_POOL_DIR = os.path.join(current_dir, "policy_pool")
@@ -493,11 +493,11 @@ def create_envs_for_session(sess: Session, config_id: str, choose_new_policy: bo
         sess.current_model_id  = "none"
     elif is_solo:
         sess.config_id = config_id
-        sess.current_layout_id = "fixed_cramped_5x5"
+        sess.current_layout_id = "fixed_ring_5x5"
         sess.current_model_id  = "solo"
     else:
         sess.config_id = config_id
-        sess.current_layout_id = "fixed_cramped_5x5"
+        sess.current_layout_id = "fixed_ring_5x5"
         sess.current_model_id  = os.path.basename(sess.chosen_policy_dir)
 
     # Cache last BO policy for Phase 4 replay (only when the AI is active)

@@ -64,7 +64,6 @@ function getEpisodePhase(episodeIndex) {
 }
 
 function getExperimentPhase(episodeIndex) {
-  // Match the "Phase 1/2/3/4" framing:
   // 1 = seed, 2 = BO, 3 = stress (kNN), 4 = replay optimal policy (new strategy)
   if (episodeIndex <= CONFIG.EPISODES_SEED) return 1;
   if (episodeIndex <= CONFIG.PHASE_BO_END) return 2;
@@ -172,7 +171,6 @@ async function startRound({ newEpisode = false } = {}) {
       n_init: CONFIG.EPISODES_SEED,
       n_bo:   CONFIG.EPISODES_BO,
       n_knn: CONFIG.EPISODES_STRESS,
-      // Solo episodes happen during BO (AI day off)
       solo_episode: (typeof isSoloEpisode === 'function') ? isSoloEpisode(STATE.episodeIndex) : false,
       new_episode: !!newEpisode
     });
