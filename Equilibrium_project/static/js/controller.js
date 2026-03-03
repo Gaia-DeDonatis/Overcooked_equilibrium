@@ -58,12 +58,18 @@ function showPage(pageId) {
 // --- 4. GAME INITIALIZATION (TIME-BASED) ---
 function getEpisodePhase(episodeIndex) {
   if (episodeIndex <= CONFIG.EPISODES_SEED) return 'seed';
-  if (episodeIndex <= CONFIG.PHASE_1_EPISODES) return 'bo';
-  return 'stress';
+  if (episodeIndex <= CONFIG.PHASE_BO_END) return 'bo';
+  if (episodeIndex <= CONFIG.PHASE_STRESS_END) return 'stress';
+  return 'replay_optimal';
 }
 
 function getExperimentPhase(episodeIndex) {
-  return episodeIndex <= CONFIG.PHASE_1_EPISODES ? 1 : 2;
+  // Match the "Phase 1/2/3/4" framing:
+  // 1 = seed, 2 = BO, 3 = stress (kNN), 4 = replay optimal policy (new strategy)
+  if (episodeIndex <= CONFIG.EPISODES_SEED) return 1;
+  if (episodeIndex <= CONFIG.PHASE_BO_END) return 2;
+  if (episodeIndex <= CONFIG.PHASE_STRESS_END) return 3;
+  return 4;
 }
 
 let gameTimer = null;
@@ -257,6 +263,25 @@ function updateTimerDisplay() {
 function updateGameUI() {
     const epEl = document.getElementById('currentEpisode');
     if (epEl) epEl.innerText = `${STATE.episodeIndex} / ${CONFIG.TOTAL_EPISODES}`;
+
+    // Phase 4 banner (replay optimal AI policy, ask participant to change strategy)
+    const phase4Banner = document.getElementById('phase4Prompt');
+    const phase4Text   = document.getElementById('phase4PromptText');
+    const subtitleEl   = document.getElementById('mainTaskSubtitle');
+
+    const isPhase4 = (STATE.episodePhase === 'replay_optimal');
+    if (phase4Banner) {
+      if (isPhase4) phase4Banner.classList.remove('hidden');
+      else phase4Banner.classList.add('hidden');
+    }
+    if (phase4Text) {
+      phase4Text.innerText = "Could you find a new way to work with the AI? Try changing your strategy in this episode.";
+    }
+    if (subtitleEl) {
+      subtitleEl.innerText = isPhase4
+        ? "Final episode: you will play again with the AI teammate from earlier — but please try a different collaboration strategy."
+        : "Play with the AI teammate and try to deliver as many dishes as possible.";
+    }
 }
 
 // E. END ROUND
@@ -329,14 +354,15 @@ async function finishTimeBasedRound() {
         // --- CASE B: EPISODE COMPLETE ---
         console.log(`Episode ${STATE.episodeIndex} Complete!`);
 
-                const soloNow = (typeof isSoloEpisode === 'function') ? isSoloEpisode(STATE.episodeIndex) : false;
-        if (!soloNow) {
-          const data = await api('/tell', {
-                    prolificId: STATE.prolificId,
-                    score: finalScore
-                  });
+        const soloNow = (typeof isSoloEpisode === 'function') ? isSoloEpisode(STATE.episodeIndex) : false;
+        const shouldTell = (!soloNow) && (STATE.episodePhase !== 'replay_optimal');
+        if (shouldTell) {
+          await api('/tell', {
+            prolificId: STATE.prolificId,
+            score: finalScore
+          });
         }
-if (overlay) {
+    if (overlay) {
           if (title) {
             title.innerText = `EPISODE ${STATE.episodeIndex} COMPLETE`;
             title.style.color = "#16a34a";
@@ -490,11 +516,16 @@ function showEpisodeBreak() {
   const bannerText = document.getElementById('aiDayOffBannerText');
 
   const next = (STATE.episodeIndex < CONFIG.TOTAL_EPISODES) ? (STATE.episodeIndex + 1) : null;
+  const nextPhase = next ? getEpisodePhase(next) : null;
+
   const soloNext = next && (typeof isSoloEpisode === 'function') ? isSoloEpisode(next) : false;
   const soloNow  = (typeof isSoloEpisode === 'function') ? isSoloEpisode(STATE.episodeIndex) : false;
 
   if (banner) {
-    if (soloNext) {
+    if (nextPhase === 'replay_optimal') {
+      banner.classList.remove('hidden');
+      if (bannerText) bannerText.innerText = `Next episode (final): you will play again with the AI teammate from the end of the BO phase. Please try a NEW way to work with the AI.`;
+    } else if (soloNext) {
       banner.classList.remove('hidden');
       if (bannerText) bannerText.innerText = `Next episode: your AI teammate has to charge its battery — you will play on your own.`;
     } else if (soloNow) {
@@ -511,6 +542,8 @@ function showEpisodeBreak() {
   if (epLabel) {
     if (!next) {
       epLabel.innerText = `Episode ${STATE.episodeIndex} complete. You can finish when the countdown reaches 0.`;
+    } else if (nextPhase === 'replay_optimal') {
+      epLabel.innerText = `Episode ${STATE.episodeIndex} complete. Next: Final episode (try a new way to work with the AI).`;
     } else if (soloNext) {
       epLabel.innerText = `Episode ${STATE.episodeIndex} complete. Next: Episode ${next}.`;
     } else if (soloNow) {
