@@ -8,7 +8,7 @@ const CONFIG = {
   ROUND_DURATION_SEC: 5, // put 45
 
   // Episode structure
-  ROUNDS_PER_EPISODE: 1, // 3
+  ROUNDS_PER_EPISODE: 2, // 3
   EPISODES_SEED: 5,      // put 5 
   EPISODES_BO: 5,        // put 5 BO + 2 without AI
   EPISODES_BO_SOLO: 2,

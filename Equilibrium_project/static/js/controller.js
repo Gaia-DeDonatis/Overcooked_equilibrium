@@ -313,7 +313,8 @@ async function finishTimeBasedRound() {
             title.innerText = `ROUND ${STATE.roundInEpisode} COMPLETE`;
             title.style.color = "#16a34a";
           }
-          if (sub) sub.innerText = `Score: ${finalScore} | Next round in 3...`;
+          //if (sub) sub.innerText = `Score: ${finalScore} | Next round in 3...`;
+          if (sub) sub.innerText = `Next round in 3...`;
 
           overlay.classList.remove('hidden');
           overlay.style.opacity = '0';
@@ -323,7 +324,8 @@ async function finishTimeBasedRound() {
         let countdown = 3;
         const interval = setInterval(() => {
             countdown--;
-            if(sub) sub.innerText = `Score: ${finalScore} | Next round in ${countdown}...`;
+            //if(sub) sub.innerText = `Score: ${finalScore} | Next round in ${countdown}...`;
+            if(sub) sub.innerText = `Next round in ${countdown}...`;
         }, 1000);
 
         setTimeout(() => {
