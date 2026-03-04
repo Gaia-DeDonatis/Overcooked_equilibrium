@@ -179,7 +179,6 @@ async function startRound({ newEpisode = false } = {}) {
 
     if (data.map_type) {
       STATE.assignment.layout = data.map_type;
-      //STATE.configId = data.map_type + '_experiment';
     }
 
     if (DataManager.LOGS.meta.tick_ms == null) {

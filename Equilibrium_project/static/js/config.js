@@ -9,7 +9,7 @@ const CONFIG = {
 
   // Episode structure
   ROUNDS_PER_EPISODE: 1, // 3
-  EPISODES_SEED: 5,      // put 5 
+  EPISODES_SEED: 2,      // put 5 
   EPISODES_BO: 5,        // put 5 BO + 2 without AI
   EPISODES_BO_SOLO: 2,
   BO_SOLO_POSITIONS: [3, 5],

@@ -123,7 +123,7 @@ MAX_STEPS = 200
 # =========================
 # fixed map, random AI policy
 # =========================
-FIXED_MAP_TYPE = "cramped"
+FIXED_MAP_TYPE = "circle"
 FIXED_GRID_DIM = [5, 5]
 
 POLICY_POOL_DIR = os.path.join(current_dir, "policy_pool")
@@ -382,6 +382,10 @@ def create_envs_for_session(sess: Session, config_id: str, choose_new_policy: bo
     # Judge whether the current phase is the practicing phase
     is_practice = (config_id == "layout_practice")
     is_solo = bool(getattr(sess, "solo_episode", False)) if is_solo is None else bool(is_solo)
+    # Human-alone (solo) episodes: build a 1-agent env so no invisible AI occupies a tile.
+    if is_solo and (not is_practice):
+        n_agent = 1
+
     if is_practice:
         env_params = {
             'grid_dim': [5, 5],
@@ -422,11 +426,15 @@ def create_envs_for_session(sess: Session, config_id: str, choose_new_policy: bo
     sess.env_mac = gym.make(mac_env_id, **env_params)
     _seed_env_everything(sess.env_mac, SEED)
 
-    # wrapper the env
-    reset_step = 10000
-    sess.wrapper = SingleAgentWrapper_accept_keyboard_action(
-        sess.env_mac, agent_index=0, reset_step=reset_step
-    )
+    # Wrap the env only in 2-agent mode (needed for macro->low-level translation).
+    # In 1-agent (solo) mode we step env_mac directly with a single human action.
+    if n_agent == 2:
+        reset_step = 10000
+        sess.wrapper = SingleAgentWrapper_accept_keyboard_action(
+            sess.env_mac, agent_index=0, reset_step=reset_step
+        )
+    else:
+        sess.wrapper = None
 
     # load the model
     if is_practice or is_solo:
@@ -461,7 +469,18 @@ def create_envs_for_session(sess: Session, config_id: str, choose_new_policy: bo
         sess.model = _load_or_get_model_by_ckpt_path(sess.chosen_ckpt_path)
 
 
-    sess.obs = sess.wrapper.reset()
+    if sess.wrapper is not None:
+        sess.obs = sess.wrapper.reset()
+    else:
+        # Solo mode: reset env_mac and keep the (only) agent's macro obs if available.
+        _obs = sess.env_mac.reset()
+        try:
+            sess.obs = sess.env_mac._get_macro_obs()[0]
+        except Exception:
+            if isinstance(_obs, (list, tuple)) and len(_obs) > 0:
+                sess.obs = _obs[0]
+            else:
+                sess.obs = _obs
 
     # log the config
     if is_practice:
@@ -548,6 +567,14 @@ def extract_state(sess: Session):
             "holding": get_type_name(holding) if holding else None,
             "holding_containing": get_contained_name(holding) if holding else None
         })
+    # If env has only 1 agent (human-alone), pad a dummy AI agent at index 0
+    # so the frontend can keep assuming agents[0]=AI, agents[1]=human.
+    if getattr(env, 'n_agent', None) == 1 and len(state['agents']) == 1:
+        human_agent = state['agents'][0]
+        human_agent['color'] = "blue"
+        dummy_ai = {"x": -1, "y": -1, "color": "gray", "holding": None, "holding_containing": None}
+        state['agents'] = [dummy_ai, human_agent]
+
     return state
 
 # =========================
@@ -704,46 +731,74 @@ def key_event():
         if key in KEYS_ACTIONS:
             t0 = time.time()
 
-            if sess.model is not None:
-                with torch.no_grad():
-                    ai_action, _ = sess.model.predict(sess.obs, deterministic=True)
-                ai_action_int = _as_int_action(ai_action)
-            else:
-                ai_action_int = 4  # stay
+            human_low = int(KEYS_ACTIONS[key])
+            solo_mode = bool(getattr(sess, 'solo_episode', False)) or (getattr(sess.env, 'n_agent', 2) == 1)
 
-            t1 = time.time()
+            if solo_mode:
+                # Human-alone: no AI model; step env with a single human action.
+                ai_action_int = 4
+                robot_low = 4
+                action = [robot_low, human_low]  # (AI placeholder, Human) for logging/score adjustment
 
-            if sess.model is not None:
-                if ai_action_int == 4:
-                    primitive_action = [4] * sess.env.n_agent
-                else:
-                    _ll_ret = sess.env_mac._computeLowLevelActions([ai_action_int, 0])
-                    # Newer env versions may return more than 2 values (e.g., (primitive_action, info, ...)).
-                    # We only need the first element: the primitive action list.
-                    if isinstance(_ll_ret, (tuple, list)):
-                        primitive_action = _ll_ret[0]
+                try:
+                    obs_all, rewards_list, dones, info = sess.env_mac.step([human_low])
+                except Exception as e:
+                    return jsonify(success=False, error=f'solo step failed: {e}'), 400
+
+                try:
+                    sess.obs = sess.env_mac._get_macro_obs()[0]
+                except Exception:
+                    if isinstance(obs_all, (list, tuple)) and len(obs_all) > 0:
+                        sess.obs = obs_all[0]
                     else:
-                        primitive_action = _ll_ret
+                        sess.obs = obs_all
+
+                # human-alone mode, use only the human agent's reward
+                if isinstance(rewards_list, (list, tuple, np.ndarray)):
+                    rewards = float(np.array(rewards_list).flatten()[0])
+                else:
+                    rewards = float(rewards_list)
+
+                robot_key = ACTION_TO_KEY.get(robot_low, 'Stay')
+                sess.robot_steps.append({
+                    'step': int(sess.cur_step + 1),
+                    'ai_macro_action': int(ai_action_int),
+                    'low_level_action': int(robot_low),
+                    'arrow': robot_key,
+                    'timestamp': time.time(),
+                })
+
             else:
-                primitive_action = [4] * sess.env.n_agent
+                # Normal human+AI: run policy -> macro action -> low-level action -> step wrapper
+                if sess.model is not None:
+                    with torch.no_grad():
+                        ai_action, _ = sess.model.predict(sess.obs, deterministic=True)
+                    ai_action_int = _as_int_action(ai_action)
+                else:
+                    ai_action_int = 4  # stay
 
-            action = [4] * sess.env.n_agent
-            action[1] = KEYS_ACTIONS[key]           
-            action[0] = int(primitive_action[0])
+                if sess.model is not None and ai_action_int != 4:
+                    ll_ret = sess.env_mac._computeLowLevelActions([ai_action_int, 0])
+                    primitive_action = ll_ret[0] if isinstance(ll_ret, (list, tuple)) else ll_ret
+                else:
+                    primitive_action = [4] * sess.env.n_agent
 
-            robot_low = int(action[0])
-            robot_key = ACTION_TO_KEY.get(robot_low, "Unknown")
-            sess.robot_steps.append({
-                "step": int(sess.cur_step + 1),
-                "ai_macro_action": int(ai_action_int),
-                "low_level_action": robot_low,
-                "arrow": robot_key,
-                "timestamp": time.time(),
-            })
+                action = [4] * sess.env.n_agent
+                action[1] = human_low
+                action[0] = int(primitive_action[0])
 
+                robot_low = int(action[0])
+                robot_key = ACTION_TO_KEY.get(robot_low, 'Unknown')
+                sess.robot_steps.append({
+                    'step': int(sess.cur_step + 1),
+                    'ai_macro_action': int(ai_action_int),
+                    'low_level_action': robot_low,
+                    'arrow': robot_key,
+                    'timestamp': time.time(),
+                })
 
-            sess.obs, rewards, dones, info = sess.wrapper.step(action[0], action[1])
-            
+                sess.obs, rewards, dones, info = sess.wrapper.step(action[0], action[1])
+
             r_env = 0.0
             r_adjusted = 0.0
 
@@ -762,13 +817,13 @@ def key_event():
                     step_pen_hu = -1.0
 
                 # compensate "Stay" actions so they don't subtract points
-                ai_low = int(action[0])
-                human_low = int(action[1])
+                ai_low = int(action[0]) if (not solo_mode) else None
+                human_low2 = int(action[1])
 
                 r_adjusted = r_env
-                if ai_low == 4:
-                   r_adjusted += (-step_pen_ai) # add back +1 if penalty is -1
-                if human_low == 4:
+                if (not solo_mode) and (ai_low == 4):
+                    r_adjusted += (-step_pen_ai)  # add back +1 if penalty is -1
+                if human_low2 == 4:
                     r_adjusted += (-step_pen_hu)
 
                 sess.cumulative_reward += r_adjusted
