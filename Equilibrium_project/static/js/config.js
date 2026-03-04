@@ -5,11 +5,11 @@ const SERVER_URL = 'http://localhost:5000';
 // Experiment Configuration
 const CONFIG = {
   PRACTICE_SCORE: 200,
-  ROUND_DURATION_SEC: 10, // put 45
+  ROUND_DURATION_SEC: 45, // put 45
 
   // Episode structure
-  ROUNDS_PER_EPISODE: 1, // 3
-  EPISODES_SEED: 2,      // put 5 
+  ROUNDS_PER_EPISODE: 3, // 3
+  EPISODES_SEED: 5,      // put 5 
   EPISODES_BO: 5,        // put 5 BO + 2 without AI
   EPISODES_BO_SOLO: 2,
   BO_SOLO_POSITIONS: [3, 5],

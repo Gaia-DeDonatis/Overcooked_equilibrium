@@ -521,10 +521,10 @@ function showEpisodeBreak() {
   if (banner) {
     if (nextPhase === 'replay_optimal') {
       banner.classList.remove('hidden');
-      if (bannerText) bannerText.innerText = `Next episode (final): you will play again with the AI teammate from the end of the BO phase. Please try a NEW way to work with the AI.`;
+      if (bannerText) bannerText.innerText = `Next episode (final): you will play one last episode with your AI teammate but this time try a NEW way to work with it.`;
     } else if (soloNext) {
       banner.classList.remove('hidden');
-      if (bannerText) bannerText.innerText = `Next episode: your AI teammate has to charge its battery — you will play on your own.`;
+      if (bannerText) bannerText.innerText = `Next episode: your AI teammate is on a break — you will play on your own.`;
     } else if (soloNow) {
       banner.classList.remove('hidden');
       if (bannerText) bannerText.innerText = `Next episode: your AI teammate is back.`;
