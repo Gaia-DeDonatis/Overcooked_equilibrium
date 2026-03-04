@@ -129,10 +129,14 @@ def main():
 
 
 
+    #"final_trained_models/[equilibrium]agent0_highlevelaction_layout_v1\model_700000"
 
+    #try --> C:\Users\dedong1\work\Overcooked_equilibrium\policy_pool\[equilibrium]agent0_a0sp_0_a1sp_3_helping_True_gamma0.95_0.9
     # Load the agent model
-    agent_model = PPO.load("final_trained_models/[equilibrium]agent0_highlevelaction_layout_v1\model_700000", env=env_agent_0)
-    
+    agent_model = PPO.load(
+    r"C:\Users\dedong1\work\Overcooked_equilibrium\policy_pool\[equilibrium]agent0_a0sp_0_a1sp_3_helping_True_gamma0.95_0.9\model_500000.zip",
+    env=env_agent_0
+    )
     obs = env_agent_0.reset()
     env.reset()
 
