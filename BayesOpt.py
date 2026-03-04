@@ -33,7 +33,7 @@ from botorch.acquisition import qNoisyExpectedImprovement, qExpectedImprovement,
 
 
 def create_surrogate_spec(
-    noise_variance: float = 0.1,
+    noise_variance: float = 0.4,
     kernel: str = "matern",
     nu: float = 2.5,
     ard: bool = True,

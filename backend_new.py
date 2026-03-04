@@ -2,7 +2,7 @@
 import os
 import numpy as np
 import sys
-from BayesOpt import TSNEBayesOptimizer
+from BayesOpt import TSNEBayesOptimizer, create_surrogate_spec
 
 # Equilibrium_project" folder
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -325,7 +325,8 @@ class OptimizerManager:
     def create_optimizer(self, prolific_id, n_init, n_bo, n_knn):
         if self.optimizer_exists(prolific_id):
             return jsonify(success=False, error="Optimizer already created for participant"), 400
-        self.optimizers[prolific_id] =TSNEBayesOptimizer(embedding_csv="tsnt.csv", n_init=n_init, n_bo=n_bo, n_knn=n_knn, verbose=True)
+        surr = create_surrogate_spec()
+        self.optimizers[prolific_id] =TSNEBayesOptimizer(embedding_csv="tsnt.csv", n_init=n_init, n_bo=n_bo, n_knn=n_knn, surrogate_spec=surr, verbose=True)
     
         
 OPTIMIZER_MGR = OptimizerManager()
