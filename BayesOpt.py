@@ -1,6 +1,7 @@
 from BayesOptUtils import *
 import pandas as pd
 import numpy as np
+import random
 import logging
 import json
 import os
@@ -23,6 +24,11 @@ from KNNGenerationNode import (
     knn_generation_node_to_dict,
     knn_generation_node_from_dict,
 )
+from BestPolicyGenerationNode import (
+    BestPolicyGenerationNode,
+    best_policy_generation_node_to_dict,
+    best_policy_generation_node_from_dict,
+)
 from logging_utils import opt_logger as logger
 from botorch.models import SingleTaskGP
 from ax.generators.torch.botorch_modular.surrogate import SurrogateSpec
@@ -34,50 +40,21 @@ from botorch.acquisition import qNoisyExpectedImprovement, qExpectedImprovement,
 
 def create_surrogate_spec(
     noise_variance: float = 0.4,
-    kernel: str = "matern",
-    nu: float = 2.5,
-    ard: bool = True,
 ) -> SurrogateSpec:
     """
-    Create a SurrogateSpec with explicit kernel and noise configuration.
+    Create a SurrogateSpec with noise configuration (serialization-safe).
 
     Args:
-        noise_variance: Observation noise variance. Lower = trust observations more.
-                       Default 0.1 is typical for noisy human feedback.
-                       Use 0.01 for cleaner HITL feedback.
-        kernel: Kernel type - "matern" (default) or "rbf".
-        nu: Matern smoothness parameter (0.5, 1.5, or 2.5). Only used if kernel="matern".
-              - 0.5: rough, equivalent to exponential kernel
-              - 1.5: once differentiable
-              - 2.5: twice differentiable (default, smooth)
-        ard: If True, use Automatic Relevance Determination (separate lengthscale per dim).
+        noise_variance: Observation noise variance. Higher = more uncertainty = more exploration.
+                       Default 0.4. Use 1.0+ for more exploration.
 
     Returns:
-        SurrogateSpec configured for SingleTaskGP with specified kernel.
+        SurrogateSpec configured for SingleTaskGP with noise constraint.
     """
-    # Build kernel options
-    n_dims = 2  # emb_x, emb_y
-    if kernel == "matern":
-        base_kernel_class = MaternKernel
-        base_kernel_options = {"nu": nu}
-        if ard:
-            base_kernel_options["ard_num_dims"] = n_dims
-    elif kernel == "rbf":
-        base_kernel_class = RBFKernel
-        base_kernel_options = {}
-        if ard:
-            base_kernel_options["ard_num_dims"] = n_dims
-    else:
-        raise ValueError(f"Unknown kernel: {kernel}. Use 'matern' or 'rbf'.")
-
     return SurrogateSpec(
         model_configs=[
             ModelConfig(
                 botorch_model_class=SingleTaskGP,
-                covar_module_class=ScaleKernel,
-                covar_module_options={
-                    "base_kernel": base_kernel_class(**base_kernel_options),
-                },
                 likelihood_options={
                     "noise_constraint": Interval(
                         lower_bound=noise_variance * 0.5,
@@ -95,17 +72,19 @@ def create_low_noise_surrogate_spec(noise_variance: float = 0.01) -> SurrogateSp
     """Create a low-noise surrogate spec. See create_surrogate_spec for more options."""
     return create_surrogate_spec(noise_variance=noise_variance)
 
-def _get_knn_encoder_registry():
-    """Get encoder registry with KNNGenerationNode registered."""
+def _get_custom_encoder_registry():
+    """Get encoder registry with custom generation nodes registered."""
     registry = dict(CORE_ENCODER_REGISTRY)
     registry[KNNGenerationNode] = knn_generation_node_to_dict
+    registry[BestPolicyGenerationNode] = best_policy_generation_node_to_dict
     return registry
 
 
-def _get_knn_decoder_registry():
-    """Get decoder registry with KNNGenerationNode registered."""
+def _get_custom_decoder_registry():
+    """Get decoder registry with custom generation nodes registered."""
     registry = dict(CORE_DECODER_REGISTRY)
     registry["KNNGenerationNode"] = knn_generation_node_from_dict
+    registry["BestPolicyGenerationNode"] = best_policy_generation_node_from_dict
     return registry
 
 # Suppress Ax library info logs
@@ -211,6 +190,7 @@ class BayesOptimizer:
                 generator_specs=[
                     GeneratorSpec(
                         generator_enum=Generators.SOBOL,
+                        generator_kwargs={"seed": random.randint(0, 2**31 - 1)},
                     ),
                 ],
                 transition_criteria=[
@@ -249,7 +229,7 @@ class TSNEBayesOptimizer:
     Maps continuous BO suggestions to nearest unevaluated discrete policies.
     """
 
-    def __init__(self, embedding_csv: str, n_init=3, n_bo=10, n_knn=10,
+    def __init__(self, embedding_csv: str, n_init=3, n_bo=10, n_knn=10, n_best=5,
                  surrogate_spec: SurrogateSpec | None = None,
                  acqf_class=qNoisyExpectedImprovement,
                  acqf_options: dict | None = None,
@@ -260,6 +240,7 @@ class TSNEBayesOptimizer:
             n_init: Number of initial random trials before BO kicks in
             n_bo_trials: Number of BO trials before switching to kNN
             n_knn_neighbors: Number of nearest neighbors to explore in kNN phase
+            n_best: Number of greedy best-policy trials after kNN phase
             surrogate_spec: Custom SurrogateSpec for the GP model. Use
                            create_surrogate_spec() to configure kernel and noise.
             acqf_class: Acquisition function class. Options:
@@ -274,6 +255,7 @@ class TSNEBayesOptimizer:
         self.n_init = n_init
         self.n_bo_trials = n_bo
         self.n_knn_neighbors = n_knn
+        self.n_best_trials = n_best
         self.surrogate_spec = surrogate_spec
         self.acqf_class = acqf_class
         self.acqf_options = acqf_options or {}
@@ -338,6 +320,13 @@ class TSNEBayesOptimizer:
 
         return None, None, None
 
+    def _map_to_nearest_policy(self, emb_x: float, emb_y: float) -> tuple:
+        """Map continuous (x, y) to nearest policy (regardless of evaluation status)."""
+        query_point = np.array([[emb_x, emb_y]])
+        distances = cdist(query_point, self._coords, metric='euclidean')[0]
+        idx = np.argmin(distances)
+        return self._policy_names[idx], self._coords[idx], distances[idx]
+
     def ask(self, n_trials=1):
         """
         Get next trial(s) to evaluate.
@@ -353,14 +342,11 @@ class TSNEBayesOptimizer:
                 logger.info("[OPT - ASK] all policies have been evaluated!")
             return {}
 
-        # Check for strategy switch
-        current_node = self._optimizer.generation_strategy.current_node_name
-
-        # Log completed trial count for debugging transitions
+        # Log status
         n_completed = len(self.evaluated_policies)
         logger.info(f"[OPT - STATUS] completed_trials={n_completed}, threshold={self.n_init} (Sobol->BO), {self.n_init + self.n_bo_trials} (BO->kNN)")
 
-        # Get suggestions from underlying BO (this guides where to look)
+        # Get suggestions from Ax
         raw_trials = self._optimizer.ask(n_trials=n_trials)
 
         # Detect and log strategy switches
@@ -369,12 +355,19 @@ class TSNEBayesOptimizer:
         if self._last_node_name is not None and new_node != self._last_node_name:
             logger.info(f"[OPT - SWITCH] {self._last_node_name} -> {new_node}")
         elif self._last_node_name is None:
-            logger.info(f"[OPT - {node_tag}] starting with {current_node}")
+            logger.info(f"[OPT - {node_tag}] starting with {new_node}")
         self._last_node_name = new_node
+
+        is_best_policy = (new_node == "BestPolicy")
 
         mapped_trials = {}
         for suggested_trial_idx, params in raw_trials.items():
-            policy_name, coords, distance = self._map_to_policy(params['emb_x'], params['emb_y'])
+            # BestPolicy: map to nearest policy (already evaluated, for re-evaluation)
+            # Other phases: map to nearest UNEVALUATED policy
+            if is_best_policy:
+                policy_name, coords, distance = self._map_to_nearest_policy(params['emb_x'], params['emb_y'])
+            else:
+                policy_name, coords, distance = self._map_to_policy(params['emb_x'], params['emb_y'])
 
             if policy_name is None:
                 if self.verbose:
@@ -473,7 +466,7 @@ class TSNEBayesOptimizer:
         Saves both the Ax client state (including KNNGenerationNode) and
         TSNEBayesOptimizer-specific state (evaluated_policies, trial_to_policy).
         """
-        encoder_registry = _get_knn_encoder_registry()
+        encoder_registry = _get_custom_encoder_registry()
 
         # Serialize experiment and generation strategy with custom encoder
         state = {
@@ -496,6 +489,7 @@ class TSNEBayesOptimizer:
                     'n_init': self.n_init,
                     'n_bo_trials': self.n_bo_trials,
                     'n_knn_neighbors': self.n_knn_neighbors,
+                    'n_best_trials': self.n_best_trials,
                 },
             },
         }
@@ -515,14 +509,14 @@ class TSNEBayesOptimizer:
         with open(filepath, 'r') as f:
             state = json.load(f)
 
-        decoder_registry = _get_knn_decoder_registry()
+        decoder_registry = _get_custom_decoder_registry()
 
         # Extract TSNEBayesOptimizer-specific state
         tsne_state = state.get('tsne_optimizer_state', {})
         loaded_evaluated_policies = set(tsne_state.get('evaluated_policies', []))
         self.trial_to_policy = {int(k): v for k, v in tsne_state.get('trial_to_policy', {}).items()}
 
-        # Restore config values (n_init, n_bo_trials, n_knn_neighbors)
+        # Restore config values (n_init, n_bo_trials, n_knn_neighbors, n_best_trials)
         config = tsne_state.get('config', {})
         if 'n_init' in config:
             self.n_init = config['n_init']
@@ -530,6 +524,8 @@ class TSNEBayesOptimizer:
             self.n_bo_trials = config['n_bo_trials']
         if 'n_knn_neighbors' in config:
             self.n_knn_neighbors = config['n_knn_neighbors']
+        if 'n_best_trials' in config:
+            self.n_best_trials = config['n_best_trials']
 
         # Deserialize experiment
         experiment = object_from_json(
@@ -555,11 +551,12 @@ class TSNEBayesOptimizer:
             new_client.set_generation_strategy(generation_strategy=gen_strategy)
             self._optimizer.generation_strategy = gen_strategy
 
-            # Find the KNNGenerationNode and sync its evaluated_policies reference
+            # Find custom nodes and sync their evaluated_policies reference
             for node in gen_strategy._nodes:
                 if isinstance(node, KNNGenerationNode):
                     node.evaluated_policies = self.evaluated_policies
-                    break
+                elif isinstance(node, BestPolicyGenerationNode):
+                    node.evaluated_policies = self.evaluated_policies
 
         # Replace the optimizer's client
         self._optimizer.client = new_client
@@ -568,25 +565,22 @@ class TSNEBayesOptimizer:
         self.evaluated_policies.clear()
         self.evaluated_policies.update(loaded_evaluated_policies)
 
-        logger.info(f"[OPT - LOAD] loaded state from {filepath} ({len(self.evaluated_policies)} evaluated policies, n_init={self.n_init}, n_bo={self.n_bo_trials}, n_knn={self.n_knn_neighbors})")
+        logger.info(f"[OPT - LOAD] loaded state from {filepath} ({len(self.evaluated_policies)} evaluated policies, n_init={self.n_init}, n_bo={self.n_bo_trials}, n_knn={self.n_knn_neighbors}, n_best={self.n_best_trials})")
 
     def _construct_generation_strategy_with_knn(self):
         """
-        Construct generation strategy: Center -> Sobol -> BO -> kNN
+        Construct generation strategy: Center -> Sobol -> BO -> kNN -> BestPolicy
 
         Uses configured surrogate_spec (kernel, noise) and acqf_class (acquisition function).
         """
-        # Build model_kwargs with surrogate_spec if provided
-        model_kwargs = {}
-        if self.surrogate_spec is not None:
-            model_kwargs["surrogate_spec"] = self.surrogate_spec
-
-        # Build generator_kwargs with acquisition function
-        generator_kwargs = {
+        # Build model_kwargs with surrogate_spec and acquisition function
+        model_kwargs = {
             "botorch_acqf_class": self.acqf_class,
         }
+        if self.surrogate_spec is not None:
+            model_kwargs["surrogate_spec"] = self.surrogate_spec
         if self.acqf_options:
-            generator_kwargs["acqf_options"] = self.acqf_options
+            model_kwargs["acqf_options"] = self.acqf_options
 
         # Log configuration
         kernel_info = "default (Matern 2.5)"
@@ -596,6 +590,17 @@ class TSNEBayesOptimizer:
                 kernel_info = str(type(mc.covar_module_options["base_kernel"]).__name__)
         logger.info(f"[OPT - INIT] kernel={kernel_info}, acqf={self.acqf_class.__name__}, acqf_options={self.acqf_options}")
 
+        # BestPolicy node - greedy exploitation of best point (final phase)
+        best_policy_node = BestPolicyGenerationNode(
+            coords=np.asarray(self._coords),
+            policy_names=np.asarray(self._policy_names),
+            evaluated_policies=self.evaluated_policies,  # Shared reference
+            generator_specs=[GeneratorSpec(
+                generator_enum=Generators.BOTORCH_MODULAR,
+                model_kwargs=model_kwargs,
+            )],
+        )
+
         # kNN node - samples nearest neighbors from best point
         knn_node = KNNGenerationNode(
             coords=np.asarray(self._coords),
@@ -604,9 +609,16 @@ class TSNEBayesOptimizer:
             evaluated_policies=self.evaluated_policies,  # Shared reference
             generator_specs=[GeneratorSpec(
                 generator_enum=Generators.BOTORCH_MODULAR,
-                model_kwargs=model_kwargs if model_kwargs else None,
-                generator_kwargs=generator_kwargs,
+                model_kwargs=model_kwargs,
             )],
+            transition_criteria=[
+                MinTrials(
+                    threshold=self.n_init + self.n_bo_trials + self.n_knn_neighbors,
+                    transition_to="BestPolicy",
+                    only_in_statuses=[TrialStatus.COMPLETED],
+                    use_all_trials_in_exp=True,
+                )
+            ],
         )
 
         # BoTorch node for Bayesian Optimization
@@ -614,8 +626,7 @@ class TSNEBayesOptimizer:
             name="Modular BoTorch",
             generator_specs=[GeneratorSpec(
                 generator_enum=Generators.BOTORCH_MODULAR,
-                model_kwargs=model_kwargs if model_kwargs else None,
-                generator_kwargs=generator_kwargs,
+                model_kwargs=model_kwargs,
             )],
             transition_criteria=[
                 MinTrials(
@@ -630,7 +641,10 @@ class TSNEBayesOptimizer:
         # Sobol node for space-filling initialization
         sobol_node = GenerationNode(
             name="Sobol",
-            generator_specs=[GeneratorSpec(generator_enum=Generators.SOBOL)],
+            generator_specs=[GeneratorSpec(
+                generator_enum=Generators.SOBOL,
+                generator_kwargs={"seed": random.randint(0, 2**31 - 1)},
+            )],
             transition_criteria=[
                 MinTrials(
                     threshold=self.n_init,
@@ -645,8 +659,8 @@ class TSNEBayesOptimizer:
         center_node = CenterGenerationNode(next_node_name="Sobol")
 
         return GenerationStrategy(
-            name="Center+Sobol+BO+kNN",
-            nodes=[center_node, sobol_node, botorch_node, knn_node],
+            name="Center+Sobol+BO+kNN+BestPolicy",
+            nodes=[center_node, sobol_node, botorch_node, knn_node, best_policy_node],
         )
 
     def generate_final_visualizations(self, prolific_id: str) -> None:
@@ -737,13 +751,15 @@ class TSNEBayesOptimizer:
                 idx_arr = np.where(self._policy_names == policy)[0]
                 if len(idx_arr) > 0:
                     coords = self._coords[idx_arr[0]]
-                    # Color by phase: green=Sobol, blue=BO, red=kNN
+                    # Color by phase: green=Sobol, blue=BO, red=kNN, purple=BestPolicy
                     if i < self.n_init:
                         color = 'green'
                     elif i < self.n_init + self.n_bo_trials:
                         color = 'blue'
-                    else:
+                    elif i < self.n_init + self.n_bo_trials + self.n_knn_neighbors:
                         color = 'red'
+                    else:
+                        color = 'purple'
                     ax.scatter(coords[0], coords[1], c=color, s=120, zorder=5,
                               edgecolors='black', linewidths=1)
                     ax.annotate(str(i+1), (coords[0], coords[1]), fontsize=9, ha='center', va='center',
@@ -760,10 +776,12 @@ class TSNEBayesOptimizer:
             ax.set_ylim(-1.1, 1.1)
 
             # Add legend
+            knn_end = self.n_init + self.n_bo_trials + self.n_knn_neighbors
             legend_elements = [
                 Patch(facecolor='green', edgecolor='black', label=f'Sobol (1-{self.n_init})'),
                 Patch(facecolor='blue', edgecolor='black', label=f'BO ({self.n_init+1}-{self.n_init + self.n_bo_trials})'),
-                Patch(facecolor='red', edgecolor='black', label=f'kNN ({self.n_init + self.n_bo_trials + 1}+)'),
+                Patch(facecolor='red', edgecolor='black', label=f'kNN ({self.n_init + self.n_bo_trials + 1}-{knn_end})'),
+                Patch(facecolor='purple', edgecolor='black', label=f'BestPolicy ({knn_end + 1}+)'),
             ]
             ax.legend(handles=legend_elements, loc='upper right', fontsize=10)
 
@@ -837,13 +855,15 @@ class TSNEBayesOptimizer:
                 if len(idx_arr) > 0:
                     coords = self._coords[idx_arr[0]]
                     param_val = coords[0] if param == "emb_x" else coords[1]
-                    # Color by phase
+                    # Color by phase: green=Sobol, blue=BO, red=kNN, purple=BestPolicy
                     if i < self.n_init:
                         color = 'green'
                     elif i < self.n_init + self.n_bo_trials:
                         color = 'blue'
-                    else:
+                    elif i < self.n_init + self.n_bo_trials + self.n_knn_neighbors:
                         color = 'red'
+                    else:
+                        color = 'purple'
                     fig.add_annotation(
                         x=param_val, y=0,
                         text=str(i+1),
@@ -871,13 +891,15 @@ class TSNEBayesOptimizer:
                     x_vals.append(coords[0])
                     y_vals.append(coords[1])
                     texts.append(str(i+1))
-                    # Color by phase
+                    # Color by phase: green=Sobol, blue=BO, red=kNN, purple=BestPolicy
                     if i < self.n_init:
                         colors.append('green')
                     elif i < self.n_init + self.n_bo_trials:
                         colors.append('blue')
-                    else:
+                    elif i < self.n_init + self.n_bo_trials + self.n_knn_neighbors:
                         colors.append('red')
+                    else:
+                        colors.append('purple')
 
             fig.add_trace(go.Scatter(
                 x=x_vals, y=y_vals,

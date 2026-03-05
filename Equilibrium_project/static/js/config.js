@@ -8,14 +8,13 @@ const CONFIG = {
   ROUND_DURATION_SEC: 45, // put 45
 
   // Episode structure
-  ROUNDS_PER_EPISODE: 3, // 3
-  EPISODES_SEED: 5,      // put 5 
+  ROUNDS_PER_EPISODE: 1, // 3
+  EPISODES_SEED: 5,      // put 5  # LOGIC BREAKS IF THIS IS <2
   EPISODES_BO: 5,        // put 5 BO + 2 without AI
-  EPISODES_BO_SOLO: 2,
-  BO_SOLO_POSITIONS: [3, 5],
+  EPISODES_BO_SOLO: 2, //2
+  BO_SOLO_POSITIONS: [3,5],
   EPISODES_STRESS: 3,    // put 3 kNN
-  EPISODES_REPLAY_OPTIMAL: 1,
-
+  EPISODES_REPLAY_OPTIMAL: 1, // LOGIC BREAKS IF >1
   EPISODE_BREAK_SEC: 1   // 15
 };
 
