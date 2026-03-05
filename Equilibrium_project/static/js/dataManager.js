@@ -17,11 +17,6 @@ const DataManager = {
       assignment: { condition: null, map: null },
       startTimeISO: null,
       tick_ms: null,
-      round_duration_sec: null,
-      rounds_per_episode: null,
-      seed: null,
-      client_config_snapshot: null,
-      user_agent: (typeof navigator !== 'undefined') ? navigator.userAgent : null
     },
     episodes: [],
     rounds: []
@@ -81,8 +76,8 @@ const DataManager = {
       startTimeISO: new Date().toISOString(),
       feedback: {
         scale: "tlx_20",
-        mental_effort: null,
-        coordination_quality: null,
+        mental_demand: null,
+        performance: null,
         submittedAtISO: null
       },
       round_index_globals: [],
@@ -94,12 +89,12 @@ const DataManager = {
   },
 
   getEpisodeTotals(episode_index) {
-    const totals = { dishes_served: 0, human_steps: 0, final_score_sum: 0 };
+    const totals = { dishes_served: 0, human_steps: 0, participant_score_sum: 0 };
     for (const r of this.LOGS.rounds) {
       if (r.episode_index !== episode_index) continue;
       totals.dishes_served += (r.summary?.dishes_served ?? 0);
       totals.human_steps += (r.summary?.human_steps ?? 0);
-      totals.final_score_sum += (r.summary?.final_score ?? 0);
+      totals.participant_score_sum += (r.summary?.participant_score ?? 0);
     }
     return totals;
   },
@@ -141,15 +136,21 @@ const DataManager = {
       policy_id: extraMeta.policyId ?? null,
 
       // mappa
-      static_map: null,
-      xlen: null,
-      ylen: null,
       map: mapLabel,
 
       summary: {
-        final_score: 0,
+        participant_score: 0,
         dishes_served: 0,
-        human_steps: 0
+        human_steps: 0,
+
+        // Reward totals (summed over ticks within this round, considering STAY as an action)
+        team_reward_raw: 0,
+        human_reward_raw: 0,
+        ai_reward_raw: 0,
+
+        team_reward_adjusted: 0,
+        human_reward_adjusted: 0,
+        ai_reward_adjusted: 0
       },
 
       // ACTION LOGs
@@ -196,9 +197,13 @@ const DataManager = {
     if (!r) return;
     r.endTimeISO = new Date().toISOString();
 
-    if (extra.final_score != null) r.summary.final_score = extra.final_score;
+    if (extra.participant_score != null) r.summary.participant_score = extra.participant_score;
+    // Backward-compat: if some old caller still passes participant_score
+    if (extra.participant_score != null) r.summary.participant_score = extra.participant_score;
     if (extra.dishes_served != null) r.summary.dishes_served = extra.dishes_served;
     if (extra.human_steps != null) r.summary.human_steps = extra.human_steps;
+    // Ensure participant_score is consistent even if only dishes/steps are provided
+    r.summary.participant_score = (r.summary.dishes_served * 200) - (r.summary.human_steps * 1);
   },
 
   // ----------------------
@@ -234,7 +239,7 @@ const DataManager = {
     };
   },
 
-  logStep(serverData, humanKey, timing = null) {
+  logStep(serverData, humanKey) {
     const r = this.getCurrentRound();
     if (!r || !serverData) return;
 
@@ -254,9 +259,41 @@ const DataManager = {
     if (r.ylen == null && state.ylen != null) r.ylen = state.ylen;
 
     // summary
-    if (typeof serverData.cumulative_reward === 'number') r.summary.final_score = serverData.cumulative_reward;
     if (typeof serverData.dishes_served === 'number') r.summary.dishes_served = serverData.dishes_served;
     if (humanKey !== 'Stay') r.summary.human_steps += 1;
+    // Participant score is derived ONLY from dishes and human actions (independent of AI reward)
+    r.summary.participant_score = (r.summary.dishes_served * 200) - (r.summary.human_steps * 1);
+
+
+    // Reward bookkeeping (round totals)
+    // Prefer explicit fields; fall back to legacy raw_reward / adjusted_reward when needed.
+    const teamRaw = (typeof serverData.team_reward_raw === 'number') ? serverData.team_reward_raw
+                  : ((typeof serverData.raw_reward === 'number') ? serverData.raw_reward : null);
+    const teamAdj = (typeof serverData.team_reward_adjusted === 'number') ? serverData.team_reward_adjusted
+                  : ((typeof serverData.adjusted_reward === 'number') ? serverData.adjusted_reward : null);
+
+    const aiRaw   = (typeof serverData.ai_reward_raw === 'number') ? serverData.ai_reward_raw : null;
+    const huRaw   = (typeof serverData.human_reward_raw === 'number') ? serverData.human_reward_raw : null;
+
+    const aiAdj   = (typeof serverData.ai_reward_adjusted === 'number') ? serverData.ai_reward_adjusted : null;
+    const huAdj   = (typeof serverData.human_reward_adjusted === 'number') ? serverData.human_reward_adjusted : null;
+
+    // Ensure fields exist even if older logs are loaded
+    if (typeof r.summary.team_reward_raw !== 'number') r.summary.team_reward_raw = 0;
+    if (typeof r.summary.human_reward_raw !== 'number') r.summary.human_reward_raw = 0;
+    if (typeof r.summary.ai_reward_raw !== 'number') r.summary.ai_reward_raw = 0;
+    if (typeof r.summary.team_reward_adjusted !== 'number') r.summary.team_reward_adjusted = 0;
+    if (typeof r.summary.human_reward_adjusted !== 'number') r.summary.human_reward_adjusted = 0;
+    if (typeof r.summary.ai_reward_adjusted !== 'number') r.summary.ai_reward_adjusted = 0;
+
+    if (teamRaw != null && Number.isFinite(teamRaw)) r.summary.team_reward_raw += teamRaw;
+    if (teamAdj != null && Number.isFinite(teamAdj)) r.summary.team_reward_adjusted += teamAdj;
+
+    if (huRaw != null && Number.isFinite(huRaw)) r.summary.human_reward_raw += huRaw;
+    if (aiRaw != null && Number.isFinite(aiRaw)) r.summary.ai_reward_raw += aiRaw;
+
+    if (huAdj != null && Number.isFinite(huAdj)) r.summary.human_reward_adjusted += huAdj;
+    if (aiAdj != null && Number.isFinite(aiAdj)) r.summary.ai_reward_adjusted += aiAdj;
 
     // AI
     const aiLast = serverData.robot_last_action || null;
@@ -270,8 +307,7 @@ const DataManager = {
       key: humanKey ?? null,
       action: this._normalizeHumanAction(humanKey),
       pos: (human.x != null && human.y != null) ? [human.x, human.y] : null,
-      holding: this._packHolding(human),
-      ...(timing && typeof timing === 'object' ? { timing } : {})
+      holding: this._packHolding(human)
     });
 
     // 2) AI
@@ -290,8 +326,12 @@ const DataManager = {
       r.counter_log.push({
         t,
         ...(this.OPTS.LOG_WALL_MS ? { wall_ms } : {}),
-        score: (typeof serverData.cumulative_reward === 'number') ? serverData.cumulative_reward : null,
-        dishes_served: (typeof serverData.dishes_served === 'number') ? serverData.dishes_served : null
+        participant_score: (typeof r.summary.participant_score === 'number') ? r.summary.participant_score : null,
+        dishes_served: (typeof serverData.dishes_served === 'number') ? serverData.dishes_served : null,
+        human_steps: (typeof r.summary.human_steps === 'number') ? r.summary.human_steps : null,
+        team_reward_raw_total: (typeof r.summary.team_reward_raw === 'number') ? r.summary.team_reward_raw : null,
+        human_reward_raw_total: (typeof r.summary.human_reward_raw === 'number') ? r.summary.human_reward_raw : null,
+        ai_reward_raw_total: (typeof r.summary.ai_reward_raw === 'number') ? r.summary.ai_reward_raw : null
       });
     }
 
@@ -312,8 +352,8 @@ const DataManager = {
     const ep = this._ensureEpisode(episode_index, episode_phase);
     if (!ep) return;
 
-    if (answers?.mental_effort != null) ep.feedback.mental_effort = answers.mental_effort;
-    if (answers?.coordination_quality != null) ep.feedback.coordination_quality = answers.coordination_quality;
+    if (answers?.mental_demand != null) ep.feedback.mental_demand = answers.mental_demand;
+    if (answers?.performance  != null) ep.feedback.performance  = answers.performance;
     ep.feedback.submittedAtISO = new Date().toISOString();
   },
 

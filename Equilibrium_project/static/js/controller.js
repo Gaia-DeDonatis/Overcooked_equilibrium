@@ -78,8 +78,7 @@ let aiTickInFlight = false;
 const AI_TICK_MS = 250;
 
 let bufferedHumanKey = 'Stay';
-let roundStartPerfMs = 0;
-let lastHumanPressMs = null;  
+
 
 function stopAiTick() {
   if (aiTickTimer) {
@@ -102,17 +101,13 @@ async function doOneTick() {
 
     drawGame(data.state, 'gameCanvas');
 
-    const appliedMs = performance.now() - roundStartPerfMs;
-    DataManager.logStep(data, keyToSend, { appliedMs, humanPressMs: lastHumanPressMs });
-    lastHumanPressMs = null;
+    DataManager.logStep(data, keyToSend);
 
     const roundObj = DataManager.getCurrentRound();
     if (roundObj && roundObj.summary) {
       // Backend dishes_served is per-round; store it so we can sum across rounds in the episode.
       if (data.dishes_served != null) roundObj.summary.dishes_served = data.dishes_served;
     }
-
-    STATE.lastScore = data.cumulative_reward ?? STATE.lastScore ?? 0;
 
     const roundNow = DataManager.getCurrentRound();
 
@@ -203,9 +198,6 @@ async function startRound({ newEpisode = false } = {}) {
 
     if (data.state) {
       STATE.isPlaying = true;
-    
-      roundStartPerfMs = performance.now();
-      lastHumanPressMs = null;
 
       drawGame(data.state, 'gameCanvas');
       startAiTick();
@@ -294,13 +286,7 @@ async function finishTimeBasedRound() {
 
 
     DataManager.endRound();
-    
-    // 2. Final Score
-    const r = DataManager.getCurrentRound();
-    const finalScore = Math.floor(r?.summary?.final_score ?? 0);
 
-    STATE.episodeScore += finalScore;
-    
     const overlay = document.getElementById('round-overlay');
     const title   = document.getElementById('overlay-title');
     const sub     = document.getElementById('overlay-subtitle');
@@ -313,7 +299,6 @@ async function finishTimeBasedRound() {
             title.innerText = `ROUND ${STATE.roundInEpisode} COMPLETE`;
             title.style.color = "#16a34a";
           }
-          //if (sub) sub.innerText = `Score: ${finalScore} | Next round in 3...`;
           if (sub) sub.innerText = `Next round in 3...`;
 
           overlay.classList.remove('hidden');
@@ -324,7 +309,6 @@ async function finishTimeBasedRound() {
         let countdown = 3;
         const interval = setInterval(() => {
             countdown--;
-            //if(sub) sub.innerText = `Score: ${finalScore} | Next round in ${countdown}...`;
             if(sub) sub.innerText = `Next round in ${countdown}...`;
         }, 1000);
 
@@ -357,8 +341,7 @@ async function finishTimeBasedRound() {
         const shouldTell = (!soloNow) && (STATE.episodePhase !== 'replay_optimal');
         if (shouldTell) {
           await api('/tell', {
-            prolificId: STATE.prolificId,
-            score: finalScore
+            prolificId: STATE.prolificId
           });
         }
     if (overlay) {
@@ -638,10 +621,11 @@ document.addEventListener('keydown', async (e) => {
         const data = await api('/key_event', { key: e.key, config_id: 'layout_practice' });
         drawGame(data.state, 'gameCanvas_practice');
         
-        const prevScore = STATE.practiceScore;
-        STATE.practiceScore = data.cumulative_reward || 0;
+        const prevDishes = STATE.practiceDishes || 0;
+        const dishesNow = (typeof data.dishes_served === 'number') ? data.dishes_served : 0;
+        STATE.practiceDishes = dishesNow;
 
-        if(STATE.practiceScore >= CONFIG.PRACTICE_SCORE && STATE.practiceScore > prevScore) {
+        if(dishesNow >= 1 && dishesNow > prevDishes) {
             STATE.isPlaying = false;
             STATE.gameOver = true;
             document.getElementById('practiceHint').innerText = "Great job! Click 'Next' to continue.";
@@ -652,7 +636,6 @@ document.addEventListener('keydown', async (e) => {
     // B. MAIN TASK LOGIC (Phase 1 and 2)
     else {
         bufferedHumanKey = e.key;
-        lastHumanPressMs = performance.now() - roundStartPerfMs;
         doOneTick();
     }
 });

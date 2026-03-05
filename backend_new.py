@@ -233,7 +233,18 @@ class SingleAgentWrapper_accept_keyboard_action(_gym.Wrapper):
             self.env.macroAgent[1].cur_macro_action_done = True
             self.obs = self.env._get_macro_obs()
 
-        return self.obs[self.agent_index], rewards[self.agent_index] + rewards[1 - self.agent_index], dones, info
+        # Save per-agent rewards for logging (agent 0 = AI, agent 1 = Human)
+        self.last_raw_rewards = rewards
+        try:
+            rr = np.array(rewards).flatten()
+            self.last_ai_reward = float(rr[0]) if rr.size > 0 else None
+            self.last_human_reward = float(rr[1]) if rr.size > 1 else None
+        except Exception:
+            self.last_ai_reward = None
+            self.last_human_reward = None
+
+        team_reward = rewards[self.agent_index] + rewards[1 - self.agent_index]
+        return self.obs[self.agent_index], team_reward, dones, info
 
 
 
@@ -1011,6 +1022,11 @@ def key_event():
             r_env = 0.0
             r_adjusted = 0.0
 
+
+            ai_reward_raw = None
+            human_reward_raw = None
+            ai_reward_adjusted = None
+            human_reward_adjusted = None
             try:
                 if isinstance(rewards, (list, tuple, np.ndarray)):
                     r_env = float(np.array(rewards).flatten()[0])
@@ -1029,11 +1045,31 @@ def key_event():
                 ai_low = int(action[0]) if (not solo_mode) else None
                 human_low2 = int(action[1])
 
+
+                # Per-agent raw rewards (agent 0 = AI, agent 1 = Human)
+                if solo_mode:
+                    ai_reward_raw = 0.0
+                    human_reward_raw = float(r_env)
+                else:
+                    rr = getattr(sess.wrapper, 'last_raw_rewards', None)
+                    if isinstance(rr, (list, tuple, np.ndarray)) and len(rr) >= 2:
+                        rr = np.array(rr).flatten()
+                        ai_reward_raw = float(rr[0])
+                        human_reward_raw = float(rr[1])
                 r_adjusted = r_env
                 if (not solo_mode) and (ai_low == 4):
                     r_adjusted += (-step_pen_ai)  # add back +1 if penalty is -1
                 if human_low2 == 4:
                     r_adjusted += (-step_pen_hu)
+
+
+                # Per-agent adjusted rewards (compensate Stay actions like adjusted_reward)
+                ai_reward_adjusted = ai_reward_raw
+                human_reward_adjusted = human_reward_raw
+                if (ai_reward_adjusted is not None) and (not solo_mode) and (ai_low == 4):
+                    ai_reward_adjusted += (-step_pen_ai)
+                if (human_reward_adjusted is not None) and (human_low2 == 4):
+                    human_reward_adjusted += (-step_pen_hu)
 
                 sess.cumulative_reward += r_adjusted
 
@@ -1076,6 +1112,13 @@ def key_event():
             cumulative_reward=sess.cumulative_reward,
             raw_reward=r_env,
             adjusted_reward=r_adjusted,
+            # Explicit reward breakdown for logging
+            team_reward_raw=r_env,
+            team_reward_adjusted=r_adjusted,
+            ai_reward_raw=ai_reward_raw,
+            human_reward_raw=human_reward_raw,
+            ai_reward_adjusted=ai_reward_adjusted,
+            human_reward_adjusted=human_reward_adjusted,
             config_id=sess.config_id,
             layout_id=sess.current_layout_id,
             model_id=sess.current_model_id,

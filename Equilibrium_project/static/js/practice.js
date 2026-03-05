@@ -8,7 +8,7 @@ async function startPracticeRound() {
     // 1. Force the global state to Practice Mode
     STATE.phase = 0; 
     STATE.configId = 'layout_practice';
-    STATE.practiceScore = 0;
+    STATE.practiceDishes = 0;
     STATE.isPlaying = false;
     STATE.gameOver = false;
 
