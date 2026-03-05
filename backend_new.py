@@ -209,9 +209,15 @@ class SingleAgentWrapper_accept_keyboard_action(_gym.Wrapper):
 
         self.reset_step = reset_step
 
+        self.firsttime_down_go_to_counter = True
+        self.firsttime_up_get_counter_lettuce = True
+
     def reset(self):
         self.obs = self.env.reset()
         self.env_reset_step = 0
+       
+        self.firsttime_down_go_to_counter = True
+        self.firsttime_up_get_counter_lettuce = True
         return self.obs[self.agent_index]
 
     def step(self, action, keyboard_action):
@@ -242,6 +248,181 @@ def _as_int_action(a):
 
 
 
+
+
+# =========================
+# AI reward helpers for BO
+# =========================
+import re
+
+ITEMNAME = ["space", "counter", "agent", "tomato", "lettuce", "plate", "knife", "delivery", "onion", "dirtyplate", "badlettuce"]
+
+macroActionDict = {"stay": 0, "get lettuce 1": 1, "get lettuce 2": 2, "get plate 1": 3, "get plate 2": 4, "go to knife 1": 5, "deliver 1": 6, "chop": 7, "go to counter": 8, "right": 9, "down": 10, "left": 11, "up": 12}
+
+
+def check_action_benevolence(env, action_up, action_down, firsttime_down_go_to_counter, firsttime_up_get_counter_lettuce):
+
+    agent_up = env.agent[0]
+    agent_down = env.agent[1]
+
+
+    counter1_x = 2
+    counter1_y = 2
+
+    counter1 = ITEMNAME[env.map[counter1_x][counter1_y]]
+
+    reward_shaping_bonus = 0
+    total_reward_bonus = 0
+
+
+    reward_bonus_up = 0
+    reward_bonus_down = 0
+
+    counters = [counter1]
+
+    if any(counter in ("lettuce") for counter in counters):
+        best_action = intelligently_find_item_number(env, agent_up, "get lettuce")
+
+        if firsttime_up_get_counter_lettuce == True:
+            reward_shaping_bonus = check_benevolence(env, best_action, action_up)
+            if reward_shaping_bonus == 20:
+                total_reward_bonus += reward_shaping_bonus
+                reward_bonus_up = 100
+                firsttime_up_get_counter_lettuce = False
+
+
+    if all(counter not in ("lettuce") for counter in counters):
+
+        if agent_down.holding and isinstance(agent_down.holding, Lettuce):
+            best_action = "go to counter"
+
+            if firsttime_down_go_to_counter == True:
+
+                reward_shaping_bonus = check_benevolence(env, best_action, action_down)
+
+                if reward_shaping_bonus == 20:
+                    total_reward_bonus += reward_shaping_bonus
+                    reward_bonus_down = 100
+                    firsttime_down_go_to_counter = False
+
+    return reward_bonus_up, reward_bonus_down, firsttime_down_go_to_counter, firsttime_up_get_counter_lettuce
+
+
+
+
+def find_best_reachable_index(can_reach_1, can_reach_2, can_reach_3, distance_1, distance_2, distance_3):
+    reachable_indices = []
+    distances = []
+    
+    if can_reach_1 != 4:
+        reachable_indices.append(0)
+        distances.append(distance_1)
+    if can_reach_2 != 4:
+        reachable_indices.append(1)
+        distances.append(distance_2)
+    if can_reach_3 != 4:
+        reachable_indices.append(2)
+        distances.append(distance_3)
+    
+    if not reachable_indices:
+        return False
+    
+    if len(reachable_indices) == 1:
+        return reachable_indices[0]
+    
+    min_distance_index = reachable_indices[distances.index(min(distances))]
+    return min_distance_index
+
+
+
+def intelligently_find_item_number(env, agent_item, raw_name):
+
+    if raw_name == "get plate":
+        target_x_1, target_y_1 = env._findPOitem(agent_item, macroActionDict[raw_name + " 1"])
+        can_reach_1 = env._navigate(agent_item, target_x_1, target_y_1)
+        distance_1 = env._calDistance(target_x_1, target_y_1, agent_item.x, agent_item.y)
+
+        target_x_2, target_y_2 = env._findPOitem(agent_item, macroActionDict[raw_name + " 2"])
+        can_reach_2 = env._navigate(agent_item, target_x_2, target_y_2)
+        distance_2 = env._calDistance(target_x_2, target_y_2, agent_item.x, agent_item.y)
+
+        target_x_3, target_y_3 = env._findPOitem(agent_item, macroActionDict["get dirty plate"])
+        can_reach_3 = env._navigate(agent_item, target_x_3, target_y_3)
+        distance_3 = env._calDistance(target_x_3, target_y_3, agent_item.x, agent_item.y)
+
+
+        best_action = "stay"
+
+        min_distance_index = find_best_reachable_index(can_reach_1, can_reach_2, can_reach_3, distance_1, distance_2, distance_3)
+
+        if min_distance_index == 0:
+            best_action = raw_name + " 1"
+        if min_distance_index == 1:
+            best_action = raw_name + " 2"
+        if min_distance_index == 2:
+            best_action = "get dirty plate"
+
+        return best_action
+
+    
+
+    target_x_1, target_y_1 = env._findPOitem(agent_item, macroActionDict[raw_name + " 1"])
+    can_reach_1 = env._navigate(agent_item, target_x_1, target_y_1)
+    distance_1 = env._calDistance(target_x_1, target_y_1, agent_item.x, agent_item.y)
+
+    target_x_2, target_y_2 = env._findPOitem(agent_item, macroActionDict[raw_name + " 2"])
+    can_reach_2 = env._navigate(agent_item, target_x_2, target_y_2)
+    distance_2 = env._calDistance(target_x_2, target_y_2, agent_item.x, agent_item.y)
+
+    best_action = "stay"
+    if can_reach_1 == 4 and can_reach_2 != 4:
+        best_action = raw_name + " 2"
+
+    if can_reach_1 != 4 and can_reach_2 == 4:
+        best_action = raw_name + " 1"
+
+    if can_reach_1 != 4 and can_reach_2 != 4:
+        if distance_1 <= distance_2:
+            best_action = raw_name + " 1"
+
+        else:
+            best_action = raw_name + " 2"
+    
+    return best_action
+
+
+
+def check_benevolence(env, best_action, action):
+    env.reward = 0
+    if action == macroActionDict[best_action] and macroActionDict[best_action] != 0:
+        env.reward += 20
+    return env.reward
+
+
+
+import re
+
+def parse_policy_id(policy_id: str):
+    """
+    Parse step_penalty (AAA) and cooperation_bonus (CCC) from policy_id
+
+    policy_id format:
+    [equilibrium]agent0_a0sp_AAA_a1sp_BBB_helping_CCC_gammaDDD_EEE
+    
+    """
+
+    pattern = r"a0sp_([^_]+).*?helping_([^_]+)"
+    match = re.search(pattern, policy_id)
+
+    if not match:
+        raise ValueError(f"Invalid policy_id format: {policy_id}")
+
+    step_penalty = match.group(1)
+    cooperation_bonus = match.group(2)
+
+    return step_penalty, cooperation_bonus
+
+
 # =========================
 # Session management for parallel participants taking the user study at the same time
 # =========================
@@ -255,6 +436,7 @@ class Session:
         self.obs = None
         self.cur_step = 0
         self.cumulative_reward = 0.0
+        self.ai_reward_total = 0.0  # AI-only reward used for BayesOpt
         self.current_layout_id = None
         self.current_model_id = None
         self.robot_steps = []       # save each step of the AI agent
@@ -371,7 +553,7 @@ def _parse_config_id(layout_id: str = None, model_id: str = None, config_id: str
 
 def create_envs_for_session(sess: Session, config_id: str, choose_new_policy: bool = True, optimizer: TSNEBayesOptimizer | None = None, is_solo: bool | None = None):
 
-    # Now, I use a fixed map, which is the circle (5*5). And for each time, I randomly load a model from the policy_pool
+    # fixed map, which is the circle (5*5). for each time, I randomly load a model from the policy_pool
 
     # Fix the environment ID
     env_id     = "Overcooked-equilibrium-v0"
@@ -500,11 +682,8 @@ def create_envs_for_session(sess: Session, config_id: str, choose_new_policy: bo
     # reset the step count and reward
     sess.cur_step = 0
     sess.cumulative_reward = 0.0
+    sess.ai_reward_total = 0.0
     sess.robot_steps = []
-
-
-
-
 
 # =========================
 # Collect the current state into a json.
@@ -771,16 +950,41 @@ def key_event():
 
             else:
                 # Normal human+AI: run policy -> macro action -> low-level action -> step wrapper
+                benev_up = 0.0
+                benev_down = 0.0
+                ai_prev_loc = [sess.env_mac.agent[0].x, sess.env_mac.agent[0].y]
+
                 if sess.model is not None:
                     with torch.no_grad():
                         ai_action, _ = sess.model.predict(sess.obs, deterministic=True)
                     ai_action_int = _as_int_action(ai_action)
                 else:
-                    ai_action_int = 4  # stay
+                    # No model loaded (practice), keep a placeholder macro id
+                    ai_action_int = 4
 
-                if sess.model is not None and ai_action_int != 4:
+                # Compute low-level actions from macro action (and get executed macro actions when available)
+                if sess.model is not None:
                     ll_ret = sess.env_mac._computeLowLevelActions([ai_action_int, 0])
-                    primitive_action = ll_ret[0] if isinstance(ll_ret, (list, tuple)) else ll_ret
+
+                    # handle both possible return formats robustly
+                    if isinstance(ll_ret, (list, tuple)) and len(ll_ret) == 2:
+                        primitive_action, real_execute_macro_actions = ll_ret
+                    else:
+                        primitive_action = ll_ret
+                        real_execute_macro_actions = [ai_action_int, 0]
+
+                    # Gaia, please see here: cooperation/benevolence bonus (one-time)
+                    try:
+                        benev_up, benev_down, sess.wrapper.firsttime_down_go_to_counter, sess.wrapper.firsttime_up_get_counter_lettuce = \
+                            check_action_benevolence(
+                                sess.env_mac,
+                                real_execute_macro_actions[0],
+                                real_execute_macro_actions[1],
+                                sess.wrapper.firsttime_down_go_to_counter,
+                                sess.wrapper.firsttime_up_get_counter_lettuce
+                            )
+                    except Exception:
+                        benev_up, benev_down = 0.0, 0.0
                 else:
                     primitive_action = [4] * sess.env.n_agent
 
@@ -799,6 +1003,10 @@ def key_event():
                 })
 
                 sess.obs, rewards, dones, info = sess.wrapper.step(action[0], action[1])
+
+                # determine if AI moved this step (for step-penalty shaping)
+                ai_cur_loc = [sess.env_mac.agent[0].x, sess.env_mac.agent[0].y]
+                ai_moved = (ai_prev_loc != ai_cur_loc)
 
             r_env = 0.0
             r_adjusted = 0.0
@@ -828,6 +1036,26 @@ def key_event():
                     r_adjusted += (-step_pen_hu)
 
                 sess.cumulative_reward += r_adjusted
+
+                # accumulate AI-only reward for BayesOpt (server-side)
+                if not solo_mode:
+                    try:
+                        step_penalty_str, cooperation_bonus_str = parse_policy_id(sess.current_model_id or "")
+                        step_penalty = float(step_penalty_str)
+                        cooperation_bonus = (cooperation_bonus_str == "True")
+                    except Exception:
+                        step_penalty = 0.0
+                        cooperation_bonus = False
+
+                    moved = bool(locals().get('ai_moved', False))
+                    benev_up_local = float(locals().get('benev_up', 0.0))
+                    move_cost = step_penalty if moved else 0.0
+                    team_reward = float(r_env)
+                    if cooperation_bonus:
+                        ai_step_reward = team_reward - move_cost + benev_up_local
+                    else:
+                        ai_step_reward = team_reward - move_cost
+                    sess.ai_reward_total += float(ai_step_reward)
 
                 # dish served detection
                 if r_env >= 150:
@@ -860,17 +1088,31 @@ def key_event():
 def tell():
     data = request.get_json(silent=True) or {}
 
-    score_raw = data.get('score')
-    if score_raw is None:
-        return jsonify(success=False, error="score is required"), 400
-    score = float(score_raw)
-
     prolific_raw = data.get('prolificId')
     if not prolific_raw:
         return jsonify(success=False, error="prolific_id is required"), 400
     prolific = prolific_raw.strip().replace('/', '_')
 
-    
+    # Preferred: use server-side AI reward (computed in /key_event) for BO.
+    sid = data.get('session_id')
+    score_raw = data.get('score')
+
+    if score_raw is not None:
+        # Backward compatible: accept explicit score if provided.
+        try:
+            score = float(score_raw)
+        except Exception:
+            return jsonify(success=False, error="score must be numeric"), 400
+    else:
+        if not sid:
+            return jsonify(success=False, error="session_id is required when score is not provided"), 400
+        sess = SESSION_MGR.ensure(sid)
+        with sess.lock:
+            score = float(getattr(sess, 'ai_reward_total', 0.0))
+
+    if prolific not in OPTIMIZER_MGR.optimizers:
+        return jsonify(success=False, error=f"optimizer not found for prolificId={prolific}"), 400
+
     trial_idx = OPTIMIZER_MGR.optimizers[prolific]._actual_trial_idx
     OPTIMIZER_MGR.optimizers[prolific].tell({trial_idx: score})
     return jsonify(success=True)
