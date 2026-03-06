@@ -336,9 +336,8 @@ async function finishTimeBasedRound() {
     } else {
         // --- CASE B: EPISODE COMPLETE ---
         console.log(`Episode ${STATE.episodeIndex} Complete!`);
-
         const soloNow = (typeof isSoloEpisode === 'function') ? isSoloEpisode(STATE.episodeIndex) : false;
-        const shouldTell = (!soloNow) && (STATE.episodePhase !== 'replay_optimal');
+        const shouldTell = !soloNow;
         if (shouldTell) {
           await api('/tell', {
             prolificId: STATE.prolificId
