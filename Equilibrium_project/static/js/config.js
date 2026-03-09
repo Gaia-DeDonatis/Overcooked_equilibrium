@@ -5,7 +5,7 @@ const SERVER_URL = 'http://localhost:5000';
 // Experiment Configuration
 const CONFIG = {
   PRACTICE_SCORE: 200,
-  ROUND_DURATION_SEC: 5, // put 45
+  ROUND_DURATION_SEC: 45, // put 45
 
   // Episode structure
   ROUNDS_PER_EPISODE: 1, // 3
@@ -15,7 +15,7 @@ const CONFIG = {
   BO_SOLO_POSITIONS: [3,5],
   EPISODES_STRESS: 3,    // put 3 kNN
   EPISODES_REPLAY_OPTIMAL: 1, // LOGIC BREAKS IF >1
-  EPISODE_BREAK_SEC: 1   // 15
+  EPISODE_BREAK_SEC: 10   // 10
 };
 
 // Total BO length shown to participants (AI BO episodes + solo "day off" episodes)

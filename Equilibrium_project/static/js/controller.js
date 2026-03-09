@@ -197,6 +197,7 @@ async function startRound({ newEpisode = false } = {}) {
     });
 
     if (data.state) {
+      DataManager.setRoundInitialState(data.state);
       STATE.isPlaying = true;
 
       drawGame(data.state, 'gameCanvas');

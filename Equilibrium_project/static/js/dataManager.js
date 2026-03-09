@@ -173,7 +173,7 @@ const DataManager = {
     return this.LOGS.rounds.length ? this.LOGS.rounds[this.LOGS.rounds.length - 1] : null;
   },
 
-  // inital state
+  // initial state
   setRoundInitialState(state) {
     const r = this.getCurrentRound();
     if (!r || !state) return;
@@ -182,13 +182,19 @@ const DataManager = {
     if (r.xlen == null && state.xlen != null) r.xlen = state.xlen;
     if (r.ylen == null && state.ylen != null) r.ylen = state.ylen;
 
+    const compact = this._compactState(state);
+    if (r.initial_state == null) r.initial_state = compact;
+
     if (this.OPTS.LOG_STATE_EACH_TICK) {
-      r.state_log.push({
-        t: (typeof state.cur_step === 'number') ? state.cur_step : 0,
-        wall_ms: 0,
-        kind: "reset_state",
-        state: this._compactState(state)
-      });
+      const alreadyLoggedReset = Array.isArray(r.state_log) && r.state_log.some(entry => entry && entry.kind === "reset_state");
+      if (!alreadyLoggedReset) {
+        r.state_log.push({
+          t: (typeof state.cur_step === 'number') ? state.cur_step : 0,
+          wall_ms: 0,
+          kind: "reset_state",
+          state: compact
+        });
+      }
     }
   },
 
