@@ -18,6 +18,8 @@ const CONFIG = {
   EPISODE_BREAK_SEC: 10   // 10
 };
 
+CONFIG.EXPERIMENT_MAPS = ["circle", "counter"];
+
 // Total BO length shown to participants (AI BO episodes + solo "day off" episodes)
 CONFIG.EPISODES_BO_TOTAL = CONFIG.EPISODES_BO + CONFIG.EPISODES_BO_SOLO;
 

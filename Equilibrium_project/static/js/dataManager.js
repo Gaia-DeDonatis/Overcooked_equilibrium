@@ -38,6 +38,7 @@ const DataManager = {
       this.LOGS.meta.assignment.condition = assigned;
     } else if (assigned && typeof assigned === 'object') {
       if (assigned.map != null) this.LOGS.meta.assignment.map = assigned.map;
+      if (assigned.layout != null) this.LOGS.meta.assignment.map = assigned.layout;
       if (assigned.condition != null) this.LOGS.meta.assignment.condition = assigned.condition;
     }
 
@@ -89,15 +90,29 @@ const DataManager = {
   },
 
   getEpisodeTotals(episode_index) {
-    const totals = { dishes_served: 0, human_steps: 0, participant_score_sum: 0 };
-    for (const r of this.LOGS.rounds) {
-      if (r.episode_index !== episode_index) continue;
-      totals.dishes_served += (r.summary?.dishes_served ?? 0);
-      totals.human_steps += (r.summary?.human_steps ?? 0);
-      totals.participant_score_sum += (r.summary?.participant_score ?? 0);
-    }
-    return totals;
-  },
+  const totals = {
+    dishes_served: 0,
+    human_steps: 0,
+    ai_steps: 0,
+    human_score_sum: 0,
+    ai_score_sum: 0,
+    human_reward_score_sum: 0,
+    ai_reward_score_sum: 0
+  };
+
+  for (const r of this.LOGS.rounds) {
+    if (r.episode_index !== episode_index) continue;
+    totals.dishes_served += (r.summary?.dishes_served ?? 0);
+    totals.human_steps += (r.summary?.human_steps ?? 0);
+    totals.ai_steps += (r.summary?.ai_steps ?? 0);
+    totals.human_score_sum += (r.summary?.human_score ?? 0);
+    totals.ai_score_sum += (r.summary?.ai_score ?? 0);
+    totals.human_reward_score_sum += (r.summary?.human_reward_score ?? 0);
+    totals.ai_reward_score_sum += (r.summary?.ai_reward_score ?? 0);
+  }
+
+  return totals;
+},
 
   // ----------------------
   // 3) Round lifecycle
@@ -139,18 +154,22 @@ const DataManager = {
       map: mapLabel,
 
       summary: {
-        participant_score: 0,
         dishes_served: 0,
         human_steps: 0,
+        ai_steps: 0,
+
+        // step-based scores
+        human_score: 0,
+        ai_score: 0,
 
         // Reward totals (summed over ticks within this round, considering STAY as an action)
-        team_reward_raw: 0,
-        human_reward_raw: 0,
-        ai_reward_raw: 0,
+        //team_reward_raw: 0,
+        //human_reward_raw: 0,
+        //ai_reward_raw: 0,
 
-        team_reward_adjusted: 0,
-        human_reward_adjusted: 0,
-        ai_reward_adjusted: 0
+        team_reward_score: 0,
+        human_reward_score: 0,
+        ai_reward_score: 0
       },
 
       // ACTION LOGs
@@ -203,13 +222,11 @@ const DataManager = {
     if (!r) return;
     r.endTimeISO = new Date().toISOString();
 
-    if (extra.participant_score != null) r.summary.participant_score = extra.participant_score;
-    // Backward-compat: if some old caller still passes participant_score
-    if (extra.participant_score != null) r.summary.participant_score = extra.participant_score;
     if (extra.dishes_served != null) r.summary.dishes_served = extra.dishes_served;
     if (extra.human_steps != null) r.summary.human_steps = extra.human_steps;
-    // Ensure participant_score is consistent even if only dishes/steps are provided
-    r.summary.participant_score = (r.summary.dishes_served * 200) - (r.summary.human_steps * 1);
+    if (extra.ai_steps != null) r.summary.ai_steps = extra.ai_steps;
+
+    this._recomputeRoundSummary(r);
   },
 
   // ----------------------
@@ -245,6 +262,17 @@ const DataManager = {
     };
   },
 
+  _recomputeRoundSummary(r) {
+    if (!r || !r.summary) return;
+
+    const dishes = Number.isFinite(r.summary.dishes_served) ? r.summary.dishes_served : 0;
+    const humanSteps = Number.isFinite(r.summary.human_steps) ? r.summary.human_steps : 0;
+    const aiSteps = Number.isFinite(r.summary.ai_steps) ? r.summary.ai_steps : 0;
+
+    r.summary.human_score = (dishes * 200) - humanSteps;
+    r.summary.ai_score = (dishes * 200) - aiSteps;
+  },
+
   logStep(serverData, humanKey) {
     const r = this.getCurrentRound();
     if (!r || !serverData) return;
@@ -265,46 +293,48 @@ const DataManager = {
     if (r.ylen == null && state.ylen != null) r.ylen = state.ylen;
 
     // summary
-    if (typeof serverData.dishes_served === 'number') r.summary.dishes_served = serverData.dishes_served;
-    if (humanKey !== 'Stay') r.summary.human_steps += 1;
-    // Participant score is derived ONLY from dishes and human actions (independent of AI reward)
-    r.summary.participant_score = (r.summary.dishes_served * 200) - (r.summary.human_steps * 1);
+    if (typeof serverData.dishes_served === 'number') {
+      r.summary.dishes_served = serverData.dishes_served;
+    }
 
+    const humanAction = this._normalizeHumanAction(humanKey);
+    if (humanAction != null && humanAction !== 'STAY') {
+      r.summary.human_steps += 1;
+    }
 
     // Reward bookkeeping (round totals)
-    // Prefer explicit fields; fall back to legacy raw_reward / adjusted_reward when needed.
-    const teamRaw = (typeof serverData.team_reward_raw === 'number') ? serverData.team_reward_raw
-                  : ((typeof serverData.raw_reward === 'number') ? serverData.raw_reward : null);
-    const teamAdj = (typeof serverData.team_reward_adjusted === 'number') ? serverData.team_reward_adjusted
-                  : ((typeof serverData.adjusted_reward === 'number') ? serverData.adjusted_reward : null);
+    // "score" here = sum of adjusted rewards over the round
+    const teamAdj = (typeof serverData.team_reward_adjusted === 'number')
+      ? serverData.team_reward_adjusted
+      : ((typeof serverData.adjusted_reward === 'number') ? serverData.adjusted_reward : null);
 
-    const aiRaw   = (typeof serverData.ai_reward_raw === 'number') ? serverData.ai_reward_raw : null;
-    const huRaw   = (typeof serverData.human_reward_raw === 'number') ? serverData.human_reward_raw : null;
+    const huAdj = (typeof serverData.human_reward_adjusted === 'number')
+      ? serverData.human_reward_adjusted
+      : null;
 
-    const aiAdj   = (typeof serverData.ai_reward_adjusted === 'number') ? serverData.ai_reward_adjusted : null;
-    const huAdj   = (typeof serverData.human_reward_adjusted === 'number') ? serverData.human_reward_adjusted : null;
+    const aiAdj = (typeof serverData.ai_reward_adjusted === 'number')
+      ? serverData.ai_reward_adjusted
+      : null;
 
-    // Ensure fields exist even if older logs are loaded
-    if (typeof r.summary.team_reward_raw !== 'number') r.summary.team_reward_raw = 0;
-    if (typeof r.summary.human_reward_raw !== 'number') r.summary.human_reward_raw = 0;
-    if (typeof r.summary.ai_reward_raw !== 'number') r.summary.ai_reward_raw = 0;
-    if (typeof r.summary.team_reward_adjusted !== 'number') r.summary.team_reward_adjusted = 0;
-    if (typeof r.summary.human_reward_adjusted !== 'number') r.summary.human_reward_adjusted = 0;
-    if (typeof r.summary.ai_reward_adjusted !== 'number') r.summary.ai_reward_adjusted = 0;
+    if (typeof r.summary.team_reward_score !== 'number') r.summary.team_reward_score = 0;
+    if (typeof r.summary.human_reward_score !== 'number') r.summary.human_reward_score = 0;
+    if (typeof r.summary.ai_reward_score !== 'number') r.summary.ai_reward_score = 0;
 
-    if (teamRaw != null && Number.isFinite(teamRaw)) r.summary.team_reward_raw += teamRaw;
-    if (teamAdj != null && Number.isFinite(teamAdj)) r.summary.team_reward_adjusted += teamAdj;
-
-    if (huRaw != null && Number.isFinite(huRaw)) r.summary.human_reward_raw += huRaw;
-    if (aiRaw != null && Number.isFinite(aiRaw)) r.summary.ai_reward_raw += aiRaw;
-
-    if (huAdj != null && Number.isFinite(huAdj)) r.summary.human_reward_adjusted += huAdj;
-    if (aiAdj != null && Number.isFinite(aiAdj)) r.summary.ai_reward_adjusted += aiAdj;
+    if (teamAdj != null && Number.isFinite(teamAdj)) r.summary.team_reward_score += teamAdj;
+    if (huAdj != null && Number.isFinite(huAdj)) r.summary.human_reward_score += huAdj;
+    if (aiAdj != null && Number.isFinite(aiAdj)) r.summary.ai_reward_score += aiAdj;
 
     // AI
     const aiLast = serverData.robot_last_action || null;
     const aiLow = (aiLast && aiLast.low_level_action != null) ? Number(aiLast.low_level_action) : null;
     const aiMacro = (aiLast && aiLast.ai_macro_action != null) ? Number(aiLast.ai_macro_action) : null;
+
+    const aiArrow = this._aiArrowFromLowLevel(aiLow);
+    if (aiArrow != null && aiArrow !== 'STAY') {
+      r.summary.ai_steps += 1;
+    }
+
+    this._recomputeRoundSummary(r);
 
     // 1) human
     r.action_log.human.push({
@@ -322,7 +352,7 @@ const DataManager = {
       ...(this.OPTS.LOG_WALL_MS ? { wall_ms } : {}),
       macro: aiMacro,
       low: aiLow,
-      arrow: this._aiArrowFromLowLevel(aiLow),
+      arrow: aiArrow,
       pos: (ai.x != null && ai.y != null) ? [ai.x, ai.y] : null,
       holding: this._packHolding(ai)
     });
@@ -330,15 +360,17 @@ const DataManager = {
     // 3) counters
     if (this.OPTS.LOG_COUNTERS_EACH_TICK) {
       r.counter_log.push({
-        t,
-        ...(this.OPTS.LOG_WALL_MS ? { wall_ms } : {}),
-        participant_score: (typeof r.summary.participant_score === 'number') ? r.summary.participant_score : null,
-        dishes_served: (typeof serverData.dishes_served === 'number') ? serverData.dishes_served : null,
-        human_steps: (typeof r.summary.human_steps === 'number') ? r.summary.human_steps : null,
-        team_reward_raw_total: (typeof r.summary.team_reward_raw === 'number') ? r.summary.team_reward_raw : null,
-        human_reward_raw_total: (typeof r.summary.human_reward_raw === 'number') ? r.summary.human_reward_raw : null,
-        ai_reward_raw_total: (typeof r.summary.ai_reward_raw === 'number') ? r.summary.ai_reward_raw : null
-      });
+      t,
+      ...(this.OPTS.LOG_WALL_MS ? { wall_ms } : {}),
+      dishes_served: (typeof r.summary.dishes_served === 'number') ? r.summary.dishes_served : null,
+      human_steps: (typeof r.summary.human_steps === 'number') ? r.summary.human_steps : null,
+      ai_steps: (typeof r.summary.ai_steps === 'number') ? r.summary.ai_steps : null,
+      human_score: (typeof r.summary.human_score === 'number') ? r.summary.human_score : null,
+      ai_score: (typeof r.summary.ai_score === 'number') ? r.summary.ai_score : null,
+      team_reward_score: (typeof r.summary.team_reward_score === 'number') ? r.summary.team_reward_score : null,
+      human_reward_score: (typeof r.summary.human_reward_score === 'number') ? r.summary.human_reward_score : null,
+      ai_reward_score: (typeof r.summary.ai_reward_score === 'number') ? r.summary.ai_reward_score : null
+    });
     }
 
     // 4) environment state (x replay)

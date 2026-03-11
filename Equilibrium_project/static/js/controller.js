@@ -19,15 +19,32 @@ async function api(endpoint, data={}) {
 
 // --- 2. CONDITION ASSIGNMENT ---
 function assignConditions() {
-    const pid = STATE.prolificId || "test";
+    const pid = (STATE.prolificId || "test").trim();
+
+    const availableMaps = (
+        Array.isArray(CONFIG.EXPERIMENT_MAPS) && CONFIG.EXPERIMENT_MAPS.length
+    ) ? CONFIG.EXPERIMENT_MAPS : ["circle", "counter"];
+
+    // Keep assignment stable for the same participant
+    const storageKey = `assigned_experiment_map_${pid}`;
+    const savedMap = localStorage.getItem(storageKey);
+    if (savedMap && availableMaps.includes(savedMap)) {
+        STATE.assignment.layout = savedMap;
+        console.log("Loaded assigned map:", STATE.assignment.layout);
+        return;
+    }
+
+    // Deterministic pseudo-random assignment from participant ID
     let h = 0;
-    for(let i=0; i<pid.length; i++) h = (h*31 + pid.charCodeAt(i)) >>> 0;
-    
-    // Randomly assign layout (kept for logging / future; backend currently uses a fixed map)
-    const layouts = ["cramped", "circuit", "asymmetric", "ring", "forced"];
-    STATE.assignment.layout = layouts[h % layouts.length];
-    
-    console.log("Assigned:", STATE.assignment);
+    for (let i = 0; i < pid.length; i++) {
+        h = (h * 31 + pid.charCodeAt(i)) >>> 0;
+    }
+
+    const assignedMap = availableMaps[h % availableMaps.length];
+    STATE.assignment.layout = assignedMap;
+    localStorage.setItem(storageKey, assignedMap);
+
+    console.log("Assigned experiment map:", STATE.assignment.layout);
 }
 
 // --- 3. PAGE NAVIGATION ---
@@ -97,7 +114,11 @@ async function doOneTick() {
     const keyToSend = bufferedHumanKey || 'Stay';
     bufferedHumanKey = 'Stay';
 
-    const data = await api('/key_event', { key: keyToSend, config_id: STATE.configId });
+    const data = await api('/key_event', {
+      key: keyToSend,
+      config_id: STATE.configId,
+      map_type: STATE.assignment.layout
+    });
 
     drawGame(data.state, 'gameCanvas');
 
@@ -158,17 +179,18 @@ async function startRound({ newEpisode = false } = {}) {
   if (gameTimer) clearInterval(gameTimer);
   try {
     const data = await api('/reset', {
-      config_id: STATE.configId,
-      episode_index: STATE.episodeIndex,
-      round_in_episode: STATE.roundInEpisode,
-      episode_phase: STATE.episodePhase,
-      prolificId: STATE.prolificId,
-      n_init: CONFIG.EPISODES_SEED,
-      n_bo:   CONFIG.EPISODES_BO,
-      n_knn: CONFIG.EPISODES_STRESS,
-      solo_episode: (typeof isSoloEpisode === 'function') ? isSoloEpisode(STATE.episodeIndex) : false,
-      new_episode: !!newEpisode
-    });
+    config_id: STATE.configId,
+    map_type: STATE.assignment.layout,
+    episode_index: STATE.episodeIndex,
+    round_in_episode: STATE.roundInEpisode,
+    episode_phase: STATE.episodePhase,
+    prolificId: STATE.prolificId,
+    n_init: CONFIG.EPISODES_SEED,
+    n_bo: CONFIG.EPISODES_BO,
+    n_knn: CONFIG.EPISODES_STRESS,
+    solo_episode: (typeof isSoloEpisode === 'function') ? isSoloEpisode(STATE.episodeIndex) : false,
+    new_episode: !!newEpisode
+  });
     bufferedHumanKey = 'Stay';
     aiTickInFlight = false;
 

@@ -119,45 +119,148 @@ ACTION_TO_KEY[4] = "Stay"
 
 MAX_STEPS = 200
 
-
 # =========================
-# fixed map, random AI policy
+# map registry / policy pools
 # =========================
-FIXED_MAP_TYPE = "circle"
-FIXED_GRID_DIM = [5, 5]
+DEFAULT_EXPERIMENT_MAP = "circle"
 
-POLICY_POOL_DIR = os.path.join(current_dir, "policy_pool")
+MAP_CONFIGS = {
+    "circle": {
+        "map_type": "circle",
+        "grid_dim": [5, 5],
+        "policy_pool_dir": os.path.join(current_dir, "policy_pool"),
+        "embedding_csv": os.path.join(current_dir, "tsnt.csv"),
+        "policy_prefix": "[equilibrium]agent0_",
+        "checkpoint_filename": "model_500000.zip",
+        "env_id": "Overcooked-equilibrium-v0",
+        "mac_env_id": "Overcooked-MA-equilibrium-v0",
+        "layout_id": "fixed_circle_5x5",
+        "aliases": ["circle", "fixed_circle_5x5"],
+    },
+    "counter": {
+        "map_type": "counter",
+        "grid_dim": [5, 8],
+        "policy_pool_dir": os.path.join(current_dir, "policy_pool_newmap2"),
+        "embedding_csv": os.path.join(current_dir, "tsnt_counter.csv"),
+        "policy_prefix": "[equilibrium][counter]agent0_",
+        "checkpoint_filename": "model_1500000.zip",
+        "env_id": "Overcooked-equilibrium-v0",
+        "mac_env_id": "Overcooked-MA-equilibrium-v1",
+        "layout_id": "fixed_counter_5x8",
+        "aliases": ["counter", "fixed_counter_5x8", "newmap2"],
+    },
+}
+
+# backward-compatible defaults
+FIXED_MAP_TYPE = DEFAULT_EXPERIMENT_MAP
+FIXED_GRID_DIM = list(MAP_CONFIGS[DEFAULT_EXPERIMENT_MAP]["grid_dim"])
 
 
-# This function is used for randomly picking one policy from the AI policy pool.
+def _normalize_map_name(map_name):
+    if map_name is None:
+        return None
+    candidate = str(map_name).strip().lower()
+    if not candidate:
+        return None
+    if candidate in MAP_CONFIGS:
+        return candidate
 
-def _pick_random_policy_checkpoint(exclude_policy_names=None):
-    """
-    pick an model from /policy_pool/
-    """
-    if not os.path.isdir(POLICY_POOL_DIR):
-        raise FileNotFoundError(f"POLICY_POOL_DIR not found: {POLICY_POOL_DIR}")
+    for registered_name, cfg in MAP_CONFIGS.items():
+        aliases = {registered_name, str(cfg.get("map_type", "")).lower(), str(cfg.get("layout_id", "")).lower()}
+        aliases.update(str(alias).strip().lower() for alias in cfg.get("aliases", []))
+        if candidate in aliases:
+            return registered_name
+    return None
+
+
+def _infer_map_name(map_name=None, layout_id=None, config_id=None, sess=None):
+    if str(config_id).strip().lower() == "layout_practice":
+        return "practice"
+    if str(layout_id).strip().lower() == "layout_practice":
+        return "practice"
+    
+    for candidate in (map_name, layout_id, config_id):
+        normalized = _normalize_map_name(candidate)
+        if normalized is not None:
+            return normalized
+
+        if candidate is None:
+            continue
+
+        lowered = str(candidate).strip().lower()
+        for registered_name, cfg in MAP_CONFIGS.items():
+            aliases = {registered_name, str(cfg.get("map_type", "")).lower(), str(cfg.get("layout_id", "")).lower()}
+            aliases.update(str(alias).strip().lower() for alias in cfg.get("aliases", []))
+            if any(alias and alias in lowered for alias in aliases):
+                return registered_name
+
+    current_map_name = getattr(sess, "current_map_name", None) if sess is not None else None
+    if current_map_name == "practice":
+        return "practice"
+    if current_map_name in MAP_CONFIGS:
+        return current_map_name
+
+    return DEFAULT_EXPERIMENT_MAP
+
+
+def _get_experiment_map_config(map_name=None, layout_id=None, config_id=None, sess=None):
+    resolved_map_name = _infer_map_name(map_name=map_name, layout_id=layout_id, config_id=config_id, sess=sess)
+    if resolved_map_name not in MAP_CONFIGS:
+        available = ", ".join(sorted(MAP_CONFIGS))
+        raise ValueError(f"Unknown map '{map_name}'. Available maps: {available}")
+    return resolved_map_name, MAP_CONFIGS[resolved_map_name]
+
+
+def _get_used_policy_names(sess, map_name: str):
+    used_by_map = getattr(sess, "used_policy_names_by_map", None)
+    if not isinstance(used_by_map, dict):
+        used_by_map = {}
+        sess.used_policy_names_by_map = used_by_map
+    return list(used_by_map.get(map_name, []))
+
+
+def _remember_policy_name(sess, map_name: str, policy_name: str):
+    used_by_map = getattr(sess, "used_policy_names_by_map", None)
+    if not isinstance(used_by_map, dict):
+        used_by_map = {}
+        sess.used_policy_names_by_map = used_by_map
+    used = used_by_map.setdefault(map_name, [])
+    if policy_name not in used:
+        used.append(policy_name)
+
+
+
+
+def _pick_random_policy_checkpoint(
+    policy_pool_dir: str,
+    checkpoint_filename: str,
+    exclude_policy_names=None,
+):
+    if not policy_pool_dir:
+        raise ValueError("policy_pool_dir must be provided")
+    if not os.path.isdir(policy_pool_dir):
+        raise FileNotFoundError(f"policy pool directory not found: {policy_pool_dir}")
 
     subdirs = [
-        os.path.join(POLICY_POOL_DIR, d)
-        for d in os.listdir(POLICY_POOL_DIR)
-        if os.path.isdir(os.path.join(POLICY_POOL_DIR, d))
+        os.path.join(policy_pool_dir, d)
+        for d in os.listdir(policy_pool_dir)
+        if os.path.isdir(os.path.join(policy_pool_dir, d))
     ]
-    if not subdirs:
-        raise FileNotFoundError(f"No subfolders found under: {POLICY_POOL_DIR}")
+    subdirs = [d for d in subdirs if "agent0" in os.path.basename(d)]
 
-    # Optional: sample without replacement (per-session) when possible.
+    if not subdirs:
+        raise FileNotFoundError(f"No policy subfolders found under: {policy_pool_dir}")
+
     if exclude_policy_names:
         exclude_set = set(exclude_policy_names)
         filtered = [d for d in subdirs if os.path.basename(d) not in exclude_set]
         if filtered:
             subdirs = filtered
 
-    chosen_dir = [d for d in subdirs if "agent0" in d]
     chosen_dir = random.choice(subdirs)
-    ckpt_path = os.path.join(chosen_dir, "model_500000.zip")
+    ckpt_path = os.path.join(chosen_dir, checkpoint_filename)
     if not os.path.isfile(ckpt_path):
-        raise FileNotFoundError(f"model_500000.zip not found in: {chosen_dir}")
+        raise FileNotFoundError(f"{checkpoint_filename} not found in: {chosen_dir}")
 
     return chosen_dir, ckpt_path
 
@@ -462,6 +565,11 @@ class Session:
         self.episode_phase = None
         self.used_policy_names = []  # basenames of chosen policy dirs
         self.solo_episode = False  # if True, freeze/hide AI teammate
+        self.used_policy_names = []  # backward-compatible flat cache
+        self.used_policy_names_by_map = {}  # map_name -> [policy_dir_basename, ...]
+        self.current_map_name = DEFAULT_EXPERIMENT_MAP
+        self.current_map_type = MAP_CONFIGS[DEFAULT_EXPERIMENT_MAP]["map_type"]
+        self.current_grid_dim = list(MAP_CONFIGS[DEFAULT_EXPERIMENT_MAP]["grid_dim"])
 
 
 class SessionManager:
@@ -511,16 +619,31 @@ SESSION_MGR = SessionManager(ttl_seconds=3600)
 class OptimizerManager:
     def __init__(self) -> None:
         self.optimizers = {}
-        
-    def optimizer_exists(self, prolofic_id):
-        return prolofic_id in self.optimizers
-           
-    def create_optimizer(self, prolific_id, n_init, n_bo, n_knn):
-        if self.optimizer_exists(prolific_id):
-            return jsonify(success=False, error="Optimizer already created for participant"), 400
+
+    def _key(self, prolific_id, map_name):
+        return (prolific_id, map_name)
+
+    def optimizer_exists(self, prolific_id, map_name):
+        return self._key(prolific_id, map_name) in self.optimizers
+
+    def create_optimizer(self, prolific_id, map_name, embedding_csv, n_init, n_bo, n_knn):
+        key = self._key(prolific_id, map_name)
+        if key in self.optimizers:
+            return
+
         surr = create_surrogate_spec(noise_variance=0.2)
-        self.optimizers[prolific_id] = TSNEBayesOptimizer(embedding_csv="tsnt.csv", n_init=n_init, n_bo=n_bo, n_knn=n_knn, n_best=1, surrogate_spec=surr, verbose=True)
-    
+        self.optimizers[key] = TSNEBayesOptimizer(
+            embedding_csv=embedding_csv,
+            n_init=n_init,
+            n_bo=n_bo,
+            n_knn=n_knn,
+            n_best=1,
+            surrogate_spec=surr,
+            verbose=True
+        )
+
+    def get_optimizer(self, prolific_id, map_name):
+        return self.optimizers[self._key(prolific_id, map_name)]
         
 OPTIMIZER_MGR = OptimizerManager()
 
@@ -529,11 +652,34 @@ OPTIMIZER_MGR = OptimizerManager()
 
 _model_cache_by_path = {}
 
-def _pick_policy_checkpoint(policy:str):
-    policy = "[equilibrium]agent0_"+policy
-    chosen_dir = os.path.join(POLICY_POOL_DIR, policy)
-    ckpt_pth = os.path.join(chosen_dir, "model_500000.zip")
-    return chosen_dir, ckpt_pth
+def _pick_policy_checkpoint(
+    policy: str,
+    policy_pool_dir: str,
+    policy_prefix: str,
+    checkpoint_filename: str,
+):
+    raw_policy = str(policy).strip()
+
+    candidate_names = [
+        raw_policy,
+        f"{policy_prefix}{raw_policy}",
+    ]
+
+    tried = []
+
+    for candidate in candidate_names:
+        chosen_dir = os.path.join(policy_pool_dir, candidate)
+        ckpt_pth = os.path.join(chosen_dir, checkpoint_filename)
+        tried.append(ckpt_pth)
+
+        if os.path.isfile(ckpt_pth):
+            logger.info(f"[POLICY - FOUND] {ckpt_pth}")
+            return chosen_dir, ckpt_pth
+
+    raise FileNotFoundError(
+        f"No checkpoint found for policy '{raw_policy}' in '{policy_pool_dir}'. "
+        f"Tried: {tried}"
+    )
 
 # This function is used for loading an AI model or getting an existing AI model.
 def _load_or_get_model_by_ckpt_path(ckpt_path: str):
@@ -562,57 +708,81 @@ def _parse_config_id(layout_id: str = None, model_id: str = None, config_id: str
 
 
 
-def create_envs_for_session(sess: Session, config_id: str, choose_new_policy: bool = True, optimizer: TSNEBayesOptimizer | None = None, is_solo: bool | None = None):
-
-    # fixed map, which is the circle (5*5). for each time, I randomly load a model from the policy_pool
-
-    # Fix the environment ID
-    env_id     = "Overcooked-equilibrium-v0"
-    mac_env_id = "Overcooked-MA-equilibrium-v0"
-
-    grid_dim = FIXED_GRID_DIM
-    n_agent = 2
-
-    # Judge whether the current phase is the practicing phase
+def create_envs_for_session(
+    sess: Session,
+    config_id: str,
+    choose_new_policy: bool = True,
+    optimizer: TSNEBayesOptimizer | None = None,
+    is_solo: bool | None = None,
+    map_name: str | None = None,
+    layout_id: str | None = None,
+):
     is_practice = (config_id == "layout_practice")
     is_solo = bool(getattr(sess, "solo_episode", False)) if is_solo is None else bool(is_solo)
-    # Human-alone (solo) episodes: build a 1-agent env so no invisible AI occupies a tile.
-    if is_solo and (not is_practice):
-        n_agent = 1
 
     if is_practice:
-        env_params = {
-            'grid_dim': [5, 5],
-            'task': ["lettuce salad"],
-            'rewardList': rewardList,
-            'map_type': "A",
-            'n_agent': n_agent,
-            'obs_radius': 0,
-            'mode': "vector",
-            'debug': True
+        env_id = "Overcooked-equilibrium-v0"
+        mac_env_id = "Overcooked-MA-equilibrium-v0"
+        active_map_name = "practice"
+        active_layout_id = "layout_practice"
+        active_cfg = {
+            "grid_dim": [5, 5],
+            "task": ["lettuce salad"],
+            "rewardList": rewardList,
+            "map_type": "A",
+            "n_agent": 2,
+            "obs_radius": 0,
+            "mode": "vector",
+            "debug": True,
         }
+        policy_pool_dir = None
+        policy_prefix = None
+        checkpoint_filename = None
     else:
-        # If it is not the practicing phase
-        env_params = {
-            'grid_dim': grid_dim,
-            'task': ["lettuce salad"],
-            'rewardList': rewardList,
-            'map_type': FIXED_MAP_TYPE,   # <- Using the circle map
-            'n_agent': n_agent,
-            'obs_radius': 0,
-            'mode': "vector",
-            'debug': True
-        }
+        active_map_name, map_cfg = _get_experiment_map_config(
+            map_name=map_name,
+            layout_id=layout_id,
+            config_id=config_id,
+            sess=sess,
+        )
+        active_cfg = dict(map_cfg)
+        env_id = active_cfg.pop("env_id")
+        mac_env_id = active_cfg.pop("mac_env_id")
+        active_layout_id = active_cfg.pop(
+            "layout_id",
+            f"fixed_{active_map_name}_{active_cfg['grid_dim'][0]}x{active_cfg['grid_dim'][1]}"
+        )
+        policy_pool_dir = active_cfg.pop("policy_pool_dir")
+        policy_prefix = active_cfg.pop("policy_prefix")
+        checkpoint_filename = active_cfg.pop("checkpoint_filename")
 
-    # Close the old env
+    n_agent = 1 if (is_solo and not is_practice) else int(active_cfg.get("n_agent", 2))
+    env_params = {
+        "grid_dim": list(active_cfg["grid_dim"]),
+        "task": list(active_cfg.get("task", ["lettuce salad"])),
+        "rewardList": active_cfg.get("rewardList", rewardList),
+        "map_type": active_cfg["map_type"],
+        "n_agent": n_agent,
+        "obs_radius": active_cfg.get("obs_radius", 0),
+        "mode": active_cfg.get("mode", "vector"),
+        "debug": active_cfg.get("debug", True),
+    }
+
+    active_grid_dim = list(env_params["grid_dim"])
+    active_map_type = env_params["map_type"]
+    map_changed = (getattr(sess, "current_map_name", None) != active_map_name)
+
     if sess.env is not None:
-        try: sess.env.close()
-        except: pass
+        try:
+            sess.env.close()
+        except Exception:
+            pass
     if sess.env_mac is not None:
-        try: sess.env_mac.close()
-        except: pass
+        try:
+            sess.env_mac.close()
+        except Exception:
+            pass
 
-    # Create env
     sess.env = gym.make(env_id, **env_params)
     _seed_env_everything(sess.env, SEED)
     sess.env.reset()
@@ -620,8 +790,6 @@ def create_envs_for_session(sess: Session, config_id: str, choose_new_policy: bo
     sess.env_mac = gym.make(mac_env_id, **env_params)
     _seed_env_everything(sess.env_mac, SEED)
 
-    # Wrap the env only in 2-agent mode (needed for macro->low-level translation).
-    # In 1-agent (solo) mode we step env_mac directly with a single human action.
     if n_agent == 2:
         reset_step = 10000
         sess.wrapper = SingleAgentWrapper_accept_keyboard_action(
@@ -630,43 +798,48 @@ def create_envs_for_session(sess: Session, config_id: str, choose_new_policy: bo
     else:
         sess.wrapper = None
 
-    # load the model
     if is_practice or is_solo:
         sess.chosen_policy_dir = None
         sess.chosen_ckpt_path = None
         sess.model = None
-   
     else:
-        # Pick a new AI policy only when starting a new episode.
-        should_pick = bool(choose_new_policy) or (not sess.chosen_ckpt_path)
+        used_policy_names = _get_used_policy_names(sess, active_map_name)
+        should_pick = bool(choose_new_policy) or map_changed or (not sess.chosen_ckpt_path)
+
         if should_pick:
             if optimizer is not None:
-                logger.info("[POLICY - PICK] picking policy using optimization pipeline")
+                logger.info(f"[POLICY - PICK] picking policy using optimization pipeline for map={active_map_name}")
                 mapped_trials = optimizer.ask()
-                checkpoint = mapped_trials[optimizer._actual_trial_idx]['policy']
-                chosen_dir, ckpt_path = _pick_policy_checkpoint(checkpoint)
+                checkpoint = mapped_trials[optimizer._actual_trial_idx]["policy"]
+                chosen_dir, ckpt_path = _pick_policy_checkpoint(
+                    checkpoint,
+                    policy_pool_dir=policy_pool_dir,
+                    policy_prefix=policy_prefix,
+                    checkpoint_filename=checkpoint_filename,
+                )
                 sess.chosen_policy_dir = chosen_dir
                 sess.chosen_ckpt_path = ckpt_path
                 sess.model = _load_or_get_model_by_ckpt_path(ckpt_path)
-                 
             else:
-                logger.info("[POLICY - PICK] picking a random policy")
-                chosen_dir, ckpt_path = _pick_random_policy_checkpoint(exclude_policy_names=sess.used_policy_names)
+                logger.info(f"[POLICY - PICK] picking a random policy for map={active_map_name}")
+                chosen_dir, ckpt_path = _pick_random_policy_checkpoint(
+                    policy_pool_dir=policy_pool_dir,
+                    checkpoint_filename=checkpoint_filename,
+                    exclude_policy_names=used_policy_names,
+                )
                 sess.chosen_policy_dir = chosen_dir
                 sess.chosen_ckpt_path = ckpt_path
 
-            policy_name = os.path.basename(chosen_dir)
+            policy_name = os.path.basename(sess.chosen_policy_dir)
+            _remember_policy_name(sess, active_map_name, policy_name)
             if policy_name not in sess.used_policy_names:
                 sess.used_policy_names.append(policy_name)
-        
-        # Always (re)load the model into the freshly created env.
-        sess.model = _load_or_get_model_by_ckpt_path(sess.chosen_ckpt_path)
 
+        sess.model = _load_or_get_model_by_ckpt_path(sess.chosen_ckpt_path)
 
     if sess.wrapper is not None:
         sess.obs = sess.wrapper.reset()
     else:
-        # Solo mode: reset env_mac and keep the (only) agent's macro obs if available.
         _obs = sess.env_mac.reset()
         try:
             sess.obs = sess.env_mac._get_macro_obs()[0]
@@ -676,21 +849,19 @@ def create_envs_for_session(sess: Session, config_id: str, choose_new_policy: bo
             else:
                 sess.obs = _obs
 
-    # log the config
-    if is_practice:
-        sess.config_id = "layout_practice"
-        sess.current_layout_id = "layout_practice"
-        sess.current_model_id  = "none"
-    elif is_solo:
-        sess.config_id = config_id
-        sess.current_layout_id = "fixed_cramped_5x5"
-        sess.current_model_id  = "solo"
-    else:
-        sess.config_id = config_id
-        sess.current_layout_id = "fixed_cramped_5x5"
-        sess.current_model_id  = os.path.basename(sess.chosen_policy_dir)
+    sess.config_id = "layout_practice" if is_practice else config_id
+    sess.current_layout_id = active_layout_id
+    sess.current_map_name = active_map_name
+    sess.current_map_type = active_map_type
+    sess.current_grid_dim = active_grid_dim
 
-    # reset the step count and reward
+    if is_practice:
+        sess.current_model_id = "none"
+    elif is_solo:
+        sess.current_model_id = "solo"
+    else:
+        sess.current_model_id = os.path.basename(sess.chosen_policy_dir)
+
     sess.cur_step = 0
     sess.cumulative_reward = 0.0
     sess.ai_reward_total = 0.0
@@ -800,6 +971,7 @@ def reset():
     layout_id = data.get('layout_id')
     model_id  = data.get('model_id')
     config_id = data.get('config_id')
+    map_type = data.get('map_type')
 
     # metadata (optional)
     episode_index = data.get('episode_index', None)
@@ -830,13 +1002,34 @@ def reset():
     if is_practice or sess.solo_episode:
         optimizer = None
     else:
+        resolved_map_name, resolved_map_cfg = _get_experiment_map_config(
+            map_name=map_type,
+            layout_id=layout_id,
+            config_id=config_id,
+            sess=sess,
+        )
+
+        embedding_csv = resolved_map_cfg["embedding_csv"]
+
         n_init = int(data.get('n_init'))
         n_bo = int(data.get('n_bo'))
         n_knn = int(data.get('n_knn'))
-        if not OPTIMIZER_MGR.optimizer_exists(prolific):
-            OPTIMIZER_MGR.create_optimizer(prolific, n_init=n_init, n_bo=n_bo, n_knn=n_knn)
-            logger.info(f"[BACKEND - RESET] optimizer configured for prolific_id={prolific}")    
-        optimizer = OPTIMIZER_MGR.optimizers[prolific]
+
+        if not OPTIMIZER_MGR.optimizer_exists(prolific, resolved_map_name):
+            OPTIMIZER_MGR.create_optimizer(
+                prolific_id=prolific,
+                map_name=resolved_map_name,
+                embedding_csv=embedding_csv,
+                n_init=n_init,
+                n_bo=n_bo,
+                n_knn=n_knn,
+            )
+            logger.info(
+                f"[BACKEND - RESET] optimizer configured for prolific_id={prolific}, "
+                f"map={resolved_map_name}, embedding_csv={embedding_csv}"
+            )
+
+        optimizer = OPTIMIZER_MGR.get_optimizer(prolific, resolved_map_name)
 
     
     with sess.lock:
@@ -854,17 +1047,27 @@ def reset():
                 sess.episode_index = episode_index_int
             sess.round_in_episode = round_in_episode_int
             sess.episode_phase = episode_phase
-            create_envs_for_session(sess, config_id=(config_id or "IGNORED"), choose_new_policy=choose_new_policy, optimizer=optimizer, is_solo=sess.solo_episode)
+            create_envs_for_session(
+                sess,
+                config_id=(config_id or "layout_practice"),
+                choose_new_policy=choose_new_policy,
+                optimizer=optimizer,
+                is_solo=sess.solo_episode,
+                map_name=map_type,
+                layout_id=layout_id,
+            )
         
         except Exception as e:
+            logger.exception(
+                f"[BACKEND - RESET - ERROR] sid={sid}, config_id={config_id}, map_type={map_type}, prolific={prolific}"
+            )
             return jsonify(success=False, error=str(e)), 400
 
         steps_left = MAX_STEPS
         logger.info(
             f"[BACKEND - RESET] sid={sid}, episode={sess.episode_index}, round={sess.round_in_episode}, "
-            f"phase={sess.episode_phase}, map={FIXED_MAP_TYPE}, grid={FIXED_GRID_DIM}, policy={sess.current_model_id}"
+            f"phase={sess.episode_phase}, map={sess.current_map_type}, grid={sess.current_grid_dim}, policy={sess.current_model_id}"
         )
-
 
         return jsonify(
             success=True,
@@ -881,8 +1084,9 @@ def reset():
             round_in_episode=sess.round_in_episode,
             episode_phase=sess.episode_phase,
 
-            map_type=FIXED_MAP_TYPE if config_id != "layout_practice" else "A",
-            grid_dim=FIXED_GRID_DIM if config_id != "layout_practice" else [5, 5],
+            map_type=sess.current_map_type,
+            selected_map=sess.current_map_name,
+            grid_dim=sess.current_grid_dim,
             policy_id=sess.current_model_id
         )
 
@@ -901,16 +1105,43 @@ def key_event():
     layout_id = data.get('layout_id')
     model_id  = data.get('model_id')
     config_id = data.get('config_id')
+    map_type = data.get('map_type')
 
     sess = SESSION_MGR.ensure(sid)
     with sess.lock:
         # When the config id changes, hot switch the env.
-        if layout_id or model_id or config_id:
+        if layout_id or model_id or config_id or map_type:
             try:
-                target_cfg_id = _parse_config_id(layout_id=layout_id, model_id=model_id, config_id=config_id)
-                if target_cfg_id != sess.config_id:
-                    create_envs_for_session(sess, target_cfg_id, is_solo=getattr(sess, 'solo_episode', False))
-                    logger.info(f"[BACKEND - HOT_SWITCH] sid={sid}, config={target_cfg_id}")
+                target_cfg_id = sess.config_id or "layout_practice"
+                if config_id:
+                    target_cfg_id = config_id
+                elif layout_id and model_id:
+                    target_cfg_id = _parse_config_id(layout_id=layout_id, model_id=model_id)
+
+                if target_cfg_id == "layout_practice":
+                    target_map_name = "practice"
+                else:
+                    target_map_name = _infer_map_name(
+                        map_name=map_type,
+                        layout_id=layout_id,
+                        config_id=target_cfg_id,
+                        sess=sess,
+                    )
+
+                needs_switch = (
+                    target_cfg_id != sess.config_id
+                    or target_map_name != getattr(sess, "current_map_name", None)
+                )
+
+                if needs_switch:
+                    create_envs_for_session(
+                        sess,
+                        target_cfg_id,
+                        is_solo=getattr(sess, 'solo_episode', False),
+                        map_name=target_map_name,
+                        layout_id=layout_id,
+                    )
+                    logger.info(f"[BACKEND - HOT_SWITCH] sid={sid}, config={target_cfg_id}, map={target_map_name}")
             except Exception as e:
                 return jsonify(success=False, error=f"hot switch failed: {e}"), 400
             

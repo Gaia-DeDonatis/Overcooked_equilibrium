@@ -1,3 +1,5 @@
 {
-    "python-envs.pythonProjects": []
+  "python.analysis.extraPaths": [
+    "./Equilibrium_project"
+  ]
 }
