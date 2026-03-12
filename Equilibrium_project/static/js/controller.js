@@ -47,6 +47,27 @@ function assignConditions() {
     console.log("Assigned experiment map:", STATE.assignment.layout);
 }
 
+const selectionModeEl = document.getElementById('selectionMode');
+if (selectionModeEl) {
+    selectionModeEl.value = CONFIG.SELECTION_MODE || 'bo';
+    STATE.assignment.condition = getSelectionMode();
+
+    selectionModeEl.addEventListener('change', () => {
+        STATE.assignment.condition = getSelectionMode();
+        console.log("Researcher condition:", STATE.assignment.condition);
+    });
+}
+
+function getSelectionMode() {
+    const el = document.getElementById('selectionMode');
+    const value = (el?.value || STATE.assignment?.condition || CONFIG.SELECTION_MODE || 'bo')
+        .toString()
+        .trim()
+        .toLowerCase();
+
+    return value === 'control' ? 'control' : 'bo';
+}
+
 // --- 3. PAGE NAVIGATION ---
 function showPage(pageId) {
     const pages = [
@@ -179,18 +200,19 @@ async function startRound({ newEpisode = false } = {}) {
   if (gameTimer) clearInterval(gameTimer);
   try {
     const data = await api('/reset', {
-    config_id: STATE.configId,
-    map_type: STATE.assignment.layout,
-    episode_index: STATE.episodeIndex,
-    round_in_episode: STATE.roundInEpisode,
-    episode_phase: STATE.episodePhase,
-    prolificId: STATE.prolificId,
-    n_init: CONFIG.EPISODES_SEED,
-    n_bo: CONFIG.EPISODES_BO,
-    n_knn: CONFIG.EPISODES_STRESS,
-    solo_episode: (typeof isSoloEpisode === 'function') ? isSoloEpisode(STATE.episodeIndex) : false,
-    new_episode: !!newEpisode
-  });
+      config_id: STATE.configId,
+      map_type: STATE.assignment.layout,
+      selection_mode: getSelectionMode(),
+      episode_index: STATE.episodeIndex,
+      round_in_episode: STATE.roundInEpisode,
+      episode_phase: STATE.episodePhase,
+      prolificId: STATE.prolificId,
+      n_init: CONFIG.EPISODES_SEED,
+      n_bo: CONFIG.EPISODES_BO,
+      n_knn: CONFIG.EPISODES_STRESS,
+      solo_episode: (typeof isSoloEpisode === 'function') ? isSoloEpisode(STATE.episodeIndex) : false,
+      new_episode: !!newEpisode
+    });
     bufferedHumanKey = 'Stay';
     aiTickInFlight = false;
 
@@ -360,10 +382,13 @@ async function finishTimeBasedRound() {
         // --- CASE B: EPISODE COMPLETE ---
         console.log(`Episode ${STATE.episodeIndex} Complete!`);
         const soloNow = (typeof isSoloEpisode === 'function') ? isSoloEpisode(STATE.episodeIndex) : false;
-        const shouldTell = !soloNow;
+        const shouldTell = !soloNow && getSelectionMode() === 'bo';
+
         if (shouldTell) {
           await api('/tell', {
-            prolificId: STATE.prolificId
+            prolificId: STATE.prolificId,
+            map_type: STATE.assignment.layout,
+            selection_mode: getSelectionMode()
           });
         }
     if (overlay) {
@@ -690,6 +715,8 @@ if(inputID) {
         const experience = inputExp.value;
         
         assignConditions(); 
+        STATE.assignment.condition = getSelectionMode();
+        if (selectionModeEl) selectionModeEl.disabled = true;
 
         DataManager.initUser(STATE.prolificId, age, gender, STATE.assignment, {
             experience: experience,
@@ -849,3 +876,20 @@ window.onload = () => {
         console.log("Images loaded and game is ready.");
     });
 };
+
+window.addEventListener('resize', () => {
+  const pageGameVisible = !document.getElementById('page-game')?.classList.contains('hidden');
+  if (pageGameVisible && STATE?.isPlaying) {
+    api('/get_state', {}).then(data => {
+      if (data?.state) drawGame(data.state, 'gameCanvas');
+    }).catch(() => {});
+  }
+
+  const practiceCanvas = document.getElementById('gameCanvas_practice');
+  const practiceVisible = practiceCanvas && practiceCanvas.offsetParent !== null;
+  if (practiceVisible) {
+    api('/get_state', {}).then(data => {
+      if (data?.state) drawGame(data.state, 'gameCanvas_practice');
+    }).catch(() => {});
+  }
+});

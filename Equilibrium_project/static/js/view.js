@@ -61,11 +61,33 @@ function resolveImage(name) {
     return null;
 }
 
-// 3. Main Draw Function (Adapted from YOUR Original Code)
+// 3. Main Draw Function
 function drawGame(state, canvasId) {
     const canvas = document.getElementById(canvasId);
     if (!canvas || !state || !state.map) return;
     const ctx = canvas.getContext('2d');
+
+    const rows = state.xlen;
+    const cols = state.ylen;
+
+    const viewport = canvas.closest('.game-viewport');
+    if (viewport) {
+        viewport.style.setProperty('--grid-ratio', `${cols} / ${rows}`);
+    }
+
+    // Make canvas truly responsive to container width
+    const displayWidth = viewport ? viewport.clientWidth : canvas.clientWidth || 600;
+    const displayHeight = Math.round(displayWidth * rows / cols);
+
+    // Support retina / hi-dpi screens
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(displayWidth * dpr);
+    canvas.height = Math.round(displayHeight * dpr);
+    canvas.style.width = `${displayWidth}px`;
+    canvas.style.height = `${displayHeight}px`;
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
 
     // === Helper: Draw Plate with Content Scaled ===
     function drawPlateWithContent(x, y, w, h, plateName, contentName) {
@@ -75,7 +97,7 @@ function drawGame(state, canvasId) {
         if (contentName) {
             const contentImg = resolveImage(contentName);
             if (contentImg) {
-                const CONTENT_SCALE = 0.65; // Scale down food on plate
+                const CONTENT_SCALE = 0.65;
                 const cw = w * CONTENT_SCALE;
                 const ch = h * CONTENT_SCALE;
                 const cx = x + (w - cw) / 2;
@@ -86,8 +108,8 @@ function drawGame(state, canvasId) {
     }
 
     // === Cleanup & Geometry ===
-    const cw = canvas.width;
-    const ch = canvas.height;
+    const cw = displayWidth;
+    const ch = displayHeight;
     ctx.clearRect(0, 0, cw, ch);
 
     const cell = Math.floor(Math.min(cw / state.ylen, ch / state.xlen));

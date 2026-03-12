@@ -19,6 +19,7 @@ const CONFIG = {
 };
 
 CONFIG.EXPERIMENT_MAPS = ["circle", "counter"];
+CONFIG.SELECTION_MODE = "bo"; // experiment: "bo" or "control"
 
 // Total BO length shown to participants (AI BO episodes + solo "day off" episodes)
 CONFIG.EPISODES_BO_TOTAL = CONFIG.EPISODES_BO + CONFIG.EPISODES_BO_SOLO;
@@ -107,7 +108,8 @@ const STATE = {
 
   // Condition assignment (kept for logging / future)
   assignment: {
-    layout: null
+    layout: null,
+    condition: CONFIG.SELECTION_MODE
   }
 };
 

@@ -973,6 +973,10 @@ def reset():
     config_id = data.get('config_id')
     map_type = data.get('map_type')
 
+    selection_mode = str(data.get('selection_mode', 'bo')).strip().lower()
+    if selection_mode not in ('bo', 'control'):
+        selection_mode = 'bo'
+
     # metadata (optional)
     episode_index = data.get('episode_index', None)
     round_in_episode = data.get('round_in_episode', None)
@@ -999,7 +1003,7 @@ def reset():
     # persist solo flag in the session
     sess.solo_episode = bool(solo_episode)
 
-    if is_practice or sess.solo_episode:
+    if is_practice or sess.solo_episode or selection_mode == "control":
         optimizer = None
     else:
         resolved_map_name, resolved_map_cfg = _get_experiment_map_config(
@@ -1087,7 +1091,8 @@ def reset():
             map_type=sess.current_map_type,
             selected_map=sess.current_map_name,
             grid_dim=sess.current_grid_dim,
-            policy_id=sess.current_model_id
+            policy_id=sess.current_model_id,
+            selection_mode=selection_mode,
         )
 
 
@@ -1366,12 +1371,15 @@ def tell():
         return jsonify(success=False, error="prolific_id is required"), 400
     prolific = prolific_raw.strip().replace('/', '_')
 
+    selection_mode = str(data.get('selection_mode', 'bo')).strip().lower()
+    if selection_mode == 'control':
+        return jsonify(success=True, skipped=True)
+
     # Preferred: use server-side AI reward (computed in /key_event) for BO.
     sid = data.get('session_id')
     score_raw = data.get('score')
 
     if score_raw is not None:
-        # Backward compatible: accept explicit score if provided.
         try:
             score = float(score_raw)
         except Exception:
@@ -1383,11 +1391,23 @@ def tell():
         with sess.lock:
             score = float(getattr(sess, 'ai_reward_total', 0.0))
 
-    if prolific not in OPTIMIZER_MGR.optimizers:
-        return jsonify(success=False, error=f"optimizer not found for prolificId={prolific}"), 400
+    map_name = data.get('map_type')
+    if not map_name and sid:
+        sess = SESSION_MGR.ensure(sid)
+        map_name = getattr(sess, "current_map_name", None)
 
-    trial_idx = OPTIMIZER_MGR.optimizers[prolific]._actual_trial_idx
-    OPTIMIZER_MGR.optimizers[prolific].tell({trial_idx: score})
+    if not map_name:
+        return jsonify(success=False, error="map_type is required for optimizer lookup"), 400
+
+    if not OPTIMIZER_MGR.optimizer_exists(prolific, map_name):
+        return jsonify(
+            success=False,
+            error=f"optimizer not found for prolificId={prolific}, map={map_name}"
+        ), 400
+
+    optimizer = OPTIMIZER_MGR.get_optimizer(prolific, map_name)
+    trial_idx = optimizer._actual_trial_idx
+    optimizer.tell({trial_idx: score})
     return jsonify(success=True)
 
 
@@ -1397,7 +1417,17 @@ def close_optimizer():
     prolific = (data.get('prolificId') or 'anon').strip().replace('/', '_')
     if not prolific:
         return jsonify(success=False, error="prolific_id is required"), 400
-    OPTIMIZER_MGR.optimizers[prolific].close()
+
+    to_delete = []
+    for key, optimizer in OPTIMIZER_MGR.optimizers.items():
+        pid, _map = key
+        if pid == prolific:
+            optimizer.close()
+            to_delete.append(key)
+
+    for key in to_delete:
+        del OPTIMIZER_MGR.optimizers[key]
+
     return jsonify(success=True)
 
 
@@ -1444,14 +1474,18 @@ def submit_log():
         with open(result_filename, 'w', encoding='utf-8') as f:
             json.dump(log_payload, f, ensure_ascii=False, indent=2)
 
-        # Save BayesOpt state and generate final visualizations if optimizer exists
-        if OPTIMIZER_MGR.optimizer_exists(prolific):
-            optimizer = OPTIMIZER_MGR.optimizers[prolific]
-            optimizer_filename = os.path.join(participant_dir, 'bayesopt_state.json')
+        # Save BayesOpt state(s) for this participant, if any exist
+        for (pid, map_name), optimizer in OPTIMIZER_MGR.optimizers.items():
+            if pid != prolific:
+                continue
+
+            optimizer_filename = os.path.join(participant_dir, f'bayesopt_state_{map_name}.json')
             try:
                 optimizer.save(optimizer_filename)
             except Exception as e:
-                logger.info(f"[BACKEND - SUBMIT] warning: could not save BayesOpt state for {prolific}: {e}")
+                logger.info(
+                    f"[BACKEND - SUBMIT] warning: could not save BayesOpt state for {prolific}, map={map_name}: {e}"
+                )
 
         return jsonify(success=True, completion_code=completion_code)
     except Exception as e:
