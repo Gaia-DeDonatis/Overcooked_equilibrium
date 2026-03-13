@@ -18,7 +18,7 @@ const CONFIG = {
   EPISODE_BREAK_SEC: 10   // 10
 };
 
-CONFIG.EXPERIMENT_MAPS = ["circle", "counter"];
+CONFIG.EXPERIMENT_MAPS = ["circle", "counter", "thinpath"];
 CONFIG.SELECTION_MODE = "bo"; // experiment: "bo" or "control"
 
 // Total BO length shown to participants (AI BO episodes + solo "day off" episodes)

@@ -149,6 +149,18 @@ MAP_CONFIGS = {
         "layout_id": "fixed_counter_5x8",
         "aliases": ["counter", "fixed_counter_5x8", "newmap2"],
     },
+    "thinpath": {
+        "map_type": "thinpath",
+        "grid_dim": [5, 7],
+        "policy_pool_dir": os.path.join(current_dir, "policy_pool_thinpath"),
+        "embedding_csv": os.path.join(current_dir, "tsnt_thinpath.csv"),
+        "policy_prefix": "[equilibrium][thinpath]agent0_",
+        "checkpoint_filename": "model_1500000.zip",
+        "env_id": "Overcooked-equilibrium-v0",
+        "mac_env_id": "Overcooked-MA-equilibrium-v2",
+        "layout_id": "fixed_thinpath_5x7",
+        "aliases": ["thinpath", "fixed_thinpath_5x7", "thinpath"],
+    },
 }
 
 # backward-compatible defaults

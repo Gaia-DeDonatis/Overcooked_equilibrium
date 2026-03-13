@@ -1,6 +1,5 @@
 from gym.envs.registration import register
 
-
 register(
     id='Overcooked-equilibrium-v0',
     entry_point='gym_macro_overcooked.overcooked_equilibrium:Overcooked_equilibrium',
@@ -11,8 +10,12 @@ register(
     entry_point='gym_macro_overcooked.overcooked_MA_equilibrium:Overcooked_MA_equilibrium',
 )
 
-
 register(
     id='Overcooked-MA-equilibrium-v1',
     entry_point='gym_macro_overcooked.overcooked_MA_equilibrium_counter:Overcooked_MA_equilibrium_counter',
+)
+
+register(
+    id='Overcooked-MA-equilibrium-v2',
+    entry_point='gym_macro_overcooked.overcooked_MA_equilibrium_thinpath:Overcooked_MA_equilibrium_thinpath',
 )

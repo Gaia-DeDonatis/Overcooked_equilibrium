@@ -23,7 +23,7 @@ function assignConditions() {
 
     const availableMaps = (
         Array.isArray(CONFIG.EXPERIMENT_MAPS) && CONFIG.EXPERIMENT_MAPS.length
-    ) ? CONFIG.EXPERIMENT_MAPS : ["circle", "counter"];
+    ) ? CONFIG.EXPERIMENT_MAPS : ["circle", "counter", "thinpath"];
 
     // Keep assignment stable for the same participant
     const storageKey = `assigned_experiment_map_${pid}`;

@@ -1636,6 +1636,14 @@ class Overcooked_equilibrium(gym.Env):
                                     [1, 0, 1, 1, 1, 1, 0, 1],
                                     [1, 0, 0, 0, 0, 0, 0, 1],
                                     [1, 1, 1, 1, 1, 1, 1, 1]]
+                    
+            elif  self.xlen == 5 and self.ylen == 7:
+                if self.mapType == "thinpath":
+                    agent.pomap =  [[1, 1, 1, 1, 1, 1, 1],
+                                    [1, 0, 0, 1, 0, 0, 1],
+                                    [1, 0, 0, 0, 0, 0, 1],
+                                    [1, 0, 0, 1, 0, 0, 1],
+                                    [1, 1, 1, 1, 1, 1, 1]]
 
                     
 
