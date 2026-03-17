@@ -4,7 +4,7 @@ import csv
 # =========================
 # CONFIG
 # =========================
-json_path = r"C:\Users\dedong1\work\Overcooked_equilibrium\submissions\Pilot03_16_03\final_result.json"
+json_path = r"C:\Users\dedong1\work\Overcooked_equilibrium\submissions\Pilot_04_16_03\final_result.json"
 output_csv = r"C:\Users\dedong1\work\Overcooked_equilibrium\Pilots\extracted_results.csv"
 
 

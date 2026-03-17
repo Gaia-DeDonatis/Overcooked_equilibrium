@@ -6,7 +6,7 @@ import numpy as np
 # Load data
 # ------------------------
 df = pd.read_csv(
-    r"C:\Users\dedong1\work\Overcooked_equilibrium\Pilots\pilot03_metricts.csv"
+    r"C:\Users\dedong1\work\Overcooked_equilibrium\Pilots\pilot04_metrics.csv"
 ).copy()
 
 df["global_round"] = range(1, len(df) + 1)
@@ -14,12 +14,12 @@ df["global_round"] = range(1, len(df) + 1)
 # Derived score
 df["team_score"] = 200 * df["dishes"]
 
-# Best policy source episode: 14
-best_mask = df["episode"].isin([14])
+# Best policy source episode: 5
+best_mask = df["episode"].isin([5])
 
 # Episode-level ratings (one value per episode)
-md = [8, 13, 11, 15, 12, 5, 1, 14, 20, 10, 10, 6, 13, 4, 9, 16]
-perf = [1, 4, 1, 4, 1, 1, 5, 8, 1, 8, 7, 1, 12, 17, 1, 1]
+md = [16, 13, 13, 18, 3, 12, 14, 2, 7, 1, 13, 14, 14, 12, 9, 9]
+perf = [5, 5, 7, 1, 18, 11, 6, 12, 11, 12, 5, 5, 3, 10, 2, 6]
 
 # Repeat each episode rating across its 3 rounds
 md_round = np.repeat(md, 3)
@@ -56,10 +56,10 @@ def decorate_axis(ax, ymax):
         ax.axvline(sep, color="gray", linestyle="--", linewidth=0.8, alpha=0.7)
 
     # Labels
-    ax.text(8, ymax * 1, "Seed", ha="center", va="bottom", fontweight="bold")
-    ax.text(26, ymax * 1, "BO", ha="center", va="bottom", fontweight="bold")
-    ax.text(41, ymax * 1, "Stress", ha="center", va="bottom", fontweight="bold")
-    ax.text(47, ymax * 1, "Replay-optimal", ha="center", va="bottom", fontweight="bold")
+    ax.text(8, ymax * 1.02, "Seed", ha="center", va="bottom", fontweight="bold")
+    ax.text(26, ymax * 1.02, "BO", ha="center", va="bottom", fontweight="bold")
+    ax.text(41, ymax * 1.02, "Stress", ha="center", va="bottom", fontweight="bold")
+    ax.text(47, ymax * 1.02, "Replay-optimal", ha="center", va="bottom", fontweight="bold")
 
     ax.text(23, ymax * 0.92, "Solo\n(Ep 8)", ha="center", va="top", color="red", fontweight="bold")
     ax.text(29, ymax * 0.92, "Solo\n(Ep 10)", ha="center", va="top", color="red", fontweight="bold")
@@ -89,7 +89,7 @@ ax.scatter(
 )
 
 ax.set_ylabel("Team score")
-ax.set_title("Pilot 03 — Team Score, AI Reward Score, and Human Steps")
+ax.set_title("Pilot 04 — Team Score, AI Reward Score, and Human Steps")
 decorate_axis(ax, df["team_score"].max())
 ax.legend(loc="upper left")
 
@@ -142,7 +142,7 @@ ax.scatter(
     facecolors="none",
     edgecolors="red",
     linewidths=2.0,
-    zorder=4,
+    zorder=4
 )
 
 ax.set_ylabel("Human steps")
@@ -190,10 +190,14 @@ axes[-1].set_xlim(0.5, 48.5)
 axes[-1].set_xticks(np.arange(1, 49))
 axes[-1].set_xticklabels(np.arange(1, 49), fontsize=7)
 
+output_path = r"C:\Users\dedong1\work\Overcooked_equilibrium\Pilots\pilot04_plots.png"
+
 plt.savefig(
-    r"C:\Users\dedong1\work\Overcooked_equilibrium\Pilots\pilot03_plots.png",
+    output_path,
+    format="png",
     dpi=400,
     bbox_inches="tight"
 )
 
+print(f"Saved figure to: {output_path}")
 plt.show()

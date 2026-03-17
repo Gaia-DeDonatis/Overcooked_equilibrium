@@ -3,6 +3,7 @@ import os
 import numpy as np
 import sys
 from BayesOpt import TSNEBayesOptimizer, create_surrogate_spec
+import csv
 
 # Equilibrium_project" folder
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -122,7 +123,7 @@ MAX_STEPS = 200
 # =========================
 # map registry / policy pools
 # =========================
-DEFAULT_EXPERIMENT_MAP = "circle"
+DEFAULT_EXPERIMENT_MAP = "counter"
 
 MAP_CONFIGS = {
     "circle": {
@@ -1463,9 +1464,62 @@ def get_state():
         return jsonify(success=True, state=extract_state(sess))
 
 
+
+
+def write_round_summary_csv(log_payload, out_csv_path):
+    episodes = log_payload.get("episodes", [])
+    rounds = log_payload.get("rounds", [])
+
+    feedback_by_episode = {}
+    for ep in episodes:
+        ep_idx = ep.get("episode_index")
+        fb = ep.get("feedback", {}) or {}
+        feedback_by_episode[ep_idx] = {
+            "mental_demand": fb.get("mental_demand"),
+            "performance": fb.get("performance"),
+        }
+
+    fieldnames = [
+        "episode",
+        "round",
+        "human_steps",
+        "ai_steps",
+        "human_score",
+        "ai_score",
+        "human_reward_score",
+        "ai_reward_score",
+        "dishes",
+        "mental_demand",
+        "performance_score",
+    ]
+
+    with open(out_csv_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+
+        for r in rounds:
+            summary = r.get("summary", {}) or {}
+            ep_idx = r.get("episode_index")
+            feedback = feedback_by_episode.get(ep_idx, {})
+
+            writer.writerow({
+                "episode": ep_idx,
+                "round": r.get("round_in_episode"),
+                "human_steps": summary.get("human_steps"),
+                "ai_steps": summary.get("ai_steps"),
+                "human_score": summary.get("human_score"),
+                "ai_score": summary.get("ai_score"),
+                "human_reward_score": summary.get("human_reward_score"),
+                "ai_reward_score": summary.get("ai_reward_score"),
+                "dishes": summary.get("dishes_served"),
+                "mental_demand": feedback.get("mental_demand"),
+                "performance_score": feedback.get("performance"),
+            })
+
+
 @app.route('/submit_log', methods=['POST'])
 def submit_log():
-    """Receive the logData json from the frontend, and save the json to the server. Then return the Prolific completion code."""
+    """Receive the logData json from the frontend, save the json and csv to the server, then return the Prolific completion code."""
     try:
         data = request.get_json(silent=True) or {}
         log_payload = data.get('log', data)
@@ -1475,7 +1529,7 @@ def submit_log():
         # Prolific completion code.
         completion_code = "CK4KW637"
 
-        prolific = log_payload.get('prolificId').strip().replace('/', '_')
+        prolific = str(log_payload.get('prolificId', 'unknown')).strip().replace('/', '_')
 
         # Create a folder for this participant
         participant_dir = os.path.join('submissions', prolific)
@@ -1485,6 +1539,10 @@ def submit_log():
         result_filename = os.path.join(participant_dir, 'final_result.json')
         with open(result_filename, 'w', encoding='utf-8') as f:
             json.dump(log_payload, f, ensure_ascii=False, indent=2)
+
+        # Save round_summary.csv in the participant's folder
+        csv_filename = os.path.join(participant_dir, 'round_summary.csv')
+        write_round_summary_csv(log_payload, csv_filename)
 
         # Save BayesOpt state(s) for this participant, if any exist
         for (pid, map_name), optimizer in OPTIMIZER_MGR.optimizers.items():
