@@ -642,7 +642,7 @@ class TSNEBayesOptimizer:
             name="BestPolicy1",
             transition_criteria=[
                 MinTrials(
-                    threshold=1,  # Transition after generating 1 trial from this node
+                    threshold=2,  # MAYBE THIS SHOULD BE 1???? COUNTING IS A BIT WONKY BECAUSE A TRIAL ABANDONMENT DURING SNAPPING.
                     transition_to="kNN",
                     use_all_trials_in_exp=False,  # Only count trials from this node
                 )
