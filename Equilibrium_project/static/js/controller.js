@@ -97,14 +97,15 @@ function showPage(pageId) {
 function getEpisodePhase(episodeIndex) {
   if (episodeIndex <= CONFIG.EPISODES_SEED) return 'seed';
   if (episodeIndex <= CONFIG.PHASE_BO_END) return 'bo';
+  if (episodeIndex <= CONFIG.PHASE_BO_REPLAY_END) return 'bo_replay_best';
   if (episodeIndex <= CONFIG.PHASE_STRESS_END) return 'stress';
   return 'replay_optimal';
 }
 
 function getExperimentPhase(episodeIndex) {
-  // 1 = seed, 2 = BO, 3 = stress (kNN), 4 = replay optimal policy (new strategy)
+  // 1 = seed, 2 = BO (including replay-best), 3 = stress, 4 = final replay
   if (episodeIndex <= CONFIG.EPISODES_SEED) return 1;
-  if (episodeIndex <= CONFIG.PHASE_BO_END) return 2;
+  if (episodeIndex <= CONFIG.PHASE_BO_REPLAY_END) return 2;
   if (episodeIndex <= CONFIG.PHASE_STRESS_END) return 3;
   return 4;
 }
@@ -382,7 +383,8 @@ async function finishTimeBasedRound() {
         // --- CASE B: EPISODE COMPLETE ---
         console.log(`Episode ${STATE.episodeIndex} Complete!`);
         const soloNow = (typeof isSoloEpisode === 'function') ? isSoloEpisode(STATE.episodeIndex) : false;
-        const shouldTell = !soloNow && getSelectionMode() === 'bo';
+        const replayNow = ['bo_replay_best', 'replay_optimal'].includes(STATE.episodePhase);
+        const shouldTell = !soloNow && !replayNow && getSelectionMode() === 'bo';
 
         if (shouldTell) {
           await api('/tell', {
@@ -551,36 +553,41 @@ function showEpisodeBreak() {
   const soloNow  = (typeof isSoloEpisode === 'function') ? isSoloEpisode(STATE.episodeIndex) : false;
 
   if (banner) {
-    if (nextPhase === 'replay_optimal') {
-      banner.classList.remove('hidden');
-      if (bannerText) bannerText.innerText = `Next episode (final): you will play one last episode with your AI teammate but this time try a NEW way to work with it.`;
-    } else if (soloNext) {
-      banner.classList.remove('hidden');
-      if (bannerText) bannerText.innerText = `Next episode: your AI teammate is on a break — you will play on your own.`;
-    } else if (soloNow) {
-      banner.classList.remove('hidden');
-      if (bannerText) bannerText.innerText = `Next episode: your AI teammate is back.`;
-    } else {
-      banner.classList.add('hidden');
-      if (bannerText) bannerText.innerText = '';
-    }
+  if (nextPhase === 'bo_replay_best') {
+    banner.classList.remove('hidden');
+    if (bannerText) bannerText.innerText = `Next episode: you will replay with the best AI policy found so far.`;
+  } else if (nextPhase === 'replay_optimal') {
+    banner.classList.remove('hidden');
+    if (bannerText) bannerText.innerText = `Next episode (final): you will play one last episode with your AI teammate but this time try a NEW way to work with it.`;
+  } else if (soloNext) {
+    banner.classList.remove('hidden');
+    if (bannerText) bannerText.innerText = `Next episode: your AI teammate is on a break — you will play on your own.`;
+  } else if (soloNow) {
+    banner.classList.remove('hidden');
+    if (bannerText) bannerText.innerText = `Next episode: your AI teammate is back.`;
+  } else {
+    banner.classList.add('hidden');
+    if (bannerText) bannerText.innerText = '';
   }
+}
 
   // --- Update the short label text ---
   const epLabel = document.getElementById('breakEpisodeLabel');
   if (epLabel) {
-    if (!next) {
-      epLabel.innerText = `Episode ${STATE.episodeIndex} complete. You can finish when the countdown reaches 0.`;
-    } else if (nextPhase === 'replay_optimal') {
-      epLabel.innerText = `Episode ${STATE.episodeIndex} complete. Next: Final episode (try a new way to work with the AI).`;
-    } else if (soloNext) {
-      epLabel.innerText = `Episode ${STATE.episodeIndex} complete. Next: Episode ${next}.`;
-    } else if (soloNow) {
-      epLabel.innerText = `Episode ${STATE.episodeIndex} complete (solo). Next: Episode ${next}.`;
-    } else {
-      epLabel.innerText = `Episode ${STATE.episodeIndex} complete. Next: Episode ${next}.`;
-    }
+  if (!next) {
+    epLabel.innerText = `Episode ${STATE.episodeIndex} complete. You can finish when the countdown reaches 0.`;
+  } else if (nextPhase === 'bo_replay_best') {
+    epLabel.innerText = `Episode ${STATE.episodeIndex} complete. Next: Replay with the best AI policy found so far.`;
+  } else if (nextPhase === 'replay_optimal') {
+    epLabel.innerText = `Episode ${STATE.episodeIndex} complete. Next: Final episode (try a new way to work with the AI).`;
+  } else if (soloNext) {
+    epLabel.innerText = `Episode ${STATE.episodeIndex} complete. Next: Episode ${next}.`;
+  } else if (soloNow) {
+    epLabel.innerText = `Episode ${STATE.episodeIndex} complete (solo). Next: Episode ${next}.`;
+  } else {
+    epLabel.innerText = `Episode ${STATE.episodeIndex} complete. Next: Episode ${next}.`;
   }
+}
 
   // --- Switch question wording for solo episodes ---
   const qMental = document.getElementById('tlx_q_mental');

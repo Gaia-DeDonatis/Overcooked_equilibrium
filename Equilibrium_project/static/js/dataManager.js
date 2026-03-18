@@ -126,7 +126,7 @@ const DataManager = {
     const ep = this._ensureEpisode(episode_index, episode_phase);
     if (ep && experiment_phase != null) ep.experiment_phase = experiment_phase;
     if (ep && extraMeta.policyId != null) ep.policy_id = extraMeta.policyId;
-    if (episode_phase === 'stress' && ep && extraMeta.optimalPolicyId != null) ep.optimal_policy_id = extraMeta.optimalPolicyId;
+    if (['stress', 'bo_replay_best', 'replay_optimal'].includes(episode_phase) && ep && extraMeta.optimalPolicyId != null) {ep.optimal_policy_id = extraMeta.optimalPolicyId;}
 
     if (this.LOGS.meta.tick_ms == null && extraMeta.tick_ms != null) this.LOGS.meta.tick_ms = extraMeta.tick_ms;
     if (this.LOGS.meta.round_duration_sec == null && extraMeta.round_duration_sec != null) this.LOGS.meta.round_duration_sec = extraMeta.round_duration_sec;

@@ -123,7 +123,7 @@ MAX_STEPS = 200
 # =========================
 # map registry / policy pools
 # =========================
-DEFAULT_EXPERIMENT_MAP = "counter"
+DEFAULT_EXPERIMENT_MAP = "circle"
 
 MAP_CONFIGS = {
     "circle": {
@@ -578,6 +578,7 @@ class Session:
         self.episode_phase = None
         self.used_policy_names = []  # basenames of chosen policy dirs
         self.solo_episode = False  # if True, freeze/hide AI teammate
+        self.bo_best_policy_name = None
         self.used_policy_names = []  # backward-compatible flat cache
         self.used_policy_names_by_map = {}  # map_name -> [policy_dir_basename, ...]
         self.current_map_name = DEFAULT_EXPERIMENT_MAP
@@ -815,12 +816,37 @@ def create_envs_for_session(
         sess.chosen_policy_dir = None
         sess.chosen_ckpt_path = None
         sess.model = None
+    
     else:
         used_policy_names = _get_used_policy_names(sess, active_map_name)
         should_pick = bool(choose_new_policy) or map_changed or (not sess.chosen_ckpt_path)
+        replay_best_phase = getattr(sess, "episode_phase", None) in ("bo_replay_best", "replay_optimal")
 
         if should_pick:
-            if optimizer is not None:
+            if replay_best_phase:
+                checkpoint = getattr(sess, "bo_best_policy_name", None)
+
+                if not checkpoint:
+                    if optimizer is None:
+                        raise RuntimeError("Replay-best phase requires an optimizer or a stored best policy.")
+                    checkpoint, _, _, _, _ = optimizer.get_best()
+                    sess.bo_best_policy_name = checkpoint
+
+                logger.info(
+                    f"[POLICY - PICK] replaying best BO policy for map={active_map_name}: {checkpoint}"
+                )
+
+                chosen_dir, ckpt_path = _pick_policy_checkpoint(
+                    checkpoint,
+                    policy_pool_dir=policy_pool_dir,
+                    policy_prefix=policy_prefix,
+                    checkpoint_filename=checkpoint_filename,
+                )
+                sess.chosen_policy_dir = chosen_dir
+                sess.chosen_ckpt_path = ckpt_path
+                sess.model = _load_or_get_model_by_ckpt_path(ckpt_path)
+
+            elif optimizer is not None:
                 logger.info(f"[POLICY - PICK] picking policy using optimization pipeline for map={active_map_name}")
                 mapped_trials = optimizer.ask()
                 checkpoint = mapped_trials[optimizer._actual_trial_idx]["policy"]
@@ -833,6 +859,7 @@ def create_envs_for_session(
                 sess.chosen_policy_dir = chosen_dir
                 sess.chosen_ckpt_path = ckpt_path
                 sess.model = _load_or_get_model_by_ckpt_path(ckpt_path)
+
             else:
                 logger.info(f"[POLICY - PICK] picking a random policy for map={active_map_name}")
                 chosen_dir, ckpt_path = _pick_random_policy_checkpoint(
@@ -1387,9 +1414,16 @@ def tell():
     selection_mode = str(data.get('selection_mode', 'bo')).strip().lower()
     if selection_mode == 'control':
         return jsonify(success=True, skipped=True)
+    
+    sid = data.get('session_id')
+
+    if sid:
+        sess = SESSION_MGR.ensure(sid)
+        with sess.lock:
+            if getattr(sess, "episode_phase", None) in ("bo_replay_best", "replay_optimal"):
+                return jsonify(success=True, skipped=True, reason="replay episode")
 
     # Preferred: use server-side AI reward (computed in /key_event) for BO.
-    sid = data.get('session_id')
     score_raw = data.get('score')
 
     if score_raw is not None:
