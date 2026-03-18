@@ -265,7 +265,6 @@ class KNNGenerationNode(ExternalGenerationNode):
         self.best_policy = str(self.policy_names[best_idx])
 
         self.neighbor_queue = []
-        logger.info(f"[OPT - KNN] evaluated_policies ({len(self.evaluated_policies)}): {sorted(str(p) for p in self.evaluated_policies)[:10]}...")
         for idx in sorted_indices:
             policy_name = str(self.policy_names[idx])
             # Skip the best policy itself - we want neighbors, not the same point
@@ -274,12 +273,10 @@ class KNNGenerationNode(ExternalGenerationNode):
             if policy_name not in self.evaluated_policies:
                 dist = float(distances[idx])
                 self.neighbor_queue.append((policy_name, self.coords[idx], dist))
-                logger.debug(f"[OPT - KNN] added to queue: '{policy_name}' (dist={dist:.4f})")
                 if len(self.neighbor_queue) >= self.n_neighbors:
                     break
 
-        best_in_evaluated = self.best_policy in self.evaluated_policies
-        logger.info(f"[OPT - KNN] best_policy='{self.best_policy}', coords=({self.best_coords[0]:.3f}, {self.best_coords[1]:.3f}), value={self.best_value:.4f}, in_evaluated={best_in_evaluated}")
+        logger.info(f"[OPT - KNN] best_policy='{self.best_policy}', coords=({self.best_coords[0]:.3f}, {self.best_coords[1]:.3f}), value={self.best_value:.4f}")
         logger.info(f"[OPT - KNN] found {len(self.neighbor_queue)} unevaluated neighbors within queue")
 
     def get_next_candidate(
