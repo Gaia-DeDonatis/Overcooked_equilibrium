@@ -553,10 +553,7 @@ function showEpisodeBreak() {
   const soloNow  = (typeof isSoloEpisode === 'function') ? isSoloEpisode(STATE.episodeIndex) : false;
 
   if (banner) {
-  if (nextPhase === 'bo_replay_best') {
-    banner.classList.remove('hidden');
-    if (bannerText) bannerText.innerText = `Next episode: you will replay with the best AI policy found so far.`;
-  } else if (nextPhase === 'replay_optimal') {
+  if (nextPhase === 'replay_optimal') {
     banner.classList.remove('hidden');
     if (bannerText) bannerText.innerText = `Next episode (final): you will play one last episode with your AI teammate but this time try a NEW way to work with it.`;
   } else if (soloNext) {
@@ -576,8 +573,6 @@ function showEpisodeBreak() {
   if (epLabel) {
   if (!next) {
     epLabel.innerText = `Episode ${STATE.episodeIndex} complete. You can finish when the countdown reaches 0.`;
-  } else if (nextPhase === 'bo_replay_best') {
-    epLabel.innerText = `Episode ${STATE.episodeIndex} complete. Next: Replay with the best AI policy found so far.`;
   } else if (nextPhase === 'replay_optimal') {
     epLabel.innerText = `Episode ${STATE.episodeIndex} complete. Next: Final episode (try a new way to work with the AI).`;
   } else if (soloNext) {
