@@ -820,33 +820,8 @@ def create_envs_for_session(
     else:
         used_policy_names = _get_used_policy_names(sess, active_map_name)
         should_pick = bool(choose_new_policy) or map_changed or (not sess.chosen_ckpt_path)
-        replay_best_phase = getattr(sess, "episode_phase", None) in ("bo_replay_best", "replay_optimal")
-
         if should_pick:
-            if replay_best_phase:
-                checkpoint = getattr(sess, "bo_best_policy_name", None)
-
-                if not checkpoint:
-                    if optimizer is None:
-                        raise RuntimeError("Replay-best phase requires an optimizer or a stored best policy.")
-                    checkpoint, _, _, _, _ = optimizer.get_best()
-                    sess.bo_best_policy_name = checkpoint
-
-                logger.info(
-                    f"[POLICY - PICK] replaying best BO policy for map={active_map_name}: {checkpoint}"
-                )
-
-                chosen_dir, ckpt_path = _pick_policy_checkpoint(
-                    checkpoint,
-                    policy_pool_dir=policy_pool_dir,
-                    policy_prefix=policy_prefix,
-                    checkpoint_filename=checkpoint_filename,
-                )
-                sess.chosen_policy_dir = chosen_dir
-                sess.chosen_ckpt_path = ckpt_path
-                sess.model = _load_or_get_model_by_ckpt_path(ckpt_path)
-
-            elif optimizer is not None:
+            if optimizer is not None:
                 logger.info(f"[POLICY - PICK] picking policy using optimization pipeline for map={active_map_name}")
                 mapped_trials = optimizer.ask()
                 checkpoint = mapped_trials[optimizer._actual_trial_idx]["policy"]
@@ -1417,11 +1392,11 @@ def tell():
     
     sid = data.get('session_id')
 
-    if sid:
-        sess = SESSION_MGR.ensure(sid)
-        with sess.lock:
-            if getattr(sess, "episode_phase", None) in ("bo_replay_best", "replay_optimal"):
-                return jsonify(success=True, skipped=True, reason="replay episode")
+    # if sid:
+    #     sess = SESSION_MGR.ensure(sid)
+    #     with sess.lock:
+    #         if getattr(sess, "episode_phase", None) in ("bo_replay_best", "replay_optimal"):
+    #             return jsonify(success=True, skipped=True, reason="replay episode")
 
     # Preferred: use server-side AI reward (computed in /key_event) for BO.
     score_raw = data.get('score')
