@@ -358,7 +358,7 @@ class TSNEBayesOptimizer:
             logger.info(f"[OPT - {node_tag}] starting with {new_node}")
         self._last_node_name = new_node
 
-        is_best_policy = (new_node == "BestPolicy")
+        is_best_policy = new_node.startswith("BestPolicy")
 
         mapped_trials = {}
         for suggested_trial_idx, params in raw_trials.items():
@@ -590,15 +590,22 @@ class TSNEBayesOptimizer:
                 kernel_info = str(type(mc.covar_module_options["base_kernel"]).__name__)
         logger.info(f"[OPT - INIT] kernel={kernel_info}, acqf={self.acqf_class.__name__}, acqf_options={self.acqf_options}")
 
-        # BestPolicy node - greedy exploitation of best point (final phase)
-        best_policy_node = BestPolicyGenerationNode(
+        # Calculate the trial cutoff for BestPolicy nodes (only consider Sobol+BO)
+        # We need to account for abandoned trials too - each phase creates 2 trials (suggested + actual)
+        # But we filter by COMPLETED status, so we use the completed trial count
+        best_policy_max_trials = self.n_init + self.n_bo_trials
+
+        # BestPolicy2 node - re-evaluate the same best policy after kNN (final phase)
+        best_policy_node_2 = BestPolicyGenerationNode(
             coords=np.asarray(self._coords),
             policy_names=np.asarray(self._policy_names),
-            evaluated_policies=self.evaluated_policies,  # Shared reference
+            evaluated_policies=self.evaluated_policies,
             generator_specs=[GeneratorSpec(
                 generator_enum=Generators.BOTORCH_MODULAR,
                 model_kwargs=model_kwargs,
             )],
+            max_trials_to_consider=best_policy_max_trials,  # Same cutoff as BestPolicy1
+            name="BestPolicy2",
         )
 
         # kNN node - samples nearest neighbors from best point
@@ -606,15 +613,36 @@ class TSNEBayesOptimizer:
             coords=np.asarray(self._coords),
             policy_names=np.asarray(self._policy_names),
             n_neighbors=self.n_knn_neighbors,
-            evaluated_policies=self.evaluated_policies,  # Shared reference
+            evaluated_policies=self.evaluated_policies,
             generator_specs=[GeneratorSpec(
                 generator_enum=Generators.BOTORCH_MODULAR,
                 model_kwargs=model_kwargs,
             )],
             transition_criteria=[
                 MinTrials(
-                    threshold=self.n_init + self.n_bo_trials + self.n_knn_neighbors,
-                    transition_to="BestPolicy",
+                    threshold=self.n_init + self.n_bo_trials + 1 + self.n_knn_neighbors,  # +1 for BestPolicy1
+                    transition_to="BestPolicy2",
+                    only_in_statuses=[TrialStatus.COMPLETED],
+                    use_all_trials_in_exp=True,
+                )
+            ],
+        )
+
+        # BestPolicy1 node - evaluate best from Sobol+BO before kNN
+        best_policy_node_1 = BestPolicyGenerationNode(
+            coords=np.asarray(self._coords),
+            policy_names=np.asarray(self._policy_names),
+            evaluated_policies=self.evaluated_policies,
+            generator_specs=[GeneratorSpec(
+                generator_enum=Generators.BOTORCH_MODULAR,
+                model_kwargs=model_kwargs,
+            )],
+            max_trials_to_consider=best_policy_max_trials,  # Only consider Sobol+BO trials
+            name="BestPolicy1",
+            transition_criteria=[
+                MinTrials(
+                    threshold=self.n_init + self.n_bo_trials + 1,  # +1 for this BestPolicy1 trial
+                    transition_to="kNN",
                     only_in_statuses=[TrialStatus.COMPLETED],
                     use_all_trials_in_exp=True,
                 )
@@ -631,9 +659,9 @@ class TSNEBayesOptimizer:
             transition_criteria=[
                 MinTrials(
                     threshold=self.n_init + self.n_bo_trials,
-                    transition_to="kNN",
+                    transition_to="BestPolicy1",
                     only_in_statuses=[TrialStatus.COMPLETED],
-                    use_all_trials_in_exp=True,  # Count all completed trials, not just this node's
+                    use_all_trials_in_exp=True,
                 )
             ],
         )
@@ -659,8 +687,8 @@ class TSNEBayesOptimizer:
         center_node = CenterGenerationNode(next_node_name="Sobol")
 
         return GenerationStrategy(
-            name="Center+Sobol+BO+kNN+BestPolicy",
-            nodes=[center_node, sobol_node, botorch_node, knn_node, best_policy_node],
+            name="Center+Sobol+BO+BestPolicy1+kNN+BestPolicy2",
+            nodes=[center_node, sobol_node, botorch_node, best_policy_node_1, knn_node, best_policy_node_2],
         )
 
     def generate_final_visualizations(self, prolific_id: str) -> None:
@@ -751,15 +779,7 @@ class TSNEBayesOptimizer:
                 idx_arr = np.where(self._policy_names == policy)[0]
                 if len(idx_arr) > 0:
                     coords = self._coords[idx_arr[0]]
-                    # Color by phase: green=Sobol, blue=BO, red=kNN, purple=BestPolicy
-                    if i < self.n_init:
-                        color = 'green'
-                    elif i < self.n_init + self.n_bo_trials:
-                        color = 'blue'
-                    elif i < self.n_init + self.n_bo_trials + self.n_knn_neighbors:
-                        color = 'red'
-                    else:
-                        color = 'purple'
+                    color = self._get_phase_color(i)
                     ax.scatter(coords[0], coords[1], c=color, s=120, zorder=5,
                               edgecolors='black', linewidths=1)
                     ax.annotate(str(i+1), (coords[0], coords[1]), fontsize=9, ha='center', va='center',
@@ -776,12 +796,14 @@ class TSNEBayesOptimizer:
             ax.set_ylim(-1.1, 1.1)
 
             # Add legend
-            knn_end = self.n_init + self.n_bo_trials + self.n_knn_neighbors
+            bp1_idx = self.n_init + self.n_bo_trials + 1
+            knn_end = bp1_idx + self.n_knn_neighbors
             legend_elements = [
                 Patch(facecolor='green', edgecolor='black', label=f'Sobol (1-{self.n_init})'),
                 Patch(facecolor='blue', edgecolor='black', label=f'BO ({self.n_init+1}-{self.n_init + self.n_bo_trials})'),
-                Patch(facecolor='red', edgecolor='black', label=f'kNN ({self.n_init + self.n_bo_trials + 1}-{knn_end})'),
-                Patch(facecolor='purple', edgecolor='black', label=f'BestPolicy ({knn_end + 1}+)'),
+                Patch(facecolor='purple', edgecolor='black', label=f'BestPolicy1 ({bp1_idx})'),
+                Patch(facecolor='red', edgecolor='black', label=f'kNN ({bp1_idx + 1}-{knn_end})'),
+                Patch(facecolor='purple', edgecolor='black', label=f'BestPolicy2 ({knn_end + 1}+)'),
             ]
             ax.legend(handles=legend_elements, loc='upper right', fontsize=10)
 
@@ -846,6 +868,19 @@ class TSNEBayesOptimizer:
         except Exception as e:
             logger.warning(f"[OPT - VIZ] Failed to generate Ax surface plots: {e}")
 
+    def _get_phase_color(self, trial_order: int) -> str:
+        """Get color for a trial based on its order (0-indexed)."""
+        if trial_order < self.n_init:
+            return 'green'  # Sobol
+        elif trial_order < self.n_init + self.n_bo_trials:
+            return 'blue'  # BO
+        elif trial_order == self.n_init + self.n_bo_trials:
+            return 'purple'  # BestPolicy1
+        elif trial_order < self.n_init + self.n_bo_trials + 1 + self.n_knn_neighbors:
+            return 'red'  # kNN
+        else:
+            return 'purple'  # BestPolicy2
+
     def _add_sample_annotations_to_plotly(self, fig, param: str) -> None:
         """Add sample order annotations to a plotly figure."""
         try:
@@ -855,15 +890,7 @@ class TSNEBayesOptimizer:
                 if len(idx_arr) > 0:
                     coords = self._coords[idx_arr[0]]
                     param_val = coords[0] if param == "emb_x" else coords[1]
-                    # Color by phase: green=Sobol, blue=BO, red=kNN, purple=BestPolicy
-                    if i < self.n_init:
-                        color = 'green'
-                    elif i < self.n_init + self.n_bo_trials:
-                        color = 'blue'
-                    elif i < self.n_init + self.n_bo_trials + self.n_knn_neighbors:
-                        color = 'red'
-                    else:
-                        color = 'purple'
+                    color = self._get_phase_color(i)
                     fig.add_annotation(
                         x=param_val, y=0,
                         text=str(i+1),
@@ -891,15 +918,7 @@ class TSNEBayesOptimizer:
                     x_vals.append(coords[0])
                     y_vals.append(coords[1])
                     texts.append(str(i+1))
-                    # Color by phase: green=Sobol, blue=BO, red=kNN, purple=BestPolicy
-                    if i < self.n_init:
-                        colors.append('green')
-                    elif i < self.n_init + self.n_bo_trials:
-                        colors.append('blue')
-                    elif i < self.n_init + self.n_bo_trials + self.n_knn_neighbors:
-                        colors.append('red')
-                    else:
-                        colors.append('purple')
+                    colors.append(self._get_phase_color(i))
 
             fig.add_trace(go.Scatter(
                 x=x_vals, y=y_vals,

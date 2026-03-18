@@ -52,6 +52,7 @@ def best_policy_generation_node_to_dict(node: "BestPolicyGenerationNode") -> dic
         "best_policy": node.best_policy,
         "best_value": node.best_value,
         "minimize": node.minimize,
+        "max_trials_to_consider": node.max_trials_to_consider,
         "visualization_generator_spec": visualization_spec_json,
     }
 
@@ -81,6 +82,8 @@ def best_policy_generation_node_from_dict(**kwargs) -> "BestPolicyGenerationNode
         policy_names=np.array(kwargs["policy_names"]),
         evaluated_policies=set(kwargs.get("evaluated_policies", [])),
         generator_specs=generator_specs,
+        max_trials_to_consider=kwargs.get("max_trials_to_consider"),
+        name=kwargs.get("name", "BestPolicy"),
     )
 
     # Restore runtime state
@@ -112,6 +115,8 @@ class BestPolicyGenerationNode(ExternalGenerationNode):
         evaluated_policies: set = None,
         generator_specs: list[GeneratorSpec] | None = None,
         transition_criteria: Sequence[TransitionCriterion] | None = None,
+        max_trials_to_consider: int | None = None,
+        name: str = "BestPolicy",
     ) -> None:
         """
         Initialize the best policy generation node.
@@ -123,16 +128,20 @@ class BestPolicyGenerationNode(ExternalGenerationNode):
             generator_specs: Optional list of GeneratorSpecs. The first spec will be
                 fitted as a surrogate model for visualization purposes.
             transition_criteria: Optional transition criteria for the generation strategy.
+            max_trials_to_consider: If set, only consider trials with index < this value
+                when finding the best. Useful to only consider Sobol+BO trials.
+            name: Name of this node (default "BestPolicy").
         """
         self._visualization_generator_spec: GeneratorSpec | None = (
             generator_specs[0] if generator_specs and len(generator_specs) > 0 else None
         )
 
-        super().__init__(name="BestPolicy", transition_criteria=transition_criteria)
+        super().__init__(name=name, transition_criteria=transition_criteria)
 
         self.coords = coords
         self.policy_names = policy_names
         self.evaluated_policies = evaluated_policies if evaluated_policies is not None else set()
+        self.max_trials_to_consider = max_trials_to_consider
 
         # State updated during generation
         self.best_coords: np.ndarray | None = None
@@ -194,6 +203,10 @@ class BestPolicyGenerationNode(ExternalGenerationNode):
 
         for trial_idx, trial in experiment.trials.items():
             if trial.status != TrialStatus.COMPLETED:
+                continue
+
+            # If max_trials_to_consider is set, only consider trials below that index
+            if self.max_trials_to_consider is not None and trial_idx >= self.max_trials_to_consider:
                 continue
 
             trial_df = data.df[data.df["trial_index"] == trial_idx]
