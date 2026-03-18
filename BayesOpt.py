@@ -300,7 +300,8 @@ class TSNEBayesOptimizer:
 
         # Store coordinate arrays for fast lookup
         self._coords = self.policies_df[['x_norm', 'y_norm']].values
-        self._policy_names = self.policies_df['policy'].values
+        # Convert to Python list to ensure consistent string types (not numpy.str_)
+        self._policy_names = self.policies_df['policy'].tolist()
 
         if self.verbose:
             logger.info(f"[OPT - INIT] loaded {len(self._policy_names)} policies from embedding space")
