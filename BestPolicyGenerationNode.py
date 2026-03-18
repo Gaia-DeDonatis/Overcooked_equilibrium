@@ -201,14 +201,17 @@ class BestPolicyGenerationNode(ExternalGenerationNode):
         best_coords = None
         best_trial_idx = None
 
-        for trial_idx, trial in experiment.trials.items():
-            if trial.status != TrialStatus.COMPLETED:
-                continue
+        # Get completed trials sorted by index (preserves order)
+        completed_trials = sorted(
+            [(idx, t) for idx, t in experiment.trials.items() if t.status == TrialStatus.COMPLETED],
+            key=lambda x: x[0]
+        )
 
-            # If max_trials_to_consider is set, only consider trials below that index
-            if self.max_trials_to_consider is not None and trial_idx >= self.max_trials_to_consider:
-                continue
+        # If max_trials_to_consider is set, only look at first N completed trials
+        if self.max_trials_to_consider is not None:
+            completed_trials = completed_trials[:self.max_trials_to_consider]
 
+        for trial_idx, trial in completed_trials:
             trial_df = data.df[data.df["trial_index"] == trial_idx]
             metric_df = trial_df[trial_df["metric_name"] == metric_name]
 
