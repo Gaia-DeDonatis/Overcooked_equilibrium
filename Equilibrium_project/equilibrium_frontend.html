@@ -414,7 +414,7 @@
       <p class="muted" style="margin-bottom: 24px;">Please fill in the following, then continue.</p>
       <div class="row">
         <div class="col">
-          <label for="prolificId">Prolific ID</label>
+          <label for="prolificId">Personal ID</label>
           <input id="prolificId" class="input" placeholder="Waiting for Prolific URL..." />
           <div id="pid-hint" style="font-size:12px; color:#16a34a; margin-top:4px; display:none;">
             ✓ Auto-detected from Prolific
@@ -482,9 +482,10 @@
     <section id="page-consent" class="card hidden">
       <h2>Consent Form</h2>
       <div style="max-height:240px; overflow:auto; border:1px solid #e5e7eb; border-radius:12px; padding:14px; margin:12px 0">
-        <p>This study is to understand how humans work with an AI agent to finish a collaborative game: Overcooked. </p>
+        <p>This study investigates how humans collaborate with an AI agent in the collaborative game Overcooked.</p>
         <p>The study is organized by researchers from Aalto University in Finland.</p>
         <p>This study aims to understand behavior and experience in human–AI collaboration. Participation is voluntary and you may withdraw at any time. Data will be stored anonymously and used for research only. There are no known risks; if you feel uncomfortable, you may stop immediately.</p>
+        <p>Compensation is based on participation and compliance with the study instructions, not on game score. Participants who fail the instruction/comprehension check will receive the minimum compensation and will not continue to the main experiment. Participants who complete the study and follow the instructions appropriately throughout the session will receive the highest compensation. Participants who remain in the session but show clear non-compliance or insufficient engagement with the task will receive reduced compensation.</p>
         <p>By checking the box and continuing, you indicate that you have read and agree to participate.</p>
       </div>
       <div class="inline">
@@ -518,12 +519,6 @@
           You are <img src="static/images/agent-blue.png" alt="Agent Blue">
           &nbsp;&nbsp;&nbsp;&nbsp; Your robot partner is
           <img id="robotIcon" src="static/images/agent-robot.png" alt="Agent Robot">
-          <!-- or 
-          <img id="robotIcon" src="static/images/agent-robot2.png" alt="Agent Robot">
-          or 
-          <img id="robotIcon" src="static/images/agent-robot3.png" alt="Agent Robot">
-          or 
-          <img id="robotIcon" src="static/images/agent-robot4.png" alt="Agent Robot">-->
         </div>
 
         <!-- Kitchen item legend -->
@@ -580,7 +575,7 @@
         </div>
         
         <p style="text-align: center; margin-top: 15px; font-weight: bold; font-size: 18px; color: #222;">
-          Use your arrow keys to play.
+          Use the arrow keys on your keyboard to move.
         </p>
         <div style="text-align:center; font-size:28px; margin-top:8px;">
           ⬆️ ⬇️ ⬅️ ➡️
@@ -588,10 +583,14 @@
       </div>
 
       <div style="margin-top:20px; text-align:center;">
+        <h2 style="margin: 0 0 12px 0; font-size: 24px; color:#1f2937;">
+          Practice Round
+        </h2>
+        <p style="margin: 0 0 16px 0; font-size:16px; color:#374151;">
+          Use this round to learn the controls before starting the experiment.
+        </p>
+
         <div class="game-controls">
-          <!--<button id="btnTryPractice" class="btn">
-            Try One Game (In this practice, your teammate won't move)
-          </button>-->
         </div>
         <h3 style="font-size:14px; color:#555;">
            If movement feels delayed, pause briefly and continue.
@@ -614,196 +613,256 @@
 
     <!-- Page 3b: Study Instruction + Attention Check -->
     <section id="page-instruction-2a" class="card hidden">
-      <div id="scenarioDescription" style="border-left: 6px solid #2563eb; background-color: #eff6ff; padding: 20px; border-radius: 8px;">
-        <h2 style="color:#1e3a8a; margin-top:0;">PART 1: The Goal - Work Smart, Not Hard</h2>
-        <p>
-          You are a chef in a busy kitchen. Unlike standard games, your goal is <strong>NOT just to be fast</strong>. 
-          Your goal is to get the <span style="color:#2563eb; font-weight:bold;">highest possible team score</span>.
-        </p>
-        
-        <div style="background:white; padding:15px; border-radius:8px; border:1px solid #dbeafe; margin:15px 0;">
-          <h3 style="margin-top:0;">How scoring works:</h3>
-          <ul style="line-height:1.8;">
-            <li><span style="color:#16a34a; font-weight:bold;">(+) Team Goal:</span> You gain points for every dish served.</li>
-            <li><span style="color:#dc2626; font-weight:bold;">(-) Energy Cost:</span> You LOSE points for every step YOU take.</li>
-          </ul>
+      <div style="max-width: 980px; margin: 0 auto;">
+        <div id="scenarioDescription" style="border-left: 6px solid #2563eb; background-color: #eff6ff; padding: 22px; border-radius: 10px;">
+          <h2 style="color:#1e3a8a; margin-top:0;">PART 1: Play smart not hard!</h2>
+          <p>
+            You are a chef working with an AI teammate in a busy kitchen. Your goal is <strong>not just to move fast</strong>:
+            your goal is to help your team get the <span style="color:#2563eb; font-weight:bold;">highest possible score</span>.
+          </p>
+
+          <div style="background:white; padding:15px; border-radius:8px; border:1px solid #dbeafe; margin:15px 0;">
+            <h3 style="margin-top:0;">How scoring works</h3>
+            <ul style="line-height:1.8; padding-left:20px; margin-bottom:0;">
+              <li><span style="color:#16a34a; font-weight:bold;">You gain points</span> when dishes are served.</li>
+              <li><span style="color:#dc2626; font-weight:bold;">You lose points</span> for every step <strong>you</strong> take.</li>
+            </ul>
+          </div>
+
+          <p>
+            This means the best strategy is usually to <strong>work efficiently</strong>: help serve dishes while avoiding unnecessary movement.
+          </p>
+          <p style="margin-bottom:0;">
+            Try to coordinate with your AI teammate instead of doing everything by yourself.
+          </p>
         </div>
 
-        <p>The AI teammate is there to help. To get a high score, you need to find your rhythm.</p>
-      </div>
+        <div class="card" style="margin-top:22px; border:1px solid #e5e7eb;">
+          <h3 style="margin-top:0;">Comprehension Check 1/3</h3>
+          <p class="muted" style="margin-top:0;">Answer all 3 questions to continue.</p>
 
-      <p class="muted" style="margin: 10px 0 0 0;">
-        Before the game starts, we’ll ask a few quick questions to confirm the instructions were clear.
-      </p>
-
-      <div class="card" style="margin-top:20px; border:1px solid #e5e7eb;">
-        <h3>Comprehension Check 1/3</h3>
-        
-        <p style="margin-bottom:8px; font-weight:600;">1. To get a high score, I should:</p>
-        <div id="quiz-q1">
-          <label class="role-item">
-            <input type="radio" name="q1" value="wrong"> 
-            <span>Run fast and do everything myself.</span>
-          </label>
-          <label class="role-item">
-            <input type="radio" name="q1" value="correct"> 
-            <span>Serve dishes while minimizing my own movement.</span>
-          </label>
-          <label class="role-item">
-            <input type="radio" name="q1" value="wrong"> 
-            <span>Stand still and ignore the orders.</span>
-          </label>
-        </div>
-
-        <div style="margin-top: 25px; padding-top: 20px; border-top: 1px dashed #ccc;">
-            <p style="margin-bottom:8px; font-weight:600;">
-                2. Which option below would result in a low score?
-            </p>
-            <div id="quiz-q1-attention">
+          <p style="margin-bottom:8px; font-weight:600;">1. To get a high score, I should:</p>
+          <div id="quiz-q1">
             <label class="role-item">
-                <input type="radio" name="q1_att" value="correct"> 
-                <span>Run around in circles wasting energy.</span>
+              <input type="radio" name="q1" value="wrong">
+              <span>Run fast and do everything myself.</span>
             </label>
             <label class="role-item">
-                <input type="radio" name="q1_att" value="wrong"> 
-                <span>Collaborate efficiently with the AI.</span> 
-                </label>
-            <label class="role-item">
-                <input type="radio" name="q1_att" value="wrong"> 
-                <span>Serve salads with few steps.</span>
+              <input type="radio" name="q1" value="correct">
+              <span>Serve dishes while trying to avoid unnecessary movement.</span>
             </label>
-            </div>
+            <label class="role-item">
+              <input type="radio" name="q1" value="wrong">
+              <span>Ignore the score and just move as much as possible.</span>
+            </label>
+          </div>
+
+          <p style="margin-top:18px; margin-bottom:8px; font-weight:600;">2. Which action would most likely lower my score?</p>
+          <div id="quiz-q1b">
+            <label class="role-item">
+              <input type="radio" name="q1b" value="correct">
+              <span>Running around in circles without helping the team.</span>
+            </label>
+            <label class="role-item">
+              <input type="radio" name="q1b" value="wrong">
+              <span>Serving dishes with few steps.</span>
+            </label>
+            <label class="role-item">
+              <input type="radio" name="q1b" value="wrong">
+              <span>Coordinating efficiently with the AI.</span>
+            </label>
+          </div>
+
+          <p style="margin-top:18px; margin-bottom:8px; font-weight:600;">3. What should I keep in mind while playing?</p>
+          <div id="quiz-q1c">
+            <label class="role-item">
+              <input type="radio" name="q1c" value="wrong">
+              <span>Only speed matters.</span>
+            </label>
+            <label class="role-item">
+              <input type="radio" name="q1c" value="correct">
+              <span>Both teamwork and my own movement cost matter.</span>
+            </label>
+            <label class="role-item">
+              <input type="radio" name="q1c" value="wrong">
+              <span>The score depends only on what the AI does.</span>
+            </label>
+          </div>
         </div>
       </div>
 
       <div class="center" style="margin-top:20px;">
-        <button id="btn-next-2a" class="btn btn-primary" style="width: 200px">Next</button>
+        <button id="btn-next-2a" class="btn btn-primary" style="width: 200px" disabled>Next</button>
       </div>
     </section>
 
     <section id="page-instruction-2b" class="card hidden">
-      <div id="scenarioDescription" style="border-left: 6px solid #8b5cf6; background-color: #f5f3ff; padding: 20px; border-radius: 8px;">
-        <h2 style="color:#5b21b6; margin-top:0;">PART 2: The Game Structure</h2>
-        <p>
-          You will play a total of <strong>16 episodes</strong>. Each episode consists of 3 rounds (45 seconds each).
-        </p>
-        
-        <div style="margin-top:15px; margin-bottom:15px;">
-          <div style="background:white; padding:15px; border-radius:8px; border:2px solid #ddd6fe; margin-bottom:10px;">
-            <strong style="color:#7c3aed;">The AI Partner</strong><br>
-            Between each episode, your teammate will <strong>update its strategy</strong>. It is trying to find the best way to support your specific playing style.<br>
-            <em style="color:#666;">Your Job: Play naturally and consistently so it can learn your style.</em>
+      <div style="max-width: 980px; margin: 0 auto;">
+        <div id="scenarioDescription" style="border-left: 6px solid #8b5cf6; background-color: #f5f3ff; padding: 22px; border-radius: 10px;">
+          <h2 style="color:#5b21b6; margin-top:0;">PART 2: How the game works</h2>
+          <p>
+            You will complete a total of <strong>17 episodes</strong>. At the end of each episode, the game will pause briefly and
+            you will answer <strong>two short questions</strong> about your experience with the AI teammate.
+          </p>
+
+          <div style="background:white; padding:15px; border-radius:8px; border:2px solid #ddd6fe; margin:15px 0;">
+            <strong style="color:#7c3aed;">About the AI teammate</strong><br>
+            Some AI policies are <strong>better</strong> and some are <strong>worse</strong>. In some episodes the AI may coordinate well with you,
+            while in others it may behave poorly or feel like a bad match for your play style.
           </div>
 
           <div style="background:white; padding:15px; border-radius:8px; border:2px solid #ddd6fe;">
-            <strong style="color:#7c3aed;">Feedback</strong><br>
-            Because the AI is adapting to you, we need your <strong>feedback</strong>. At the end of an episode the game will pause briefly so you can answer <strong>two quick questions</strong> about your experience with your partner.
-            <br>
-            <em style="color:#666;">Your Job: Don't overthink it, just be honest.</em>
+            <strong style="color:#7c3aed;">Your job during the game</strong><br>
+            Keep playing seriously in every episode, even if the AI is not performing well. Do your best to complete the task,
+            and give honest feedback after each episode.
           </div>
         </div>
-      </div>
 
-      <div class="card" style="margin-top:20px;">
-        <h3>Comprehension Check 2/3</h3>
-        
-        <p style="margin-bottom:8px; font-weight:600;">1. What happens after every 3 rounds (1 Episode)?</p>
-        <div id="quiz-q2a">
-          <label class="role-item">
-            <input type="radio" name="q2a" value="wrong"> 
-            <span>The game ends.</span>
-          </label>
-          <label class="role-item">
-            <input type="radio" name="q2a" value="wrong"> 
-            <span>I get a 5-minute break.</span>
-          </label>
-          <label class="role-item">
-            <input type="radio" name="q2a" value="correct"> 
-            <span>The AI updates its strategy, and I answer two questions.</span>
-          </label>
-        </div>
+        <div class="card" style="margin-top:22px; border:1px solid #e5e7eb;">
+          <h3 style="margin-top:0;">Comprehension Check 2/3</h3>
+          <p class="muted" style="margin-top:0;">Answer all 3 questions to continue.</p>
 
-        <p style="margin-top:20px; margin-bottom:8px; font-weight:600;">2. What happens once the AI updates?</p>
-        <div id="quiz-q2b">
-          <label class="role-item">
-            <input type="radio" name="q2b" value="wrong"> 
-            <span>The game ends immediately.</span>
-          </label>
-          <label class="role-item">
-            <input type="radio" name="q2b" value="correct"> 
-            <span>Its behavior changes based on how I played earlier.</span>
-          </label>
-          <label class="role-item">
-            <input type="radio" name="q2b" value="wrong"> 
-            <span>The AI starts to play against me.</span>
-          </label>
+          <p style="margin-bottom:8px; font-weight:600;">1. How many episodes will I complete in the main study?</p>
+          <div id="quiz-q2a">
+            <label class="role-item">
+              <input type="radio" name="q2a" value="wrong">
+              <span>10 episodes.</span>
+            </label>
+            <label class="role-item">
+              <input type="radio" name="q2a" value="correct">
+              <span>17 episodes.</span>
+            </label>
+            <label class="role-item">
+              <input type="radio" name="q2a" value="wrong">
+              <span>25 episodes.</span>
+            </label>
+          </div>
+
+          <p style="margin-top:18px; margin-bottom:8px; font-weight:600;">2. What happens at the end of each episode?</p>
+          <div id="quiz-q2b">
+            <label class="role-item">
+              <input type="radio" name="q2b" value="wrong">
+              <span>The study ends immediately.</span>
+            </label>
+            <label class="role-item">
+              <input type="radio" name="q2b" value="correct">
+              <span>The game pauses briefly and I answer two quick questions.</span>
+            </label>
+            <label class="role-item">
+              <input type="radio" name="q2b" value="wrong">
+              <span>I take a long break before the next episode.</span>
+            </label>
+          </div>
+
+          <p style="margin-top:18px; margin-bottom:8px; font-weight:600;">3. If the AI plays badly in an episode, what should I do?</p>
+          <div id="quiz-q2c">
+            <label class="role-item">
+              <input type="radio" name="q2c" value="correct">
+              <span>Keep playing seriously and give honest feedback afterward.</span>
+            </label>
+            <label class="role-item">
+              <input type="radio" name="q2c" value="wrong">
+              <span>Stop trying because the episode does not count.</span>
+            </label>
+            <label class="role-item">
+              <input type="radio" name="q2c" value="wrong">
+              <span>Wait without moving until the episode ends.</span>
+            </label>
+          </div>
         </div>
       </div>
 
       <div class="center" style="margin-top:20px;">
-        <button id="btn-next-2b" class="btn btn-primary" style="width: 200px">Next</button>
+        <button id="btn-next-2b" class="btn btn-primary" style="width: 200px" disabled>Next</button>
       </div>
     </section>
 
     <section id="page-instruction-2c" class="card hidden">
-      <div id="scenarioDescription" style="border-left: 6px solid #f59e0b; background-color: #fffbeb; padding: 20px; border-radius: 8px;">
-        <h2 style="color:#92400e; margin-top:0;">PART 3: Tips and Reminders</h2>
-        <p>
-          There is no single "correct" role to play. Your goal is to find the strategy that feels most efficient for <strong>you</strong>.
-        </p>
-        
-        <ul style="line-height:1.7;">
-          <li><strong>Play naturally:</strong> There is no "right" or "wrong" way to play. The AI is designed to observe your unique style and adapt to you. Don't feel forced to play in a specific way; instead, play in a way that feels most <strong>efficient</strong> and <strong>comfortable</strong> for you. The more consistent you are, the better the AI can learn to support you.</li>
-          <li><strong>Observe your partner:</strong> When the AI updates, you might notice it changing its behavior. It is trying to match your style to make it easier for you to get a good result. Play along with its changes so you both end up working smoothly together.</li>
-          <li><strong>Always keep the "Movement Cost" in mind: </strong>You have to make the choice: <em>"Is it worth running to get that plate, or should I wait for the AI to do it?"</em>. Find the balance that maximizes your own score.</li>
-        </ul>
+      <div style="max-width: 980px; margin: 0 auto;">
+        <div id="scenarioDescription" style="border-left: 6px solid #f59e0b; background-color: #fffbeb; padding: 22px; border-radius: 10px;">
+          <h2 style="color:#92400e; margin-top:0;">PART 3: Always keep in mind</h2>
+
+       <ul style="line-height:1.8; padding-left:20px; margin-bottom:0;">
+        <li><strong>Play naturally:</strong> Use a strategy that feels natural and efficient for you.</li>
+        <li><strong>Stay engaged:</strong> Every episode matters, even when the AI is not performing well.</li>
+        <li><strong>Work with the AI teammate:</strong> Try to coordinate with the AI instead of ignoring it.</li>
+        <li><strong>Answer honestly:</strong> After each episode, give honest ratings about your experience.</li>
+        <li><strong>Take the game seriously:</strong> Compensation depends on how seriously you take your participation, not on your game score.</li>
+      </ul>
       </div>
 
-        <div class="card" style="margin-top:20px;">
-          <h3>Final Check 3/3</h3>
+        <div class="card" style="margin-top:22px; border:1px solid #e5e7eb;">
+          <h3 style="margin-top:0;">Final Check 3/3</h3>
+          <p class="muted" style="margin-top:0;">Answer all 3 questions before starting.</p>
 
-          <p style="margin-bottom:8px; font-weight:600;">1. How should you play?</p>
+          <p style="margin-bottom:8px; font-weight:600;">1. How should I approach the task?</p>
           <div id="quiz-q3a">
             <label class="role-item">
-              <input type="radio" name="q3a" value="correct"> 
-              <span>I should play naturally and try to work with my AI teammate.</span>
+              <input type="radio" name="q3a" value="correct">
+              <span>I should play seriously, try to coordinate with the AI, and answer honestly.</span>
             </label>
             <label class="role-item">
-              <input type="radio" name="q3a" value="wrong"> 
-              <span>I must force myself to do one specific task only.</span>
+              <input type="radio" name="q3a" value="wrong">
+              <span>I should move randomly so the AI has to do all the work.</span>
             </label>
             <label class="role-item">
-              <input type="radio" name="q3a" value="wrong"> 
-              <span>I should play like I have no teammates.</span>
+              <input type="radio" name="q3a" value="wrong">
+              <span>I should ignore the ratings because they do not matter.</span>
             </label>
           </div>
 
-          <p style="margin-top:20px; margin-bottom:8px; font-weight:600;">2. To end this introduction to the game and show you are reading, select "Always do nothing".</p>
+          <p style="margin-top:18px; margin-bottom:8px; font-weight:600;">2. What is compensation based on?</p>
           <div id="quiz-q3b">
-            <label class="role-item"><input type="radio" name="q3b" value="wrong"> Find your style.</label>
-            <label class="role-item"><input type="radio" name="q3b" value="correct"> Always do nothing.</label>
-            <label class="role-item"><input type="radio" name="q3b" value="wrong"> Run around randomly.</label>
-          </div>
-        </div>
-
-        <div id="submit-quiz-container" class="center" style="margin-top:20px;">
-          <button id="btn-submit-quiz" class="btn btn-primary" style="width: 200px">Submit Quiz</button>
-        </div>
-
-        <div id="all-set-container" class="hidden">
-          <div style="background:#f0fdf4; border:2px solid #86efac; border-radius:8px; padding:16px; margin-top:25px; text-align:center;">
-            <strong style="color:#16a34a; font-size: 18px;">All Set!</strong>
-            <p style="margin: 8px 0 0 0; color:#15803d;">
-              You are about to begin <strong>Episode 1</strong>. Click the button below when you are ready to start.
-            </p>
+            <label class="role-item">
+              <input type="radio" name="q3b" value="wrong">
+              <span>Only on my final game score.</span>
+            </label>
+            <label class="role-item">
+              <input type="radio" name="q3b" value="correct">
+              <span>On how seriously I take my participation and follow the instructions.</span>
+            </label>
+            <label class="role-item">
+              <input type="radio" name="q3b" value="wrong">
+              <span>Only on how quickly I finish the study.</span>
+            </label>
           </div>
 
-          <div class="center" style="margin-top:20px;">
-            <button id="start-task-1" class="btn success" style="font-size:18px; padding:15px 30px;">
-              I'm Ready - Start
-            </button>
+          <p style="margin-top:18px; margin-bottom:8px; font-weight:600;">3. To show you are reading carefully, please select “Raise your hand if there is a problem.”</p>
+          <div id="quiz-q3c">
+            <label class="role-item">
+              <input type="radio" name="q3c" value="wrong">
+              <span>Talk to the person next to you.</span>
+            </label>
+            <label class="role-item">
+              <input type="radio" name="q3c" value="correct">
+              <span>Raise your hand if there is a problem.</span>
+            </label>
+            <label class="role-item">
+              <input type="radio" name="q3c" value="wrong">
+              <span>Leave the room immediately.</span>
+            </label>
           </div>
         </div>
+      </div>
+
+      <div id="submit-quiz-container" class="center" style="margin-top:20px;">
+        <button id="btn-submit-quiz" class="btn btn-primary" style="width: 200px" disabled>Submit Quiz</button>
+      </div>
+
+      <div id="all-set-container" class="hidden">
+        <div style="background:#f0fdf4; border:2px solid #86efac; border-radius:8px; padding:16px; margin-top:25px; text-align:center;">
+          <strong style="color:#16a34a; font-size: 18px;">All Set!</strong>
+          <p style="margin: 8px 0 0 0; color:#15803d;">
+            You are about to begin <strong>Episode 1</strong>. Click the button below when you are ready to start.
+          </p>
+        </div>
+
+        <div class="center" style="margin-top:20px;">
+          <button id="start-task-1" class="btn success" style="font-size:18px; padding:15px 30px;">
+            I'm Ready - Start
+          </button>
+        </div>
+      </div>
     </section>
 
     <!--Phase 1-->
@@ -820,7 +879,7 @@
       
       <div style="display:flex; justify-content:center; gap:20px; margin:20px 0;">
         <div class="pill">
-          <span>Episode <strong id="currentEpisode">1 / 16</strong></span>
+          <span>Episode <strong id="currentEpisode">1 / 17</strong></span>
         </div>
         
         <div class="pill">
@@ -959,7 +1018,18 @@
       <p style="font-size: 18px; color: #4b5563; max-width: 500px; margin: 0 auto 30px auto;">
           Thank you for your participation. Your data has been successfully recorded for our study.
       </p>
+
+      <div style="margin-top:20px; padding:25px; background:#f0fdf4; border:2px solid #22c55e; border-radius:12px; max-width: 520px; margin-left: auto; margin-right: auto;">
+        <p style="margin:0; color:#15803d; font-weight:600; font-size:16px;">
+          You have completed the study.
+        </p>
+        <p style="margin:10px 0 0 0; color:#166534; font-size:15px; line-height:1.6;">
+          You may now close this window and leave quietly.
+          If you have any questions, please ask the researcher.
+        </p>
+      </div>
       
+      <!-- Prolific
       <div id="completionCodeWrap" class="hidden" style="margin-top:20px; padding:25px; background:#f0fdf4; border:2px solid #22c55e; border-radius:12px; max-width: 400px; margin-left: auto; margin-right: auto;">
         <p style="margin:0; color:#15803d; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-size: 14px;">
           Your Completion Code:
@@ -968,7 +1038,6 @@
         <p id="completionCode"
           style="font-family: monospace; font-weight:700; font-size:32px; margin:10px 0; color: #14532d;"></p>
 
-        <!--Return to Prolific button -->
         <a id="prolificReturnLink" href="#" target="_blank"
           style="display:inline-block; margin-top:10px; padding:10px 14px; border-radius:8px; background:#111827; color:#fff; text-decoration:none;">
           Return to Prolific
@@ -981,6 +1050,20 @@
 
       <div style="margin-top: 40px;">
           <p class="muted" style="font-style: italic;">You may now close this window.</p>
+      </div> -->
+    </section>
+
+    <section id="page-quiz-fail" class="card hidden center" style="padding: 60px 20px;">
+      <div style="font-size:64px; margin-bottom: 20px;">😔</div>
+      <h2 style="color:#dc2626; font-size: 32px; margin-top:0;">Instruction Check Not Passed</h2>
+      <p style="font-size: 18px; color: #4b5563; max-width: 560px; margin: 0 auto 20px auto;">
+        Thank you for your time, but unfortunately you did not pass the comprehension check, so the experiment will not continue.
+      </p>
+
+      <div style="margin-top:20px; padding:25px; background:#fef2f2; border:2px solid #fca5a5; border-radius:12px; max-width: 520px; margin-left: auto; margin-right: auto;">
+        <p style="margin:0; color:#991b1b; font-weight:600; font-size:16px;">
+          Please stand up quietly and exit the room.
+        </p>
       </div>
     </section>
 

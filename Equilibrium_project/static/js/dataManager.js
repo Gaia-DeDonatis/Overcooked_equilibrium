@@ -15,6 +15,7 @@ const DataManager = {
       gender: null,
       experience: null,
       assignment: { condition: null, map: null },
+      consentGiven: false,
       startTimeISO: null,
       tick_ms: null,
     },
@@ -50,6 +51,11 @@ const DataManager = {
     if (extraMeta.client_config_snapshot != null && this.LOGS.meta.client_config_snapshot == null) {
       this.LOGS.meta.client_config_snapshot = extraMeta.client_config_snapshot;
     }
+  },
+
+  setConsent(consentGiven = true) {
+    this.LOGS.meta.consentGiven = Boolean(consentGiven);
+    this.LOGS.meta.consentTimeISO = consentGiven ? new Date().toISOString() : null;
   },
 
   // ----------------------
@@ -396,9 +402,9 @@ const DataManager = {
   },
 
   // ---------------
-  // 6) Submission
+  // 6) Submission / Progress Save
   // ---------------
-  async submitToServer() {
+  buildPayload() {
     const payload = JSON.parse(JSON.stringify(this.LOGS));
 
     for (const r of payload.rounds) delete r._roundStartWallMs;
@@ -406,6 +412,67 @@ const DataManager = {
     for (const ep of payload.episodes) {
       if (Array.isArray(ep.rounds)) ep.rounds = [];
     }
+
+    return payload;
+  },
+
+  persistLocalBackup(reason = 'autosave') {
+    try {
+      const pid = this.LOGS.prolificId || 'unknown';
+      const key = `overcooked_progress_${pid}`;
+
+      localStorage.setItem(
+        key,
+        JSON.stringify({
+          savedAtISO: new Date().toISOString(),
+          reason,
+          log: this.buildPayload()
+        })
+      );
+    } catch (err) {
+      console.warn("Could not store local backup:", err);
+    }
+  },
+
+  async saveProgressToServer(reason = 'autosave') {
+    const payload = this.buildPayload();
+
+    this.persistLocalBackup(reason);
+
+    try {
+      await fetch(`${SERVER_URL}/save_progress`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          log: payload,
+          reason
+        }),
+        keepalive: true
+      });
+    } catch (err) {
+      console.warn("Autosave failed:", err);
+    }
+  },
+
+  sendBeaconProgress(reason = 'pagehide') {
+    try {
+      const payload = this.buildPayload();
+
+      this.persistLocalBackup(reason);
+
+      const blob = new Blob(
+        [JSON.stringify({ log: payload, reason })],
+        { type: 'application/json' }
+      );
+
+      navigator.sendBeacon(`${SERVER_URL}/save_progress`, blob);
+    } catch (err) {
+      console.warn("sendBeacon progress save failed:", err);
+    }
+  },
+
+  async submitToServer() {
+    const payload = this.buildPayload();
 
     const res = await fetch(`${SERVER_URL}/submit_log`, {
       method: 'POST',
@@ -418,6 +485,13 @@ const DataManager = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prolificId: STATE.prolificId })
     });
+
+    try {
+      const pid = this.LOGS.prolificId || 'unknown';
+      localStorage.removeItem(`overcooked_progress_${pid}`);
+    } catch (err) {
+      console.warn("Could not remove local backup:", err);
+    }
 
     return await res.json();
   }

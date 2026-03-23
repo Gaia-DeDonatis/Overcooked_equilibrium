@@ -1059,7 +1059,15 @@ def reset():
                 and sess.episode_index is not None
                 and episode_index_int != sess.episode_index
             )
-            choose_new_policy = (not is_practice) and (not sess.solo_episode) and (bool(new_episode) or episode_changed)
+
+            is_control = (selection_mode == "control")
+
+            choose_new_policy = (
+                (not is_practice)
+                and (not sess.solo_episode)
+                and (not is_control)
+                and (bool(new_episode) or episode_changed)
+            )
 
             # Persist metadata in the session.
             if episode_index_int is not None:
@@ -1525,8 +1533,70 @@ def write_round_summary_csv(log_payload, out_csv_path):
                 "performance_score": feedback.get("performance"),
             })
 
+def save_participant_snapshot(log_payload):
+    """Save the participant snapshot using the SAME filenames as final submission."""
+    prolific = str(log_payload.get('prolificId', 'unknown')).strip().replace('/', '_')
+
+    participant_dir = os.path.join('submissions', prolific)
+    os.makedirs(participant_dir, exist_ok=True)
+
+    # 1) Save latest JSON snapshot
+    result_filename = os.path.join(participant_dir, 'final_result.json')
+    with open(result_filename, 'w', encoding='utf-8') as f:
+        json.dump(log_payload, f, ensure_ascii=False, indent=2)
+
+    # 2) Save latest CSV snapshot
+    csv_filename = os.path.join(participant_dir, 'round_summary.csv')
+    write_round_summary_csv(log_payload, csv_filename)
+
+    # 3) Save BayesOpt state(s) for this participant, if any exist
+    for (pid, map_name), optimizer in OPTIMIZER_MGR.optimizers.items():
+        if pid != prolific:
+            continue
+
+        optimizer_filename = os.path.join(participant_dir, f'bayesopt_state_{map_name}.json')
+        try:
+            optimizer.save(optimizer_filename)
+        except Exception as e:
+            logger.info(
+                f"[BACKEND - SNAPSHOT] warning: could not save BayesOpt state for {prolific}, map={map_name}: {e}"
+            )
+
+    return participant_dir
+
+@app.route('/save_progress', methods=['POST'])
+def save_progress():
+    """Save an in-progress snapshot so data is not lost if the participant stops early."""
+    try:
+        data = request.get_json(silent=True) or {}
+        log_payload = data.get('log', data)
+
+        if not isinstance(log_payload, dict) or 'rounds' not in log_payload:
+            return jsonify(success=False, error="Invalid payload: 'rounds' missing"), 400
+
+        save_participant_snapshot(log_payload)
+        return jsonify(success=True)
+
+    except Exception as e:
+        return jsonify(success=False, error=str(e)), 500
 
 @app.route('/submit_log', methods=['POST'])
+def submit_log():
+    """Receive the final logData json from the frontend, save the participant snapshot, then return the completion code."""
+    try:
+        data = request.get_json(silent=True) or {}
+        log_payload = data.get('log', data)
+
+        if not isinstance(log_payload, dict) or 'rounds' not in log_payload:
+            return jsonify(success=False, error="Invalid payload: 'rounds' missing"), 400
+
+        save_participant_snapshot(log_payload)
+
+        return jsonify(success=True)
+    except Exception as e:
+        return jsonify(success=False, error=str(e)), 500
+    
+''' @app.route('/submit_log', methods=['POST'])
 def submit_log():
     """Receive the logData json from the frontend, save the json and csv to the server, then return the Prolific completion code."""
     try:
@@ -1568,7 +1638,7 @@ def submit_log():
 
         return jsonify(success=True, completion_code=completion_code)
     except Exception as e:
-        return jsonify(success=False, error=str(e)), 500
+        return jsonify(success=False, error=str(e)), 500 '''
 
 # =========================
 # run the server

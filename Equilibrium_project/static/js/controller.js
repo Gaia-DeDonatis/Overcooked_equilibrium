@@ -74,7 +74,7 @@ function showPage(pageId) {
         'page-intro', 'page-consent', 'page-instruction-1',
         'page-instruction-2a','page-instruction-2b','page-instruction-2c',
         'page-game', 'page-episode-break',
-        'page-end'
+        'page-end', 'page-quiz-fail'
     ];
     
     pages.forEach(id => {
@@ -332,6 +332,7 @@ async function finishTimeBasedRound() {
 
 
     DataManager.endRound();
+    await DataManager.saveProgressToServer('round_complete');
 
     const overlay = document.getElementById('round-overlay');
     const title   = document.getElementById('overlay-title');
@@ -523,6 +524,7 @@ async function finishEpisodeBreak() {
     STATE.episodePhase,
     { mental_demand, performance }
   );
+  await DataManager.saveProgressToServer('episode_feedback');
 
   if (breakTimer) {
     clearInterval(breakTimer);
@@ -732,16 +734,21 @@ if(inputID) {
 const consentCheck = document.getElementById('consentCheck');
 const btnInstruction = document.getElementById('to-instruction');
 
-if(consentCheck && btnInstruction) {
+if (consentCheck && btnInstruction) {
     consentCheck.addEventListener('change', () => {
         btnInstruction.disabled = !consentCheck.checked;
     });
 
     btnInstruction.onclick = () => {
+        if (!consentCheck.checked) return;
+
+        DataManager.setConsent(true);
+
         showPage('page-instruction-1');
+
         // Start practice round when page loads
         setTimeout(() => {
-            if(typeof startPracticeRound === 'function') {
+            if (typeof startPracticeRound === 'function') {
                 startPracticeRound();
             }
         }, 100);
@@ -757,23 +764,53 @@ if(btnToInst2) {
 }
 
 // --- 8. SILENT QUIZ & EXCLUSION LOGIC ---
-
 let QUIZ_ERRORS = 0;
 
 function calculatePageErrors(questionNames) {
     let pageErrors = 0;
-    
+
     questionNames.forEach(name => {
         const selected = document.querySelector(`input[name="${name}"]:checked`);
-        
+
         if (!selected || selected.value !== 'correct') {
             pageErrors++;
             console.log(`Mistake on question: ${name}`);
         }
     });
-    
+
     return pageErrors;
 }
+
+function areAllQuestionsAnswered(questionNames) {
+    return questionNames.every(name => {
+        return document.querySelector(`input[name="${name}"]:checked`);
+    });
+}
+
+function setupQuestionGate(questionNames, buttonId) {
+    const button = document.getElementById(buttonId);
+    if (!button) return;
+
+    const updateButtonState = () => {
+        const ready = areAllQuestionsAnswered(questionNames);
+        button.disabled = !ready;
+        button.style.opacity = ready ? '1' : '0.6';
+        button.style.cursor = ready ? 'pointer' : 'not-allowed';
+    };
+
+    questionNames.forEach(name => {
+        document.querySelectorAll(`input[name="${name}"]`).forEach(input => {
+            input.addEventListener('change', updateButtonState);
+        });
+    });
+
+    updateButtonState();
+}
+
+// Enable Next/Submit only when all answers on that page are selected
+setupQuestionGate(['q1', 'q1b', 'q1c'], 'btn-next-2a');
+setupQuestionGate(['q2a', 'q2b', 'q2c'], 'btn-next-2b');
+setupQuestionGate(['q3a', 'q3b', 'q3c'], 'btn-submit-quiz');
 
 // --- BUTTON LISTENERS ---
 
@@ -781,11 +818,12 @@ function calculatePageErrors(questionNames) {
 const btnNext2a = document.getElementById('btn-next-2a');
 if (btnNext2a) {
     btnNext2a.onclick = () => {
-        const errors = calculatePageErrors(['q1', 'q1_att']);
+        if (!areAllQuestionsAnswered(['q1', 'q1b', 'q1c'])) return;
+
+        const errors = calculatePageErrors(['q1', 'q1b', 'q1c']);
         QUIZ_ERRORS += errors;
-        
+
         console.log(`Page 2a Errors: ${errors} | Current Total: ${QUIZ_ERRORS}`);
-        //showPage('page-instruction-2b');
         showPage('page-instruction-2b');
     };
 }
@@ -794,19 +832,23 @@ if (btnNext2a) {
 const btnNext2b = document.getElementById('btn-next-2b');
 if (btnNext2b) {
     btnNext2b.onclick = () => {
-        const errors = calculatePageErrors(['q2a', 'q2b']);
+        if (!areAllQuestionsAnswered(['q2a', 'q2b', 'q2c'])) return;
+
+        const errors = calculatePageErrors(['q2a', 'q2b', 'q2c']);
         QUIZ_ERRORS += errors;
-        
+
         console.log(`Page 2b Errors: ${errors} | Current Total: ${QUIZ_ERRORS}`);
         showPage('page-instruction-2c');
     };
 }
 
-// 3. Page 2c -> SUBMIT QUIZ
+// 3. Page 2c -> start game
 const btnSubmitQuiz = document.getElementById('btn-submit-quiz');
 if (btnSubmitQuiz) {
     btnSubmitQuiz.onclick = () => {
-        const errors = calculatePageErrors(['q3a', 'q3b']);
+        if (!areAllQuestionsAnswered(['q3a', 'q3b', 'q3c'])) return;
+
+        const errors = calculatePageErrors(['q3a', 'q3b', 'q3c']);
         QUIZ_ERRORS += errors;
 
         console.log(`Final Check. Total Cumulative Errors: ${QUIZ_ERRORS}`);
@@ -817,11 +859,9 @@ if (btnSubmitQuiz) {
             STATE.gameOver = true;
             stopAiTick();
             if (gameTimer) clearInterval(gameTimer);
-            alert("Qualification Failed.\n\nYou answered too many comprehension questions incorrectly.");
-            window.location.href = "https://app.prolific.com/submissions/complete?cc=CGDMBD6O";
-            return; 
+            showPage('page-quiz-fail');
+            return;
         } else {
-            // Pass! Reveal the "All Set" box and Start button
             console.log("Quiz Passed. Revealing start button.");
             document.getElementById('submit-quiz-container').classList.add('hidden');
             document.getElementById('all-set-container').classList.remove('hidden');
@@ -842,33 +882,15 @@ if (btnStartTask) {
 async function submitData() {
     try {
         const response = await DataManager.submitToServer();
-        
-        if(response.success) {
+
+        if (response.success) {
             showPage('page-end');
-           
-            const code = response.completion_code || "CK4KW637";
-            const prolificUrl = `https://app.prolific.com/submissions/complete?cc=${encodeURIComponent(code)}`;
-
-            // Show the completion code
-            document.getElementById('completionCodeWrap')?.classList.remove('hidden');
-
-            const codeEl = document.getElementById('completionCode');
-            if (codeEl) codeEl.innerText = code;
-
-            // "copy/paste" fallback text element
-            const codeInlineEl = document.getElementById('completionCodeInline');
-            if (codeInlineEl) codeInlineEl.innerText = code;
-
-            // "Return to Prolific" link
-            const linkEl = document.getElementById('prolificReturnLink');
-            if (linkEl) linkEl.href = prolificUrl;
-            
         } else {
             alert("Submission failed. Please contact the researcher.");
         }
-    } catch(err) {
+    } catch (err) {
         console.error("Submission error:", err);
-        alert("Network error during submission. Please try again.");
+        alert("Network error during submission. Please contact the researcher.");
     }
 }
 
@@ -893,5 +915,19 @@ window.addEventListener('resize', () => {
     api('/get_state', {}).then(data => {
       if (data?.state) drawGame(data.state, 'gameCanvas_practice');
     }).catch(() => {});
+  }
+});
+
+window.addEventListener('pagehide', () => {
+  DataManager.sendBeaconProgress('pagehide');
+});
+
+window.addEventListener('beforeunload', () => {
+  DataManager.sendBeaconProgress('beforeunload');
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    DataManager.sendBeaconProgress('visibility_hidden');
   }
 });
