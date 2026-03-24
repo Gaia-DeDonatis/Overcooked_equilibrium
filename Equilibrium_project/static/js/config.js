@@ -1,6 +1,7 @@
 // static/js/config.js
 
-const SERVER_URL = 'http://localhost:5000';
+// const SERVER_URL = 'http://localhost:5000';
+const SERVER_URL = window.location.origin;
 
 // Experiment Configuration
 const CONFIG = {
