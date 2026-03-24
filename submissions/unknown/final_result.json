@@ -1,0 +1,18 @@
+{
+  "prolificId": "unknown",
+  "meta": {
+    "prolificId": "unknown",
+    "age": null,
+    "gender": null,
+    "experience": null,
+    "assignment": {
+      "condition": null,
+      "map": null
+    },
+    "consentGiven": false,
+    "startTimeISO": null,
+    "tick_ms": null
+  },
+  "episodes": [],
+  "rounds": []
+}

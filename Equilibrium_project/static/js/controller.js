@@ -217,9 +217,10 @@ async function startRound({ newEpisode = false } = {}) {
     bufferedHumanKey = 'Stay';
     aiTickInFlight = false;
 
-    if (data.map_type) {
-      STATE.assignment.layout = data.map_type;
-    }
+    //test for thinpath flexible
+    //if (data.map_type) {
+      //STATE.assignment.layout = data.map_type;
+    //}
 
     if (DataManager.LOGS.meta.tick_ms == null) {
       DataManager.LOGS.meta.tick_ms = AI_TICK_MS;

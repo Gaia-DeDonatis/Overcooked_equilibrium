@@ -6,7 +6,7 @@ const SERVER_URL = window.location.origin;
 // Experiment Configuration
 const CONFIG = {
   PRACTICE_SCORE: 200,
-  ROUND_DURATION_SEC: 10, // put 45
+  ROUND_DURATION_SEC: 30, // put 45
 
   // // Episode structure
   // ROUNDS_PER_EPISODE: 3, // 3
@@ -31,7 +31,8 @@ const CONFIG = {
   EPISODE_BREAK_SEC: 1   // 10
 };
 
-CONFIG.EXPERIMENT_MAPS = ["circle", "counter", "thinpath"];
+//CONFIG.EXPERIMENT_MAPS = ["circle", "counter", "thinpath"];
+CONFIG.EXPERIMENT_MAPS = ["thinpath_flexible"];
 CONFIG.SELECTION_MODE = "bo"; // experiment: "bo" or "control"
 
 // Total BO length shown to participants (AI BO episodes + solo "day off" episodes)
