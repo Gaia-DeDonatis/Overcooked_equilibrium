@@ -440,15 +440,19 @@ const DataManager = {
     this.persistLocalBackup(reason);
 
     try {
-      await fetch(`${SERVER_URL}/save_progress`, {
+      const res = await fetch(`${SERVER_URL}/save_progress`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           log: payload,
           reason
-        }),
-        keepalive: true
+        })
       });
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        console.warn("Autosave HTTP error:", res.status, text);
+      }
     } catch (err) {
       console.warn("Autosave failed:", err);
     }

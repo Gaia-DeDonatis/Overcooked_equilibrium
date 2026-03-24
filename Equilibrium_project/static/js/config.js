@@ -6,7 +6,7 @@ const SERVER_URL = window.location.origin;
 // Experiment Configuration
 const CONFIG = {
   PRACTICE_SCORE: 200,
-  ROUND_DURATION_SEC: 30, // put 45
+  ROUND_DURATION_SEC: 20, // put 45
 
   // // Episode structure
   // ROUNDS_PER_EPISODE: 3, // 3
@@ -20,7 +20,7 @@ const CONFIG = {
   // EPISODE_BREAK_SEC: 10   // 10
 
     // Episode structure
-  ROUNDS_PER_EPISODE: 1, // 3
+  ROUNDS_PER_EPISODE: 3, // 3
   EPISODES_SEED: 5,      // put 5  # LOGIC BREAKS IF THIS IS <2
   EPISODES_BO: 5,        // put 5 BO + 2 without AI
   EPISODES_BO_SOLO: 2, //2
@@ -31,8 +31,7 @@ const CONFIG = {
   EPISODE_BREAK_SEC: 1   // 10
 };
 
-//CONFIG.EXPERIMENT_MAPS = ["circle", "counter", "thinpath"];
-CONFIG.EXPERIMENT_MAPS = ["thinpath_flexible"];
+CONFIG.EXPERIMENT_MAPS = ["circle", "counter", "thinpath"];
 CONFIG.SELECTION_MODE = "bo"; // experiment: "bo" or "control"
 
 // Total BO length shown to participants (AI BO episodes + solo "day off" episodes)
@@ -122,6 +121,9 @@ const STATE = {
 
   // Backend config id (backend currently ignores for main task)
   configId: null,
+
+  //episode skiper
+  skipEpisodeRequested: false,
 
   // Condition assignment (kept for logging / future)
   assignment: {

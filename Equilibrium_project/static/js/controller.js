@@ -116,6 +116,9 @@ let aiTickTimer = null;
 let aiTickInFlight = false;
 const AI_TICK_MS = 250;
 
+let autosaveTimer = null;
+const AUTOSAVE_MS = 10000;
+
 let bufferedHumanKey = 'Stay';
 
 
@@ -125,6 +128,21 @@ function stopAiTick() {
     aiTickTimer = null;
   }
   aiTickInFlight = false;
+}
+
+function stopAutosave() {
+  if (autosaveTimer) {
+    clearInterval(autosaveTimer);
+    autosaveTimer = null;
+  }
+}
+
+function startAutosave() {
+  stopAutosave();
+  autosaveTimer = setInterval(() => {
+    if (!STATE.isPlaying || STATE.gameOver) return;
+    DataManager.saveProgressToServer('interval_autosave');
+  }, AUTOSAVE_MS);
 }
 
 async function doOneTick() {
@@ -183,6 +201,8 @@ async function startEpisode(episodeIndex) {
   STATE.phase = 1; // main task
   STATE.episodeIndex = episodeIndex;
   STATE.roundInEpisode = 1;
+  STATE.skipEpisodeRequested = false;
+  
   STATE.episodePhase = getEpisodePhase(episodeIndex);
   STATE.experimentPhase = getExperimentPhase(episodeIndex);
   STATE.gameOver = false;
@@ -248,8 +268,10 @@ async function startRound({ newEpisode = false } = {}) {
 
       drawGame(data.state, 'gameCanvas');
       startAiTick();
+      startAutosave();
       startTimer(CONFIG.ROUND_DURATION_SEC);
       updateGameUI();
+      updateSkipPolicyUI();
 
       const roundNow = DataManager.getCurrentRound();
 
@@ -320,6 +342,75 @@ function updateGameUI() {
     }
 }
 
+// skip episode that creates problems
+function updateSkipPolicyUI() {
+  const wrap = document.getElementById('skipPolicyWrap');
+  const btn = document.getElementById('skipPolicyBtn');
+  const confirmBox = document.getElementById('skipConfirmBox');
+  if (!wrap || !btn) return;
+
+  const canShow =
+    STATE.phase === 1 &&
+    STATE.isPlaying &&
+    !STATE.gameOver &&
+    STATE.roundInEpisode >= 2;
+
+  wrap.classList.toggle('hidden', !canShow);
+  btn.disabled = !canShow;
+
+  if (!canShow && confirmBox) {
+    confirmBox.classList.add('hidden');
+  }
+}
+
+async function actuallySkipCurrentPolicyEpisode() {
+  if (!STATE.isPlaying || STATE.gameOver) return;
+
+  STATE.skipEpisodeRequested = true;
+  STATE.isPlaying = false;
+  STATE.gameOver = true;
+
+  if (gameTimer) {
+    clearInterval(gameTimer);
+    gameTimer = null;
+  }
+
+  stopAiTick();
+  stopAutosave();
+  bufferedHumanKey = 'Stay';
+
+  DataManager.endRound();
+  await DataManager.saveProgressToServer('episode_skipped');
+
+  showEpisodeBreak();
+}
+
+function setupSkipPolicyUI() {
+  const skipBtn = document.getElementById('skipPolicyBtn');
+  const confirmBox = document.getElementById('skipConfirmBox');
+  const yesBtn = document.getElementById('skipConfirmYes');
+  const noBtn = document.getElementById('skipConfirmNo');
+
+  if (!skipBtn || !confirmBox || !yesBtn || !noBtn) return;
+
+  skipBtn.onclick = () => {
+    confirmBox.classList.remove('hidden');
+  };
+
+  noBtn.onclick = () => {
+    confirmBox.classList.add('hidden');
+  };
+
+  yesBtn.onclick = () => {
+    confirmBox.classList.add('hidden');
+
+    actuallySkipCurrentPolicyEpisode().catch(err => {
+      console.error("Skip policy error:", err);
+      alert("Could not skip this episode. Please try again.");
+    });
+  };
+}
+
 // E. END ROUND
 async function finishTimeBasedRound() {
     if (STATE.gameOver) return;
@@ -329,8 +420,8 @@ async function finishTimeBasedRound() {
     console.log("TIME IS UP!");
 
     stopAiTick();
+    stopAutosave();
     bufferedHumanKey = 'Stay';
-
 
     DataManager.endRound();
     await DataManager.saveProgressToServer('round_complete');
@@ -859,6 +950,7 @@ if (btnSubmitQuiz) {
             STATE.isPlaying = false;
             STATE.gameOver = true;
             stopAiTick();
+            stopAutosave();
             if (gameTimer) clearInterval(gameTimer);
             showPage('page-quiz-fail');
             return;
@@ -900,6 +992,8 @@ window.onload = () => {
     preloadImages(() => {
         console.log("Images loaded and game is ready.");
     });
+
+    setupSkipPolicyUI();
 };
 
 window.addEventListener('resize', () => {
