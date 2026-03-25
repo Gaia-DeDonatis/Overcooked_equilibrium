@@ -19,8 +19,3 @@ register(
     id='Overcooked-MA-equilibrium-v2',
     entry_point='gym_macro_overcooked.overcooked_MA_equilibrium_thinpath:Overcooked_MA_equilibrium_thinpath',
 )
-
-register(
-    id='Overcooked-MA-equilibrium-v3',
-    entry_point='gym_macro_overcooked.overcooked_MA_equilibrium_thinpath_flexible:Overcooked_MA_equilibrium_thinpath_flexible',
-)
