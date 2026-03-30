@@ -232,6 +232,8 @@ class Overcooked_MA_equilibrium(Overcooked_equilibrium):
         real_execute_macro_actions = []
 
         primitive_actions = []
+
+        action_dones = []
         
         counter_x = 10
         
@@ -241,6 +243,7 @@ class Overcooked_MA_equilibrium(Overcooked_equilibrium):
 
 
             # print("done " + str(idx), self.macroAgent[idx].cur_macro_action_done)
+            action_dones.append(self.macroAgent[idx].cur_macro_action_done)
 
             """下面是判断是否done的操作，我试着允许打断，允许打断的话，那就先注释掉"""
 
@@ -327,58 +330,46 @@ class Overcooked_MA_equilibrium(Overcooked_equilibrium):
                 # 然后找出里面距离A和距离B的差值的绝对值最小。
 
 
-                # print('进入')
-                
-
-
                 counter_x = []
                 counter_y = []
 
                 # 这里每次更换地图都要改
                 for x_i in [2]:
                     for y_i in [2]:
-                        counter_x.append(x_i)
-                        counter_y.append(y_i)
+                        if ITEMNAME[agent.pomap[x_i][y_i]] == "counter":
+                            counter_x.append(x_i)
+                            counter_y.append(y_i)
 
-               
+                # 计算每个候选 counter 的可达距离
+                counter_distances = []
+                for i in range(len(counter_x)):
+                    dist = self.shortest_path_through_zeros(
+                        agent.pomap,
+                        agent.x,
+                        agent.y,
+                        counter_x[i],
+                        counter_y[i]
+                    )
+                    counter_distances.append(dist)
 
-                # tocounter1 = self.shortest_path_through_zeros(agent.pomap, agent.x, agent.y, 12, 7)
-                # tocounter2 = self.shortest_path_through_zeros(agent.pomap, agent.x, agent.y, 13, 7)
+                # 找到“可到达且最近”的 counter
+                best_index = None
+                best_dist = None
 
-
-                # if tocounter1 == -1 and tocounter2 != -1:
-                #     best_index = 1
-                
-                # if tocounter2 == -1 and tocounter1 != -1:
-                #     best_index = 0
-
-                # if tocounter1 == -1 and tocounter2 == -1:
-                #     best_index = None
-
-                # if tocounter1 != -1 and tocounter2 != -1 and tocounter1 <= tocounter2:
-                #     best_index = 0
-                # if tocounter1 != -1 and tocounter2 != -1 and tocounter1 > tocounter2:
-                #     best_index = 1
-
-
-                best_index = 0
-
+                for i, dist in enumerate(counter_distances):
+                    if dist == -1:
+                        continue
+                    if best_dist is None or dist < best_dist:
+                        best_dist = dist
+                        best_index = i
 
                 # print('最好的counter: ', best_index)
                 if best_index is None:
                     primitive_action = ACTIONIDX["stay"]
                     self.macroAgent[idx].cur_macro_action_done = True
                 else:
-                    # if agent.holding and isinstance(agent.holding, Food) and ITEMNAME[agent.pomap[counter_x[best_index]][counter_y[best_index]]] != "counter":
-                    #     self.target_counter_x = counter_x[1-best_index]
-                    #     self.target_counter_y = counter_y[1-best_index]
-                    # else:
-                    #     self.target_counter_x = counter_x[best_index]
-                    #     self.target_counter_y = counter_y[best_index]
-
                     self.target_counter_x = counter_x[best_index]
                     self.target_counter_y = counter_y[best_index]
-
 
                     if self._calDistance(agent.x, agent.y, self.target_counter_x, self.target_counter_y) == 1 and not agent.holding:
                         primitive_action = ACTIONIDX["stay"]
@@ -388,8 +379,8 @@ class Overcooked_MA_equilibrium(Overcooked_equilibrium):
                         if self._calDistance(agent.x, agent.y, self.target_counter_x, self.target_counter_y) == 1:
                             self.macroAgent[idx].cur_macro_action_done = True
 
-
             
+
 
 
             # 如果mac action是一些上下左右，就可以直接映射为primitive action了
@@ -626,6 +617,7 @@ class Overcooked_MA_equilibrium(Overcooked_equilibrium):
             # print(self.macroAgent[idx].cur_macro_action_done)
             # 返回的其实只是两个agent下一个step要做的primitive action，而不是一个primitive action序列
             primitive_actions.append(primitive_action)
+        # return primitive_actions, real_execute_macro_actions, action_dones
         return primitive_actions, real_execute_macro_actions
 
 

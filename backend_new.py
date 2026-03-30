@@ -129,7 +129,7 @@ MAP_CONFIGS = {
     "circle": {
         "map_type": "circle",
         "grid_dim": [5, 5],
-        "policy_pool_dir": os.path.join(current_dir, "policy_pool"),
+        "policy_pool_dir": os.path.join(current_dir, "policy_pool_circle"),
         "embedding_csv": os.path.join(current_dir, "tsnt.csv"),
         "policy_prefix": "[equilibrium]agent0_",
         "checkpoint_filename": "model_500000.zip",
@@ -141,7 +141,7 @@ MAP_CONFIGS = {
     "counter": {
         "map_type": "counter",
         "grid_dim": [5, 8],
-        "policy_pool_dir": os.path.join(current_dir, "policy_pool_newmap2"),
+        "policy_pool_dir": os.path.join(current_dir, "policy_pool_counter"),
         "embedding_csv": os.path.join(current_dir, "tsnt_counter.csv"),
         "policy_prefix": "[equilibrium][counter]agent0_",
         "checkpoint_filename": "model_1500000.zip",
@@ -376,7 +376,6 @@ def _as_int_action(a):
 
 
 
-
 # =========================
 # AI reward helpers for BO
 # =========================
@@ -387,7 +386,7 @@ ITEMNAME = ["space", "counter", "agent", "tomato", "lettuce", "plate", "knife", 
 macroActionDict = {"stay": 0, "get lettuce 1": 1, "get lettuce 2": 2, "get plate 1": 3, "get plate 2": 4, "go to knife 1": 5, "deliver 1": 6, "chop": 7, "go to counter": 8, "right": 9, "down": 10, "left": 11, "up": 12}
 
 
-def check_action_benevolence(env, action_up, action_down, firsttime_down_go_to_counter, firsttime_up_get_counter_lettuce):
+def check_action_benevolence_circle(env, action_up, action_down, firsttime_down_go_to_counter, firsttime_up_get_counter_lettuce):
 
     agent_up = env.agent[0]
     agent_down = env.agent[1]
@@ -414,7 +413,7 @@ def check_action_benevolence(env, action_up, action_down, firsttime_down_go_to_c
             reward_shaping_bonus = check_benevolence(env, best_action, action_up)
             if reward_shaping_bonus == 20:
                 total_reward_bonus += reward_shaping_bonus
-                reward_bonus_up = 100
+                reward_bonus_up = 1000
                 firsttime_up_get_counter_lettuce = False
 
 
@@ -429,12 +428,165 @@ def check_action_benevolence(env, action_up, action_down, firsttime_down_go_to_c
 
                 if reward_shaping_bonus == 20:
                     total_reward_bonus += reward_shaping_bonus
-                    reward_bonus_down = 100
+                    reward_bonus_down = 1000
                     firsttime_down_go_to_counter = False
 
     return reward_bonus_up, reward_bonus_down, firsttime_down_go_to_counter, firsttime_up_get_counter_lettuce
 
 
+
+
+def check_action_benevolence_counter(env, action_up, action_down, firsttime_down_go_to_counter, firsttime_up_get_counter_lettuce):
+
+    agent_up = env.agent[0]
+    agent_down = env.agent[1]
+
+
+    counter1_x = 2
+    counter1_y = 2
+
+    counter2_x = 2
+    counter2_y = 3
+
+    counter3_x = 2
+    counter3_y = 4
+
+    counter4_x = 2
+    counter4_y = 5
+
+
+
+    counter1 = ITEMNAME[env.map[counter1_x][counter1_y]]
+    counter2 = ITEMNAME[env.map[counter2_x][counter2_y]]
+    counter3 = ITEMNAME[env.map[counter3_x][counter3_y]]
+    counter4 = ITEMNAME[env.map[counter4_x][counter4_y]]
+
+
+
+    reward_shaping_bonus = 0
+    total_reward_bonus = 0
+
+
+    reward_bonus_up = 0
+    reward_bonus_down = 0
+
+    counters = [counter1, counter2, counter3, counter4]
+
+
+
+    if any(counter in ("lettuce") for counter in counters):
+        best_action = intelligently_find_item_number(env, agent_up, "get lettuce")
+
+        if firsttime_up_get_counter_lettuce == True:
+            reward_shaping_bonus = check_benevolence(env, best_action, action_up)
+            if reward_shaping_bonus == 20:
+                total_reward_bonus += reward_shaping_bonus
+                reward_bonus_up = 1000
+                firsttime_up_get_counter_lettuce = False
+
+
+    if all(counter not in ("lettuce") for counter in counters):
+
+        if agent_down.holding and isinstance(agent_down.holding, Lettuce):
+            best_action = "go to counter"
+
+            if firsttime_down_go_to_counter == True:
+
+                reward_shaping_bonus = check_benevolence(env, best_action, action_down)
+
+                if reward_shaping_bonus == 20:
+                    total_reward_bonus += reward_shaping_bonus
+                    reward_bonus_down = 1000
+                    firsttime_down_go_to_counter = False
+
+
+    return reward_bonus_up, reward_bonus_down, firsttime_down_go_to_counter, firsttime_up_get_counter_lettuce
+
+
+
+
+def check_action_benevolence_thinpath(env, action_up, action_down, firsttime_down_go_to_counter, firsttime_up_get_counter_lettuce):
+
+    agent_up = env.agent[0]
+    agent_down = env.agent[1]
+
+
+
+    counter1_x = 1
+    counter1_y = 3
+
+    counter2_x = 3
+    counter2_y = 3
+
+
+
+    counter1 = ITEMNAME[env.map[counter1_x][counter1_y]]
+    counter2 = ITEMNAME[env.map[counter2_x][counter2_y]]
+
+
+    reward_shaping_bonus = 0
+    total_reward_bonus = 0
+
+
+    reward_bonus_up = 0
+    reward_bonus_down = 0
+
+    counters = [counter1, counter2]
+
+
+
+    if any(counter in ("lettuce") for counter in counters):
+        best_action = intelligently_find_item_number(env, agent_up, "get lettuce")
+
+        if firsttime_up_get_counter_lettuce == True:
+            reward_shaping_bonus = check_benevolence(env, best_action, action_up)
+            if reward_shaping_bonus == 20:
+                total_reward_bonus += reward_shaping_bonus
+                reward_bonus_up = 1000
+                firsttime_up_get_counter_lettuce = False
+
+
+    if all(counter not in ("lettuce") for counter in counters):
+
+        if agent_down.holding and isinstance(agent_down.holding, Lettuce):
+            best_action = "go to counter"
+
+            if firsttime_down_go_to_counter == True:
+
+                reward_shaping_bonus = check_benevolence(env, best_action, action_down)
+
+                if reward_shaping_bonus == 20:
+                    total_reward_bonus += reward_shaping_bonus
+                    reward_bonus_down = 1000
+                    firsttime_down_go_to_counter = False
+
+
+    return reward_bonus_up, reward_bonus_down, firsttime_down_go_to_counter, firsttime_up_get_counter_lettuce
+
+
+def check_action_benevolence(env, action_up, action_down, firsttime_down_go_to_counter, firsttime_up_get_counter_lettuce):
+    map_type = getattr(env, "map_type", None)
+
+    if map_type == "circle":
+        return check_action_benevolence_circle(
+            env, action_up, action_down,
+            firsttime_down_go_to_counter,
+            firsttime_up_get_counter_lettuce
+        )
+    elif map_type == "counter":
+        return check_action_benevolence_counter(
+            env, action_up, action_down,
+            firsttime_down_go_to_counter,
+            firsttime_up_get_counter_lettuce
+        )
+    elif map_type == "thinpath":
+        return check_action_benevolence_thinpath(
+            env, action_up, action_down,
+            firsttime_down_go_to_counter,
+            firsttime_up_get_counter_lettuce
+        )
+
+    return 0.0, 0.0, firsttime_down_go_to_counter, firsttime_up_get_counter_lettuce
 
 
 def find_best_reachable_index(can_reach_1, can_reach_2, can_reach_3, distance_1, distance_2, distance_3):
@@ -531,24 +683,22 @@ import re
 
 def parse_policy_id(policy_id: str):
     """
-    Parse step_penalty (AAA) and cooperation_bonus (CCC) from policy_id
+    Parse step_penalty0 and helping0 bonus from policy_id
 
     policy_id format:
-    [equilibrium]agent0_a0sp_AAA_a1sp_BBB_helping_CCC_gammaDDD_EEE
-    
+    [equilibrium][MAP_NAME]agent0_a0sp_STEPPENALTY0_a1sp_STEPPENALTY1_helping0_BONUS0_helping1_BONUS1_gammaAAA_BBB
     """
 
-    pattern = r"a0sp_([^_]+).*?helping_([^_]+)"
+    pattern = r"a0sp_([^_]+).*?helping0_([^_]+)"
     match = re.search(pattern, policy_id)
 
     if not match:
         raise ValueError(f"Invalid policy_id format: {policy_id}")
 
-    step_penalty = match.group(1)
-    cooperation_bonus = match.group(2)
+    step_penalty0 = match.group(1)
+    bonus0 = match.group(2)
 
-    return step_penalty, cooperation_bonus
-
+    return step_penalty0, bonus0
 
 # =========================
 # Session management for parallel participants taking the user study at the same time
@@ -1243,7 +1393,7 @@ def key_event():
                         primitive_action = ll_ret
                         real_execute_macro_actions = [ai_action_int, 0]
 
-                    # Gaia, please see here: cooperation/benevolence bonus (one-time)
+                    
                     try:
                         benev_up, benev_down, sess.wrapper.firsttime_down_go_to_counter, sess.wrapper.firsttime_up_get_counter_lettuce = \
                             check_action_benevolence(
@@ -1566,9 +1716,12 @@ def save_participant_snapshot(log_payload):
 
 @app.route('/save_progress', methods=['POST'])
 def save_progress():
-    """Save an in-progress snapshot so data is not lost if the participant stops early."""
     try:
-        data = request.get_json(silent=True) or {}
+        data = request.get_json(silent=True)
+        if data is None:
+            raw = request.data.decode('utf-8', errors='ignore')
+            data = json.loads(raw) if raw else {}
+
         log_payload = data.get('log', data)
 
         if not isinstance(log_payload, dict) or 'rounds' not in log_payload:
@@ -1644,6 +1797,10 @@ def submit_log():
 # run the server
 # =========================
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
 
-    app.run(host='0.0.0.0', port=5000, debug=True)
+#     app.run(host='0.0.0.0', port=5000, debug=True)
+
+if __name__ == '__main__':
+    from waitress import serve
+    serve(app, host='0.0.0.0', port=5000, threads=8)
