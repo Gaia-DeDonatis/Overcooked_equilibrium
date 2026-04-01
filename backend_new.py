@@ -721,6 +721,8 @@ class Session:
         self.lock = threading.RLock()
         self.chosen_policy_dir = None
         self.chosen_ckpt_path = None
+        self.ai_tick_counter = 0
+        self.last_ai_action_int = 4
        
         # Experiment structure (episodes)
         self.episode_index = None
@@ -1032,6 +1034,9 @@ def create_envs_for_session(
     sess.ai_reward_total = 0.0
     sess.robot_steps = []
 
+    sess.ai_tick_counter = 0
+    sess.last_ai_action_int = 4
+
 # =========================
 # Collect the current state into a json.
 # =========================
@@ -1328,192 +1333,205 @@ def key_event():
 
         KEYS_ACTIONS = {'ArrowUp': 3, 'ArrowRight': 0, 'ArrowDown': 1, 'ArrowLeft': 2, 'Stay': 4}
 
-        if key in KEYS_ACTIONS:
-            t0 = time.time()
+        if key not in KEYS_ACTIONS:
+            return jsonify(success=False, error="invalid key"), 400
 
-            human_low = int(KEYS_ACTIONS[key])
-            solo_mode = bool(getattr(sess, 'solo_episode', False)) or (getattr(sess.env, 'n_agent', 2) == 1)
+        t0 = time.time()
 
-            if solo_mode:
-                # Human-alone: no AI model; step env with a single human action.
-                ai_action_int = 4
-                robot_low = 4
-                action = [robot_low, human_low]  # (AI placeholder, Human) for logging/score adjustment
+        human_low = int(KEYS_ACTIONS[key])
+        solo_mode = bool(getattr(sess, 'solo_episode', False)) or (getattr(sess.env, 'n_agent', 2) == 1)
 
-                try:
-                    obs_all, rewards_list, dones, info = sess.env_mac.step([human_low])
-                except Exception as e:
-                    return jsonify(success=False, error=f'solo step failed: {e}'), 400
+        if solo_mode:
+            # Human-alone: no AI model; step env with a single human action.
+            ai_action_int = 4
+            robot_low = 4
+            action = [robot_low, human_low]  # (AI placeholder, Human) for logging/score adjustment
 
-                try:
-                    sess.obs = sess.env_mac._get_macro_obs()[0]
-                except Exception:
-                    if isinstance(obs_all, (list, tuple)) and len(obs_all) > 0:
-                        sess.obs = obs_all[0]
-                    else:
-                        sess.obs = obs_all
+            try:
+                obs_all, rewards_list, dones, info = sess.env_mac.step([human_low])
+            except Exception as e:
+                return jsonify(success=False, error=f'solo step failed: {e}'), 400
 
-                # human-alone mode, use only the human agent's reward
-                if isinstance(rewards_list, (list, tuple, np.ndarray)):
-                    rewards = float(np.array(rewards_list).flatten()[0])
+            try:
+                sess.obs = sess.env_mac._get_macro_obs()[0]
+            except Exception:
+                if isinstance(obs_all, (list, tuple)) and len(obs_all) > 0:
+                    sess.obs = obs_all[0]
                 else:
-                    rewards = float(rewards_list)
+                    sess.obs = obs_all
 
-                robot_key = ACTION_TO_KEY.get(robot_low, 'Stay')
-                sess.robot_steps.append({
-                    'step': int(sess.cur_step + 1),
-                    'ai_macro_action': int(ai_action_int),
-                    'low_level_action': int(robot_low),
-                    'arrow': robot_key,
-                    'timestamp': time.time(),
-                })
-
+            # human-alone mode, use only the human agent's reward
+            if isinstance(rewards_list, (list, tuple, np.ndarray)):
+                rewards = float(np.array(rewards_list).flatten()[0])
             else:
-                # Normal human+AI: run policy -> macro action -> low-level action -> step wrapper
-                benev_up = 0.0
-                benev_down = 0.0
-                ai_prev_loc = [sess.env_mac.agent[0].x, sess.env_mac.agent[0].y]
+                rewards = float(rewards_list)
 
-                if sess.model is not None:
+            robot_key = ACTION_TO_KEY.get(robot_low, 'Stay')
+            sess.robot_steps.append({
+                'step': int(sess.cur_step + 1),
+                'ai_macro_action': int(ai_action_int),
+                'low_level_action': int(robot_low),
+                'arrow': robot_key,
+                'timestamp': time.time(),
+            })
+
+        else:
+            # Normal human+AI: run policy -> macro action -> low-level action -> step wrapper
+            benev_up = 0.0
+            benev_down = 0.0
+            ai_prev_loc = [sess.env_mac.agent[0].x, sess.env_mac.agent[0].y]
+
+            AI_DECISION_EVERY = 2  # AI updates every 2 game ticks
+            AI_MOVE_EVERY = 3      # AI physically moves only every 2 ticks
+
+            sess.ai_tick_counter += 1
+
+            if sess.model is not None:
+                if sess.ai_tick_counter % AI_DECISION_EVERY == 1:
                     with torch.no_grad():
                         ai_action, _ = sess.model.predict(sess.obs, deterministic=True)
-                    ai_action_int = _as_int_action(ai_action)
+                    sess.last_ai_action_int = _as_int_action(ai_action)
+
+                ai_action_int = sess.last_ai_action_int
+            else:
+                # No model loaded (practice), keep a placeholder macro id
+                ai_action_int = 4
+
+            # Compute low-level actions from macro action (and get executed macro actions when available)
+            if sess.model is not None:
+                ll_ret = sess.env_mac._computeLowLevelActions([ai_action_int, 0])
+
+                # handle both possible return formats robustly
+                if isinstance(ll_ret, (list, tuple)) and len(ll_ret) == 2:
+                    primitive_action, real_execute_macro_actions = ll_ret
                 else:
-                    # No model loaded (practice), keep a placeholder macro id
-                    ai_action_int = 4
+                    primitive_action = ll_ret
+                    real_execute_macro_actions = [ai_action_int, 0]
 
-                # Compute low-level actions from macro action (and get executed macro actions when available)
-                if sess.model is not None:
-                    ll_ret = sess.env_mac._computeLowLevelActions([ai_action_int, 0])
-
-                    # handle both possible return formats robustly
-                    if isinstance(ll_ret, (list, tuple)) and len(ll_ret) == 2:
-                        primitive_action, real_execute_macro_actions = ll_ret
-                    else:
-                        primitive_action = ll_ret
-                        real_execute_macro_actions = [ai_action_int, 0]
-
-                    
-                    try:
-                        benev_up, benev_down, sess.wrapper.firsttime_down_go_to_counter, sess.wrapper.firsttime_up_get_counter_lettuce = \
-                            check_action_benevolence(
-                                sess.env_mac,
-                                real_execute_macro_actions[0],
-                                real_execute_macro_actions[1],
-                                sess.wrapper.firsttime_down_go_to_counter,
-                                sess.wrapper.firsttime_up_get_counter_lettuce
-                            )
-                    except Exception:
-                        benev_up, benev_down = 0.0, 0.0
-                else:
-                    primitive_action = [4] * sess.env.n_agent
-
-                action = [4] * sess.env.n_agent
-                action[1] = human_low
-                action[0] = int(primitive_action[0])
-
-                robot_low = int(action[0])
-                robot_key = ACTION_TO_KEY.get(robot_low, 'Unknown')
-                sess.robot_steps.append({
-                    'step': int(sess.cur_step + 1),
-                    'ai_macro_action': int(ai_action_int),
-                    'low_level_action': robot_low,
-                    'arrow': robot_key,
-                    'timestamp': time.time(),
-                })
-
-                sess.obs, rewards, dones, info = sess.wrapper.step(action[0], action[1])
-
-                # determine if AI moved this step (for step-penalty shaping)
-                ai_cur_loc = [sess.env_mac.agent[0].x, sess.env_mac.agent[0].y]
-                ai_moved = (ai_prev_loc != ai_cur_loc)
-
-            r_env = 0.0
-            r_adjusted = 0.0
-
-
-            ai_reward_raw = None
-            human_reward_raw = None
-            ai_reward_adjusted = None
-            human_reward_adjusted = None
-            try:
-                if isinstance(rewards, (list, tuple, np.ndarray)):
-                    r_env = float(np.array(rewards).flatten()[0])
                 
-                else:
-                    r_env = float(rewards)
-
                 try:
-                    step_pen_ai = float(sess.env_mac.rewardList[0].get("step penalty", 0))
-                    step_pen_hu = float(sess.env_mac.rewardList[1].get("step penalty", 0))
+                    benev_up, benev_down, sess.wrapper.firsttime_down_go_to_counter, sess.wrapper.firsttime_up_get_counter_lettuce = \
+                        check_action_benevolence(
+                            sess.env_mac,
+                            real_execute_macro_actions[0],
+                            real_execute_macro_actions[1],
+                            sess.wrapper.firsttime_down_go_to_counter,
+                            sess.wrapper.firsttime_up_get_counter_lettuce
+                        )
                 except Exception:
-                    step_pen_ai = -1.0
-                    step_pen_hu = -1.0
+                    benev_up, benev_down = 0.0, 0.0
+            else:
+                primitive_action = [4] * sess.env.n_agent
 
-                # compensate "Stay" actions so they don't subtract points
-                ai_low = int(action[0]) if (not solo_mode) else None
-                human_low2 = int(action[1])
+            action = [4] * sess.env.n_agent
+            action[1] = human_low
+            if sess.ai_tick_counter % AI_MOVE_EVERY == 1:
+                action[0] = int(primitive_action[0])
+            else:
+                action[0] = 4
+
+            robot_low = int(action[0])
+            robot_key = ACTION_TO_KEY.get(robot_low, 'Unknown')
+            sess.robot_steps.append({
+                'step': int(sess.cur_step + 1),
+                'ai_macro_action': int(ai_action_int),
+                'low_level_action': robot_low,
+                'arrow': robot_key,
+                'timestamp': time.time(),
+            })
+
+            sess.obs, rewards, dones, info = sess.wrapper.step(action[0], action[1])
+
+            # determine if AI moved this step (for step-penalty shaping)
+            ai_cur_loc = [sess.env_mac.agent[0].x, sess.env_mac.agent[0].y]
+            ai_moved = (ai_prev_loc != ai_cur_loc)
+
+        r_env = 0.0
+        r_adjusted = 0.0
+        ai_reward_raw = None
+        human_reward_raw = None
+        ai_reward_adjusted = None
+        human_reward_adjusted = None
+        try:
+            if isinstance(rewards, (list, tuple, np.ndarray)):
+                r_env = float(np.array(rewards).flatten()[0])
+            
+            else:
+                r_env = float(rewards)
+
+            try:
+                step_pen_ai = float(sess.env_mac.rewardList[0].get("step penalty", 0))
+                step_pen_hu = float(sess.env_mac.rewardList[1].get("step penalty", 0))
+            except Exception:
+                step_pen_ai = -1.0
+                step_pen_hu = -1.0
+
+            # compensate "Stay" actions so they don't subtract points
+            ai_low = int(action[0]) if (not solo_mode) else None
+            human_low2 = int(action[1])
 
 
-                # Per-agent raw rewards (agent 0 = AI, agent 1 = Human)
-                if solo_mode:
-                    ai_reward_raw = 0.0
-                    human_reward_raw = float(r_env)
+            # Per-agent raw rewards (agent 0 = AI, agent 1 = Human)
+            if solo_mode:
+                ai_reward_raw = 0.0
+                human_reward_raw = float(r_env)
+            else:
+                rr = getattr(sess.wrapper, 'last_raw_rewards', None)
+                if isinstance(rr, (list, tuple, np.ndarray)) and len(rr) >= 2:
+                    rr = np.array(rr).flatten()
+                    ai_reward_raw = float(rr[0])
+                    human_reward_raw = float(rr[1])
+            r_adjusted = r_env
+            if (not solo_mode) and (ai_low == 4):
+                r_adjusted += (-step_pen_ai)  # add back +1 if penalty is -1
+            if human_low2 == 4:
+                r_adjusted += (-step_pen_hu)
+
+
+            # Per-agent adjusted rewards (compensate Stay actions like adjusted_reward)
+            ai_reward_adjusted = ai_reward_raw
+            human_reward_adjusted = human_reward_raw
+            if (ai_reward_adjusted is not None) and (not solo_mode) and (ai_low == 4):
+                ai_reward_adjusted += (-step_pen_ai)
+            if (human_reward_adjusted is not None) and (human_low2 == 4):
+                human_reward_adjusted += (-step_pen_hu)
+
+            sess.cumulative_reward += r_adjusted
+
+            # accumulate AI-only reward for BayesOpt (server-side)
+            if not solo_mode:
+                try:
+                    step_penalty_str, cooperation_bonus_str = parse_policy_id(sess.current_model_id or "")
+                    step_penalty = float(step_penalty_str)
+                    cooperation_bonus = (cooperation_bonus_str == "True")
+                except Exception:
+                    step_penalty = 0.0
+                    cooperation_bonus = False
+
+                moved = bool(locals().get('ai_moved', False))
+                benev_up_local = float(locals().get('benev_up', 0.0))
+                move_cost = step_penalty if moved else 0.0
+                team_reward = float(r_env)
+                if cooperation_bonus:
+                    ai_step_reward = team_reward - move_cost + benev_up_local
                 else:
-                    rr = getattr(sess.wrapper, 'last_raw_rewards', None)
-                    if isinstance(rr, (list, tuple, np.ndarray)) and len(rr) >= 2:
-                        rr = np.array(rr).flatten()
-                        ai_reward_raw = float(rr[0])
-                        human_reward_raw = float(rr[1])
-                r_adjusted = r_env
-                if (not solo_mode) and (ai_low == 4):
-                    r_adjusted += (-step_pen_ai)  # add back +1 if penalty is -1
-                if human_low2 == 4:
-                    r_adjusted += (-step_pen_hu)
+                    ai_step_reward = team_reward - move_cost
+                sess.ai_reward_total += float(ai_step_reward)
 
+            # dish served detection
+            if r_env >= 150:
+                sess.dishes_served += 1
+                logger.info(f"[BACKEND - KEY_EVENT] sid={sid}, dish_served! total={sess.dishes_served}")
 
-                # Per-agent adjusted rewards (compensate Stay actions like adjusted_reward)
-                ai_reward_adjusted = ai_reward_raw
-                human_reward_adjusted = human_reward_raw
-                if (ai_reward_adjusted is not None) and (not solo_mode) and (ai_low == 4):
-                    ai_reward_adjusted += (-step_pen_ai)
-                if (human_reward_adjusted is not None) and (human_low2 == 4):
-                    human_reward_adjusted += (-step_pen_hu)
-
-                sess.cumulative_reward += r_adjusted
-
-                # accumulate AI-only reward for BayesOpt (server-side)
-                if not solo_mode:
-                    try:
-                        step_penalty_str, cooperation_bonus_str = parse_policy_id(sess.current_model_id or "")
-                        step_penalty = float(step_penalty_str)
-                        cooperation_bonus = (cooperation_bonus_str == "True")
-                    except Exception:
-                        step_penalty = 0.0
-                        cooperation_bonus = False
-
-                    moved = bool(locals().get('ai_moved', False))
-                    benev_up_local = float(locals().get('benev_up', 0.0))
-                    move_cost = step_penalty if moved else 0.0
-                    team_reward = float(r_env)
-                    if cooperation_bonus:
-                        ai_step_reward = team_reward - move_cost + benev_up_local
-                    else:
-                        ai_step_reward = team_reward - move_cost
-                    sess.ai_reward_total += float(ai_step_reward)
-
-                # dish served detection
-                if r_env >= 150:
-                    sess.dishes_served += 1
-                    logger.info(f"[BACKEND - KEY_EVENT] sid={sid}, dish_served! total={sess.dishes_served}")
-
-            except Exception as e:
-                logger.info(f"[BACKEND - KEY_EVENT] error updating rewards: {e}")
+        except Exception as e:
+            logger.info(f"[BACKEND - KEY_EVENT] error updating rewards: {e}")
                 
-            sess.cur_step += 1
+        sess.cur_step += 1
 
         state = extract_state(sess)
         steps_left = max(0, MAX_STEPS - sess.cur_step)
+
+
         return jsonify(
             success=True,
             state=state,

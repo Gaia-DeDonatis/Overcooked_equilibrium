@@ -114,7 +114,7 @@ let gameTimer = null;
 let timeLeft = 0;
 let aiTickTimer = null;
 let aiTickInFlight = false;
-const AI_TICK_MS = 250;
+const AI_TICK_MS = 150;
 
 let autosaveTimer = null;
 const AUTOSAVE_MS = 10000;
@@ -147,31 +147,44 @@ function startAutosave() {
 
 async function doOneTick() {
   if (!STATE.isPlaying || STATE.gameOver) return;
-  if (aiTickInFlight) return; // prevent request pile-up
+  if (aiTickInFlight) return;
   aiTickInFlight = true;
+
+  const t0 = performance.now();
 
   try {
     const keyToSend = bufferedHumanKey || 'Stay';
     bufferedHumanKey = 'Stay';
 
+    const tApi0 = performance.now();
     const data = await api('/key_event', {
       key: keyToSend,
       config_id: STATE.configId,
       map_type: STATE.assignment.layout
     });
+    const tApi1 = performance.now();
 
+    const tDraw0 = performance.now();
     drawGame(data.state, 'gameCanvas');
+    const tDraw1 = performance.now();
 
+    const tLog0 = performance.now();
     DataManager.logStep(data, keyToSend);
+    const tLog1 = performance.now();
+
+    console.log(
+      `[FRONTEND_TICK] total=${(performance.now()-t0).toFixed(1)}ms ` +
+      `api=${(tApi1-tApi0).toFixed(1)}ms ` +
+      `draw=${(tDraw1-tDraw0).toFixed(1)}ms ` +
+      `log=${(tLog1-tLog0).toFixed(1)}ms`
+    );
 
     const roundObj = DataManager.getCurrentRound();
     if (roundObj && roundObj.summary) {
-      // Backend dishes_served is per-round; store it so we can sum across rounds in the episode.
       if (data.dishes_served != null) roundObj.summary.dishes_served = data.dishes_served;
     }
 
     const roundNow = DataManager.getCurrentRound();
-
     const dishesNow = roundNow?.summary?.dishes_served ?? 0;
     const stepsNow  = roundNow?.summary?.human_steps ?? 0;
 
@@ -180,7 +193,7 @@ async function doOneTick() {
 
     const stepsEl = document.getElementById('humanSteps');
     if (stepsEl) stepsEl.innerText = String(stepsNow);
-} catch (err) {
+  } catch (err) {
     console.error("Tick error:", err);
   } finally {
     aiTickInFlight = false;

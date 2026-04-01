@@ -1,6 +1,44 @@
 // static/js/view.js
 
 const images = {};
+
+const canvasLayoutCache = new Map();
+
+function ensureCanvasSize(canvas, rows, cols) {
+  const viewport = canvas.closest('.game-viewport');
+  if (viewport) {
+    viewport.style.setProperty('--grid-ratio', `${cols} / ${rows}`);
+  }
+
+  const displayWidth = viewport ? viewport.clientWidth : (canvas.clientWidth || 600);
+  const displayHeight = Math.round(displayWidth * rows / cols);
+  const dpr = window.devicePixelRatio || 1;
+
+  const next = { rows, cols, displayWidth, displayHeight, dpr };
+  const prev = canvasLayoutCache.get(canvas.id);
+
+  const same =
+    prev &&
+    prev.rows === next.rows &&
+    prev.cols === next.cols &&
+    prev.displayWidth === next.displayWidth &&
+    prev.displayHeight === next.displayHeight &&
+    prev.dpr === next.dpr;
+
+  if (same) return;
+
+  canvas.width = Math.round(displayWidth * dpr);
+  canvas.height = Math.round(displayHeight * dpr);
+  canvas.style.width = `${displayWidth}px`;
+  canvas.style.height = `${displayHeight}px`;
+
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.scale(dpr, dpr);
+
+  canvasLayoutCache.set(canvas.id, next);
+}
+
 // Map tile IDs to file names
 const TILE_MAP = {
     0: "space.png", 1: "counter.png", 3: "FreshTomato.png", 4: "FreshLettuce.png",
@@ -70,24 +108,10 @@ function drawGame(state, canvasId) {
     const rows = state.xlen;
     const cols = state.ylen;
 
-    const viewport = canvas.closest('.game-viewport');
-    if (viewport) {
-        viewport.style.setProperty('--grid-ratio', `${cols} / ${rows}`);
-    }
+    ensureCanvasSize(canvas, rows, cols);
 
-    // Make canvas truly responsive to container width
-    const displayWidth = viewport ? viewport.clientWidth : canvas.clientWidth || 600;
-    const displayHeight = Math.round(displayWidth * rows / cols);
-
-    // Support retina / hi-dpi screens
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = Math.round(displayWidth * dpr);
-    canvas.height = Math.round(displayHeight * dpr);
-    canvas.style.width = `${displayWidth}px`;
-    canvas.style.height = `${displayHeight}px`;
-
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.scale(dpr, dpr);
+    const displayWidth = canvas.clientWidth;
+    const displayHeight = canvas.clientHeight;
 
     // === Helper: Draw Plate with Content Scaled ===
     function drawPlateWithContent(x, y, w, h, plateName, contentName) {

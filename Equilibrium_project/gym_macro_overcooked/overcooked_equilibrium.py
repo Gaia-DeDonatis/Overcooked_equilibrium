@@ -176,23 +176,14 @@ class Overcooked_equilibrium(gym.Env):
         #action: move(up, down, left, right), stay
         self.action_space = spaces.Discrete(5)
 
-        #Observation: agent(pos[x,y]) dim = 2
-        #    knife(pos[x,y]) dim = 2
-        #    delivery (pos[x,y]) dim = 2
-        #    plate(pos[x,y]) dim = 2
-        #    food(pos[x,y]/status) dim = 3
 
         self._initObs()
-        # print('~~~~~~')
-        # print(len(self._get_obs()))
-        # print(len(self._get_obs()[0]))
-        # print(self.observation_space.shape)
+        
         self.observation_space = spaces.Box(low=0, high=1, shape=(len(self._get_obs()[0]),), dtype=np.float32)
 
 
 
     def _createItems(self):
-        # 存储着这些item（包含位置和其他属性）的list
         self.agent = []
         self.knife = []
         self.delivery = []
@@ -205,14 +196,11 @@ class Overcooked_equilibrium(gym.Env):
         self.itemList = []
         agent_idx = 0
 
-        # 明白了，self.plate[0]与self.plate[1]是在一开始循环这个二维map的时候append进来的！！！
         for x in range(self.xlen):
             for y in range(self.ylen):
-                # print(self.xlen)
-                # print(self.ylen)
-                # print(self.map)
+                
                 if self.map[x][y] == ITEMIDX["agent"]:
-                    # Shuai Note: 明白了，需要先从map中识别到标记为2的agent，才能创建关于该agent的obs等后续以agent为list item的变量。
+                    
                     self.agent.append(Agent(x, y, color = AGENTCOLOR[agent_idx]))
                     agent_idx += 1
                 elif self.map[x][y] == ITEMIDX["knife"]:
@@ -232,13 +220,11 @@ class Overcooked_equilibrium(gym.Env):
                 elif self.map[x][y] == ITEMIDX["dirtyplate"]:
                     self.dirtyplate.append(DirtyPlate(x, y))
         
-        # 又有dict又有list，有点浪费
         self.itemDic = {"tomato": self.tomato, "lettuce": self.lettuce, "badlettuce": self.badlettuce, "onion": self.onion, "plate": self.plate, "dirtyplate": self.dirtyplate, "knife": self.knife, "delivery": self.delivery, "agent": self.agent}
         for key in self.itemDic:
             self.itemList += self.itemDic[key]
 
 
-    # 初始化vec格式的obs
     def _initObs(self):
         obs = []
         for item in self.itemList:
@@ -251,7 +237,6 @@ class Overcooked_equilibrium(gym.Env):
             if isinstance(item, Food):
                 obs.append(item.cur_chopped_times / item.required_chopped_times)
 
-            # 切菜板是否装着东西，盘子里是否装着东西
             if isinstance(item, Plate):
                 if item.containing:
                     obs.append(1)
@@ -277,30 +262,16 @@ class Overcooked_equilibrium(gym.Env):
                     obs.append(0)
 
 
-        # oneHotTask = [0, 0, 0, 0, 1, 0, 0]
-        # +=的意思应该就是拼接吧
+        
         obs += self.oneHotTask
 
-        # obs += self.taskCompletionStatus 
-
-        # 最后初始化的obs是[3/7, 1/7, 1/3, 3/7, 1/7, 1/3, ..., 3/7, 1/7, 1/3, 0, 0, 0, 0, 1, 0, 0]
-        # 这个表征方式有点弱啊，不容易学的出来
-
-        # 让每一个agent的obs都是一致的
         for agent in self.agent:
             agent.obs = obs
         return [np.array(obs)] * self.n_agent
 
-
-    # 初始化的vec state和obs是一样的
-    # 我要自己优化state了
     def _get_vector_state(self):
         state = []
-        # print('++++++++++++++++++++++++++++++++++++++')
-        # print('++++++++++++++++++++++++++++++++++++++')
-        # print('++++++++++++++++++++++++++++++++++++++')
-        # print('++++++++++++++++++++++++++++++++++++++')
-        # print(self.itemList)
+        
         for item in self.itemList:
             x = item.x / self.xlen
             y = item.y / self.ylen
@@ -309,15 +280,6 @@ class Overcooked_equilibrium(gym.Env):
             if isinstance(item, Food):
                 state.append(item.cur_chopped_times / item.required_chopped_times)
 
-
-
-            """
-            # 下面的代码貌似没生效，因为agent使用的是_get_vector_obs（这里面只对食物添加了第三维度-是否切好，对其他盘子之类的只有x，y）
-            # 不对，并不是没有生效，下面代码在full observation的时候是生效了的，是不过在partial observation的时候会采用_get_vector_obs
-            # 而恰恰就是在_get_vector_obs中，对agent.obs进行了赋值和修改——————agent.obs，在_get_vector_state只是返回了state vector，
-            # 并未对agent.obs做出修改
-            """
-            # 切菜板是否装着东西，盘子里是否装着东西
             if isinstance(item, Plate):
                 if item.containing:
                     state.append(1)
@@ -343,12 +305,8 @@ class Overcooked_equilibrium(gym.Env):
                 else:
                     state.append(0)
 
-            # print(state)
-
 
         state += self.oneHotTask
-        # state += self.taskCompletionStatus
-        # print(state)
         return [np.array(state)] * self.n_agent
 
 
@@ -390,11 +348,6 @@ class Overcooked_equilibrium(gym.Env):
                 obs.append(0)
                 obs.append(1)
 
-                # # teammate holding: only encode whether holding
-                # obs.append(1 if teammate.holding else 0)
-
-                # # teammate holding_idx one-hot
-                # obs += get_one_hot_index(teammate.holding)
 
             # === Part 3: Encode items relative to own agent ===
             for item in self.itemList:
@@ -425,10 +378,6 @@ class Overcooked_equilibrium(gym.Env):
                 # Knife holding
                 if isinstance(item, Knife):
                     obs.append(1 if item.holding else 0)
-
-
-            # === Part 4: oneHotTask ===
-            # obs += self.oneHotTask
 
 
             macro_obs.append(obs)
@@ -478,20 +427,12 @@ class Overcooked_equilibrium(gym.Env):
                     obs.append(0)
                     obs.append(1)
                 else:
-                    # 用-1来表示看不到吧，应该没问题
                     obs.append(-1)
                     obs.append(-1)
 
                     # identity one-hot: teammate = [0, 1]
                     obs.append(0)
                     obs.append(1)
-
-
-                # # teammate holding: only encode whether holding
-                # obs.append(1 if teammate.holding else 0)
-
-                # # teammate holding_idx one-hot
-                # obs += get_one_hot_index(teammate.holding)
 
             # === Part 3: Encode items relative to own agent ===
             for item in self.itemList:
@@ -544,10 +485,6 @@ class Overcooked_equilibrium(gym.Env):
                     # Knife holding
                     if isinstance(item, Knife):
                         obs.append(-1)
-
-
-            # === Part 4: oneHotTask ===
-            # obs += self.oneHotTask
 
 
             macro_obs.append(obs)
@@ -660,131 +597,9 @@ class Overcooked_equilibrium(gym.Env):
         return macro_obs
     
 
-
-
-    # def _get_macro_vector_obs_new2(self):
-    #     """
-    #     Returns
-    #     -------
-    #     macro_vector_obs : list
-    #         vector observation for each agent.
-    #     """
-
-    #     def _norm_held_item_index(holder):
-    #         """
-    #         返回 holder 所持物品在 itemList 的归一化索引：
-    #         0.0 表示未持有或找不到，(idx+1)/N 表示第 idx 个（1..N）。
-    #         """
-    #         idx = -1
-    #         N = len(self.itemList)
-
-    #         # 1) 若有显式 holding_item 对象，优先用它
-    #         if hasattr(holder, "holding_item") and holder.holding_item is not None:
-    #             try:
-    #                 idx = self.itemList.index(holder.holding_item)
-    #             except ValueError:
-    #                 idx = -1
-
-    #         # 2) 某些实现里 agent.holding 直接是对象（而不仅是布尔）
-    #         elif hasattr(holder, "holding") and holder.holding not in (None, False, 0, 0.0, ""):
-    #             # 避免 bool 被当对象
-    #             if not isinstance(holder.holding, (bool, int, float)):
-    #                 try:
-    #                     idx = self.itemList.index(holder.holding)
-    #                 except ValueError:
-    #                     idx = -1
-    #             else:
-    #                 idx = -1
-
-    #         # 3) 回退：在 itemList 里找 holder 标记（如 item.holder == agent）
-    #         if idx < 0:
-    #             for i, it in enumerate(self.itemList):
-    #                 if getattr(it, "holder", None) is holder:
-    #                     idx = i
-    #                     break
-
-    #         if N == 0 or idx < 0:
-    #             return 0.0
-    #         return (idx + 1) / N
-
-    #     macro_obs = []
-
-    #     for idx, agent in enumerate(self.agent):
-    #         obs = []
-
-    #         # === Part 1: Encode own agent ===
-    #         obs.append(agent.x / self.xlen)
-    #         obs.append(agent.y / self.ylen)
-
-    #         # identity one-hot: self = [1, 0]
-    #         obs.append(1)
-    #         obs.append(0)
-
-    #         # holding flag + 持有物品在 itemList 的归一化索引
-    #         obs.append(1 if agent.holding else 0)
-    #         obs.append(_norm_held_item_index(agent))
-
-    #         # === Part 2: Encode teammate agent ===
-    #         for teammate in self.agent:
-    #             if teammate == agent:
-    #                 continue  # skip self
-    #             obs.append(teammate.x / self.xlen)
-    #             obs.append(teammate.y / self.ylen)
-
-    #             # identity one-hot: teammate = [0, 1]
-    #             obs.append(0)
-    #             obs.append(1)
-
-    #             # teammate holding flag + 归一化索引
-    #             obs.append(1 if teammate.holding else 0)
-    #             obs.append(_norm_held_item_index(teammate))
-
-    #         # === Part 3: Encode items relative to own agent ===
-    #         for item in self.itemList:
-    #             if isinstance(item, Agent):
-    #                 continue  # Agents already encoded separately
-
-    #             dx = item.x - agent.x
-    #             dy = item.y - agent.y
-    #             rel_x = dx / self.xlen
-    #             rel_y = dy / self.ylen
-    #             obs.append(rel_x)
-    #             obs.append(rel_y)
-
-    #             # Food chopped progress
-    #             if isinstance(item, Food):
-    #                 obs.append(item.cur_chopped_times / item.required_chopped_times)
-
-    #             # Plate containing
-    #             if isinstance(item, Plate):
-    #                 obs.append(1 if item.containing else 0)
-
-    #             # DirtyPlate containing
-    #             if isinstance(item, DirtyPlate):
-    #                 obs.append(1 if item.containing else 0)
-
-    #             # Knife holding
-    #             if isinstance(item, Knife):
-    #                 obs.append(1 if item.holding else 0)
-
-    #         # 保存
-    #         macro_obs.append(obs)
-
-    #     return macro_obs
-    
-
-
-
-    # image类型的state，其中get_image_obs考虑了agent能观察到的视野半径
     def _get_image_state(self):
         return [self.game.get_image_obs()] * self.n_agent
 
-
-
-    # _get_obs是真的返回obs的函数，如果机器人观测半径不够的时候，会返回_get_vector_obs得到的向量，如果机器人观测半径是完整的时候，会返回
-    # _get_vector_state得到的向量。但是_get_vector_obs处于半径条件判断之外了，所以不论观测半径如何，都会执行一次_get_vector_obs这个代码
-    # 当半径完整的时候，step或者reset的返回的都是self._get_vector_state()这个函数的，但是agent.obs却是self._get_vector_obs()中修改的
-    # 这就导致agent.obs是M维度，但是step或者reset得到的obs却是M+N维，N是Plate, Knife, Agent我自己添加的新状态
 
     def _get_obs(self):
         """
@@ -830,14 +645,6 @@ class Overcooked_equilibrium(gym.Env):
 
         po_obs = []
 
-        # print('self.oneHotTask ', self.oneHotTask )
-
-
-        # print('here to look at')
-        # print(self.xlen)
-        # print(self.ylen)
-        # print(self.mapType)
-        # print(self.agent)
         for agent in self.agent:
             obs = []
             idx = 0
