@@ -48,6 +48,7 @@ const DataManager = {
     if (extraMeta.client_config_snapshot != null && this.LOGS.meta.client_config_snapshot == null) {
       this.LOGS.meta.client_config_snapshot = extraMeta.client_config_snapshot;
     }
+    try { localStorage.setItem('last_prolific_id', pid); } catch (err) {}
   },
 
   setConsent(consentGiven = true) {
@@ -359,17 +360,81 @@ const DataManager = {
     return payload;
   },
 
+  _buildResumeMeta() {
+    return {
+      sessionId: STATE.sessionId ?? null,
+      prolificId: STATE.prolificId ?? null,
+      phase: STATE.phase ?? null,
+      configId: STATE.configId ?? null,
+      episodeIndex: STATE.episodeIndex ?? null,
+      roundInEpisode: STATE.roundInEpisode ?? null,
+      episodePhase: STATE.episodePhase ?? null,
+      experimentPhase: STATE.experimentPhase ?? null,
+      layout: STATE.assignment?.layout ?? null,
+      condition: STATE.assignment?.condition ?? null,
+      timeLeft: (typeof timeLeft === 'number') ? timeLeft : null,
+      isPlaying: !!STATE.isPlaying,
+      gameOver: !!STATE.gameOver
+    };
+  },
+
+  readLocalBackup(prolificId = null) {
+    try {
+      const pid = prolificId || this.LOGS.prolificId || STATE.prolificId || 'unknown';
+      const raw = localStorage.getItem(`overcooked_progress_${pid}`);
+      return raw ? JSON.parse(raw) : null;
+    } catch (err) {
+      console.warn("Could not read local backup:", err);
+      return null;
+    }
+  },
+
+  restoreLogs(logPayload) {
+    if (!logPayload || typeof logPayload !== 'object') return;
+    this.LOGS = JSON.parse(JSON.stringify(logPayload));
+  },
+
   persistLocalBackup(reason = 'autosave') {
     try {
-      const pid = this.LOGS.prolificId || 'unknown';
+      const pid = this.LOGS.prolificId || STATE.prolificId || 'unknown';
       const key = `overcooked_progress_${pid}`;
+      const resumeMeta = this._buildResumeMeta();
+      const compactLog = JSON.parse(JSON.stringify(this.LOGS));
+
+      compactLog.meta = compactLog.meta || {};
+      compactLog.meta.resume_meta = resumeMeta;
+
+      const currentRoundIdx = (compactLog.rounds?.length || 0) - 1;
+
+      compactLog.rounds = (compactLog.rounds || []).map((r, idx) => {
+        const round = { ...r };
+        delete round._roundStartWallMs;
+        round.state_log = [];
+
+        if (idx !== currentRoundIdx) {
+          round.action_log = { human: [], ai: [] };
+          round.counter_log = [];
+          delete round.initial_state;
+        }
+
+        return round;
+      });
+
+      compactLog.episodes = (compactLog.episodes || []).map(ep => ({
+        ...ep,
+        rounds: []
+      }));
+
+      try { localStorage.setItem('last_prolific_id', pid); } catch (err) {}
 
       localStorage.setItem(
         key,
         JSON.stringify({
           savedAtISO: new Date().toISOString(),
           reason,
-          log: this.buildPayload()
+          sessionId: STATE.sessionId ?? null,
+          resume_meta: resumeMeta,
+          log: compactLog
         })
       );
     } catch (err) {
@@ -379,6 +444,8 @@ const DataManager = {
 
   async saveProgressToServer(reason = 'autosave') {
     const payload = this.buildPayload();
+    payload.meta = payload.meta || {};
+    payload.meta.resume_meta = this._buildResumeMeta();
 
     this.persistLocalBackup(reason);
 
@@ -404,6 +471,8 @@ const DataManager = {
   sendBeaconProgress(reason = 'pagehide') {
     try {
       const payload = this.buildPayload();
+      payload.meta = payload.meta || {};
+      payload.meta.resume_meta = this._buildResumeMeta();
 
       this.persistLocalBackup(reason);
 

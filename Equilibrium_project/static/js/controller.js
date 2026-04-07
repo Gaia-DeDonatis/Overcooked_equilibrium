@@ -2,16 +2,29 @@
 
 
 // --- 1. API HELPER ---
-async function api(endpoint, data={}) {
-    if(!STATE.sessionId) {
-        const res = await fetch(`${SERVER_URL}/new_session`, { method:'POST'});
-        const d = await res.json();
-        STATE.sessionId = d.session_id;
-        localStorage.setItem('session_id', d.session_id);
+async function api(endpoint, data = {}) {
+    if (!STATE.sessionId) {
+        const storedSid = localStorage.getItem('session_id');
+        if (storedSid) {
+            STATE.sessionId = storedSid;
+        }
     }
+
+    if (!STATE.sessionId) {
+      const res = await fetch(`${SERVER_URL}/new_session`, { method: 'POST' });
+      const d = await res.json();
+      STATE.sessionId = d.session_id;
+      try {
+          localStorage.setItem('session_id', d.session_id);
+      } catch (err) {
+          console.warn("Could not persist session_id:", err);
+      }
+    }
+
     const res = await fetch(`${SERVER_URL}${endpoint}`, {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({...data, session_id: STATE.sessionId})
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...data, session_id: STATE.sessionId })
     });
     return await res.json();
 }
@@ -27,7 +40,14 @@ function assignConditions() {
 
     // Keep assignment stable for the same participant
     const storageKey = `assigned_experiment_map_${pid}`;
-    const savedMap = localStorage.getItem(storageKey);
+    
+    let savedMap = null;
+    try {
+        savedMap = localStorage.getItem(storageKey);
+    } catch (err) {
+        console.warn("Could not read assigned map from localStorage:", err);
+    }
+
     if (savedMap && availableMaps.includes(savedMap)) {
         STATE.assignment.layout = savedMap;
         console.log("Loaded assigned map:", STATE.assignment.layout);
@@ -42,7 +62,12 @@ function assignConditions() {
 
     const assignedMap = availableMaps[h % availableMaps.length];
     STATE.assignment.layout = assignedMap;
-    localStorage.setItem(storageKey, assignedMap);
+    
+    try {
+        localStorage.setItem(storageKey, assignedMap);
+    } catch (err) {
+        console.warn("Could not persist assigned map:", err);
+    }
 
     console.log("Assigned experiment map:", STATE.assignment.layout);
 }
@@ -86,11 +111,28 @@ function showPage(pageId) {
     if(target) target.classList.remove('hidden');
     window.scrollTo(0,0);
 
+    if (pageId === 'page-game' || pageId === 'page-instruction-1') {
+      focusGameSurface();
+    }
+
     // Only set isPlaying for game pages
     const gamePages = ['page-game', 'page-instruction-1'];
     if (!gamePages.includes(pageId)) {
         STATE.isPlaying = false;
     }
+}
+
+function focusGameSurface() {
+  const canvasId = (STATE.phase === 0) ? 'gameCanvas_practice' : 'gameCanvas';
+
+  setTimeout(() => {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+
+    canvas.setAttribute('tabindex', '0');
+    try { window.focus(); } catch (err) {}
+    try { canvas.focus({ preventScroll: true }); } catch (err) { canvas.focus(); }
+  }, 0);
 }
 
 // --- 4. GAME INITIALIZATION (TIME-BASED) ---
@@ -205,6 +247,162 @@ function startAiTick() {
   aiTickTimer = setInterval(doOneTick, AI_TICK_MS);
 }
 
+function syncRoundHudFromLogs() {
+  const roundNow = DataManager.getCurrentRound();
+
+  const dishesNow = roundNow?.summary?.dishes_served ?? 0;
+  const stepsNow  = roundNow?.summary?.human_steps ?? 0;
+
+  const dishesEl = document.getElementById('dishesServed');
+  if (dishesEl) dishesEl.innerText = String(dishesNow);
+
+  const stepsEl = document.getElementById('humanSteps');
+  if (stepsEl) stepsEl.innerText = String(stepsNow);
+}
+
+function applyResumeMeta(resume) {
+  if (!resume) return;
+
+  STATE.sessionId = resume.sessionId || localStorage.getItem('session_id') || STATE.sessionId || null;
+  
+  if (STATE.sessionId) {
+    try {
+        localStorage.setItem('session_id', STATE.sessionId);
+    } catch (err) {
+        console.warn("Could not persist restored session_id:", err);
+    }
+  }
+
+  if (resume.phase != null) STATE.phase = resume.phase;
+  if (resume.configId != null) STATE.configId = resume.configId;
+  if (resume.episodeIndex != null) STATE.episodeIndex = resume.episodeIndex;
+  if (resume.roundInEpisode != null) STATE.roundInEpisode = resume.roundInEpisode;
+  if (resume.episodePhase != null) STATE.episodePhase = resume.episodePhase;
+  if (resume.experimentPhase != null) STATE.experimentPhase = resume.experimentPhase;
+
+  if (resume.layout != null) STATE.assignment.layout = resume.layout;
+  if (resume.condition != null) STATE.assignment.condition = resume.condition;
+}
+
+async function resumeCurrentRoundFromServer(backup) {
+  const resume = backup?.resume_meta || backup?.log?.meta?.resume_meta;
+  if (!resume || resume.episodeIndex == null) return false;
+
+  applyResumeMeta(resume);
+
+  if (backup?.log) {
+    DataManager.restoreLogs(backup.log);
+  }
+
+  STATE.gameOver = false;
+  STATE.isPlaying = false;
+  bufferedHumanKey = 'Stay';
+  aiTickInFlight = false;
+
+  showPage('page-game');
+  updateGameUI();
+
+  const data = await api('/get_state', {});
+  if (!data?.success || !data?.state) {
+    throw new Error(data?.error || 'Could not restore live round state');
+  }
+
+  STATE.phase = 1;
+  STATE.configId = 'experiment';
+  STATE.gameOver = false;
+  STATE.isPlaying = true;
+
+  drawGame(data.state, 'gameCanvas');
+  focusGameSurface();
+  startAiTick();
+  startAutosave();
+
+  const restoredTime =
+    Number.isFinite(resume.timeLeft) && resume.timeLeft > 0
+      ? resume.timeLeft
+      : CONFIG.ROUND_DURATION_SEC;
+
+  startTimer(restoredTime);
+  updateGameUI();
+  updateSkipPolicyUI();
+  syncRoundHudFromLogs();
+
+  return true;
+}
+
+async function restartCurrentEpisodeFromBackup(backup) {
+  const resume = backup?.resume_meta || backup?.log?.meta?.resume_meta;
+  if (!resume || resume.episodeIndex == null) return false;
+
+  if (backup?.log) {
+    DataManager.restoreLogs(backup.log);
+
+    // Drop the interrupted episode so it can restart cleanly.
+    DataManager.LOGS.rounds = DataManager.LOGS.rounds.filter(
+      r => r.episode_index !== resume.episodeIndex
+    );
+    DataManager.LOGS.episodes = DataManager.LOGS.episodes.filter(
+      ep => ep.episode_index !== resume.episodeIndex
+    );
+  }
+
+  STATE.phase = 1;
+  STATE.episodeIndex = resume.episodeIndex;
+  STATE.roundInEpisode = 1;
+  STATE.skipEpisodeRequested = false;
+  STATE.episodePhase = getEpisodePhase(STATE.episodeIndex);
+  STATE.experimentPhase = getExperimentPhase(STATE.episodeIndex);
+  STATE.gameOver = false;
+  STATE.configId = 'experiment';
+
+  if (resume.layout != null) STATE.assignment.layout = resume.layout;
+  if (resume.condition != null) STATE.assignment.condition = resume.condition;
+
+  showPage('page-game');
+  updateGameUI();
+  await startRound({ newEpisode: true });
+  return true;
+}
+
+async function tryResumeInterruptedSession() {
+  const backup = DataManager.readLocalBackup(STATE.prolificId);
+  const resume = backup?.resume_meta || backup?.log?.meta?.resume_meta;
+
+  if (!resume || resume.episodeIndex == null) return false;
+
+  const ok = window.confirm(
+    `We found interrupted progress for Episode ${resume.episodeIndex}, ` +
+    `Round ${resume.roundInEpisode ?? 1}. Press OK to resume. ` +
+    `If the old live round is no longer available, the current episode will restart from the beginning.`
+  );
+  if (!ok) return false;
+
+  try {
+    return await resumeCurrentRoundFromServer(backup);
+  } catch (err) {
+    console.warn("Live round resume failed, restarting current episode:", err);
+    return await restartCurrentEpisodeFromBackup(backup);
+  }
+}
+
+function getLastSavedProlificId() {
+  try {
+    return localStorage.getItem('last_prolific_id') || null;
+  } catch (err) {
+    return null;
+  }
+}
+
+async function tryAutoResumeOnLoad() {
+  const savedPid = getLastSavedProlificId();
+  if (!savedPid) return false;
+
+  STATE.prolificId = savedPid;
+
+  const resumed = await tryResumeInterruptedSession();
+  return resumed;
+}
+
 // A. START EPISODE (3 rounds each)
 async function startEpisode(episodeIndex) {
   if (!STATE.assignment || !STATE.assignment.layout) {
@@ -250,11 +448,6 @@ async function startRound({ newEpisode = false } = {}) {
     bufferedHumanKey = 'Stay';
     aiTickInFlight = false;
 
-    //test for thinpath flexible
-    //if (data.map_type) {
-      //STATE.assignment.layout = data.map_type;
-    //}
-
     if (DataManager.LOGS.meta.tick_ms == null) {
       DataManager.LOGS.meta.tick_ms = AI_TICK_MS;
     }
@@ -277,9 +470,15 @@ async function startRound({ newEpisode = false } = {}) {
 
     if (data.state) {
       DataManager.setRoundInitialState(data.state);
-      STATE.isPlaying = true;
+        STATE.phase = 1;
+        STATE.configId = 'experiment';
+        STATE.gameOver = false;
+        STATE.isPlaying = true;
+
+      DataManager.persistLocalBackup('round_started');
 
       drawGame(data.state, 'gameCanvas');
+      focusGameSurface();
       startAiTick();
       startAutosave();
       startTimer(CONFIG.ROUND_DURATION_SEC);
@@ -766,31 +965,35 @@ function showEpisodeBreak() {
 }
 
 // --- 5. KEYBOARD LISTENER ---
-document.addEventListener('keydown', async (e) => {
+window.addEventListener('keydown', async (e) => {
     if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].indexOf(e.key) === -1) return;
     if(!STATE.isPlaying || STATE.gameOver) return;
     
     e.preventDefault();
 
     // A. PRACTICE LOGIC
-    if(STATE.phase === 0) {
-        const data = await api('/key_event', { key: e.key, config_id: 'layout_practice' });
+    const practiceVisible = !document.getElementById('page-instruction-1')?.classList.contains('hidden');
+    const gameVisible = !document.getElementById('page-game')?.classList.contains('hidden');
+
+    // A. PRACTICE LOGIC
+    if (practiceVisible) {
+        const data = await practiceApi('/key_event', { key: e.key, config_id: 'layout_practice' });
         drawGame(data.state, 'gameCanvas_practice');
         
         const prevDishes = STATE.practiceDishes || 0;
         const dishesNow = (typeof data.dishes_served === 'number') ? data.dishes_served : 0;
         STATE.practiceDishes = dishesNow;
 
-        if(dishesNow >= 1 && dishesNow > prevDishes) {
+        if (dishesNow >= 1 && dishesNow > prevDishes) {
             STATE.isPlaying = false;
             STATE.gameOver = true;
+            clearPracticeSession();
             document.getElementById('practiceHint').innerText = "Great job! Click 'Next' to continue.";
             document.getElementById('to-instruction-2').disabled = false;
-            //alert("Practice Complete! You delivered the salad.");
         }
-    } 
-    // B. MAIN TASK LOGIC (Phase 1 and 2)
-    else {
+    }
+    // B. MAIN TASK LOGIC
+    else if (gameVisible) {
         bufferedHumanKey = e.key;
         doOneTick();
     }
@@ -844,14 +1047,26 @@ if (consentCheck && btnInstruction) {
         btnInstruction.disabled = !consentCheck.checked;
     });
 
-    btnInstruction.onclick = () => {
+    btnInstruction.onclick = async () => {
         if (!consentCheck.checked) return;
 
         DataManager.setConsent(true);
 
+        const backup = DataManager.readLocalBackup(STATE.prolificId);
+        const resume = backup?.resume_meta || backup?.log?.meta?.resume_meta;
+
+        // If interrupted main-task progress exists, try to resume that first.
+        if (resume && resume.phase === 1 && resume.episodeIndex != null) {
+            try {
+                const resumed = await tryResumeInterruptedSession();
+                if (resumed) return;
+            } catch (err) {
+                console.warn("Resume before practice failed:", err);
+            }
+        }
+
         showPage('page-instruction-1');
 
-        // Start practice round when page loads
         setTimeout(() => {
             if (typeof startPracticeRound === 'function') {
                 startPracticeRound();
@@ -978,10 +1193,18 @@ if (btnSubmitQuiz) {
 // 4. START GAME
 const btnStartTask = document.getElementById('start-task-1');
 if (btnStartTask) {
-    btnStartTask.onclick = () => {
-        console.log("Starting Episode 1...");
-        startEpisode(1);
-    };
+  btnStartTask.onclick = async () => {
+    try {
+      const resumed = await tryResumeInterruptedSession();
+      if (resumed) return;
+
+      console.log("Starting Episode 1...");
+      await startEpisode(1);
+    } catch (err) {
+      console.error("Start/resume error:", err);
+      alert("Could not restore the interrupted session. Please contact the researcher.");
+    }
+  };
 }
 
 // --- 10. FINAL SUBMISSION ---
@@ -1001,12 +1224,21 @@ async function submitData() {
 }
 
 // --- 11. INITIALIZE ---
-window.onload = () => {
+window.onload = async () => {
     preloadImages(() => {
         console.log("Images loaded and game is ready.");
     });
 
     setupSkipPolicyUI();
+
+    try {
+        const resumed = await tryAutoResumeOnLoad();
+        if (resumed) {
+            console.log("Interrupted session resumed.");
+        }
+    } catch (err) {
+        console.warn("Auto-resume on load failed:", err);
+    }
 };
 
 window.addEventListener('resize', () => {
@@ -1020,7 +1252,7 @@ window.addEventListener('resize', () => {
   const practiceCanvas = document.getElementById('gameCanvas_practice');
   const practiceVisible = practiceCanvas && practiceCanvas.offsetParent !== null;
   if (practiceVisible) {
-    api('/get_state', {}).then(data => {
+    practiceApi('/get_state', {}).then(data => {
       if (data?.state) drawGame(data.state, 'gameCanvas_practice');
     }).catch(() => {});
   }
