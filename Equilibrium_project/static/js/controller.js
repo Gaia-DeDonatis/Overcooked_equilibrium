@@ -72,26 +72,11 @@ function assignConditions() {
     console.log("Assigned experiment map:", STATE.assignment.layout);
 }
 
-const selectionModeEl = document.getElementById('selectionMode');
-if (selectionModeEl) {
-    selectionModeEl.value = CONFIG.SELECTION_MODE || 'bo';
-    STATE.assignment.condition = getSelectionMode();
-
-    selectionModeEl.addEventListener('change', () => {
-        STATE.assignment.condition = getSelectionMode();
-        console.log("Researcher condition:", STATE.assignment.condition);
-    });
-}
-
 function getSelectionMode() {
-    const el = document.getElementById('selectionMode');
-    const value = (el?.value || STATE.assignment?.condition || CONFIG.SELECTION_MODE || 'bo')
-        .toString()
-        .trim()
-        .toLowerCase();
-
-    return value === 'control' ? 'control' : 'bo';
+    return 'bo';
 }
+
+STATE.assignment.condition = getSelectionMode();
 
 // --- 3. PAGE NAVIGATION ---
 function showPage(pageId) {
@@ -364,11 +349,27 @@ async function restartCurrentEpisodeFromBackup(backup) {
   return true;
 }
 
+function hasResumableBackup(backup) {
+  const resume = backup?.resume_meta || backup?.log?.meta?.resume_meta;
+  const hasRounds = Array.isArray(backup?.log?.rounds) && backup.log.rounds.length > 0;
+
+  return Boolean(
+    resume &&
+    resume.canResume === true &&
+    resume.phase === 1 &&
+    resume.episodeIndex != null &&
+    resume.roundInEpisode != null &&
+    resume.isPlaying === true &&
+    resume.gameOver !== true &&
+    hasRounds
+  );
+}
+
 async function tryResumeInterruptedSession() {
   const backup = DataManager.readLocalBackup(STATE.prolificId);
-  const resume = backup?.resume_meta || backup?.log?.meta?.resume_meta;
+  if (!hasResumableBackup(backup)) return false;
 
-  if (!resume || resume.episodeIndex == null) return false;
+  const resume = backup?.resume_meta || backup?.log?.meta?.resume_meta;
 
   const ok = window.confirm(
     `We found interrupted progress for Episode ${resume.episodeIndex}, ` +
@@ -1028,7 +1029,6 @@ if(inputID) {
         
         assignConditions(); 
         STATE.assignment.condition = getSelectionMode();
-        if (selectionModeEl) selectionModeEl.disabled = true;
 
         DataManager.initUser(STATE.prolificId, age, gender, STATE.assignment, {
             experience: experience,
@@ -1053,10 +1053,9 @@ if (consentCheck && btnInstruction) {
         DataManager.setConsent(true);
 
         const backup = DataManager.readLocalBackup(STATE.prolificId);
-        const resume = backup?.resume_meta || backup?.log?.meta?.resume_meta;
 
         // If interrupted main-task progress exists, try to resume that first.
-        if (resume && resume.phase === 1 && resume.episodeIndex != null) {
+        if (hasResumableBackup(backup)) {
             try {
                 const resumed = await tryResumeInterruptedSession();
                 if (resumed) return;

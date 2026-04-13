@@ -360,7 +360,21 @@ const DataManager = {
     return payload;
   },
 
+  _hasActiveMainTaskRound() {
+    return Boolean(
+      STATE.phase === 1 &&
+      STATE.isPlaying &&
+      !STATE.gameOver &&
+      STATE.episodeIndex != null &&
+      STATE.roundInEpisode != null &&
+      Array.isArray(this.LOGS.rounds) &&
+      this.LOGS.rounds.length > 0
+    );
+  },
+
   _buildResumeMeta() {
+    const canResume = this._hasActiveMainTaskRound();
+
     return {
       sessionId: STATE.sessionId ?? null,
       prolificId: STATE.prolificId ?? null,
@@ -374,7 +388,8 @@ const DataManager = {
       condition: STATE.assignment?.condition ?? null,
       timeLeft: (typeof timeLeft === 'number') ? timeLeft : null,
       isPlaying: !!STATE.isPlaying,
-      gameOver: !!STATE.gameOver
+      gameOver: !!STATE.gameOver,
+      canResume
     };
   },
 
@@ -399,6 +414,14 @@ const DataManager = {
       const pid = this.LOGS.prolificId || STATE.prolificId || 'unknown';
       const key = `overcooked_progress_${pid}`;
       const resumeMeta = this._buildResumeMeta();
+
+      try { localStorage.setItem('last_prolific_id', pid); } catch (err) {}
+
+      if (!resumeMeta.canResume) {
+        localStorage.removeItem(key);
+        return;
+      }
+
       const compactLog = JSON.parse(JSON.stringify(this.LOGS));
 
       compactLog.meta = compactLog.meta || {};
@@ -424,8 +447,6 @@ const DataManager = {
         ...ep,
         rounds: []
       }));
-
-      try { localStorage.setItem('last_prolific_id', pid); } catch (err) {}
 
       localStorage.setItem(
         key,

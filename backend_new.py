@@ -1143,9 +1143,7 @@ def reset():
     config_id = data.get('config_id')
     map_type = data.get('map_type')
 
-    selection_mode = str(data.get('selection_mode', 'bo')).strip().lower()
-    if selection_mode not in ('bo', 'control'):
-        selection_mode = 'bo'
+    selection_mode = 'bo'
 
     # metadata (optional)
     episode_index = data.get('episode_index', None)
@@ -1173,7 +1171,7 @@ def reset():
     # persist solo flag in the session
     sess.solo_episode = bool(solo_episode)
 
-    if is_practice or sess.solo_episode or selection_mode == "control":
+    if is_practice or sess.solo_episode:
         optimizer = None
     else:
         resolved_map_name, resolved_map_cfg = _get_experiment_map_config(
@@ -1215,12 +1213,9 @@ def reset():
                 and episode_index_int != sess.episode_index
             )
 
-            is_control = (selection_mode == "control")
-
             choose_new_policy = (
                 (not is_practice)
                 and (not sess.solo_episode)
-                and (not is_control)
                 and (bool(new_episode) or episode_changed)
             )
 
@@ -1562,10 +1557,6 @@ def tell():
         return jsonify(success=False, error="prolific_id is required"), 400
     prolific = prolific_raw.strip().replace('/', '_')
 
-    selection_mode = str(data.get('selection_mode', 'bo')).strip().lower()
-    if selection_mode == 'control':
-        return jsonify(success=True, skipped=True)
-    
     sid = data.get('session_id')
 
     # if sid:

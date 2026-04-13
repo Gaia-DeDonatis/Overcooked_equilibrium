@@ -493,14 +493,6 @@
 
 <body>
   <div class="container">
-    <div class="researcher-toolbar">
-      <span class="researcher-toolbar-label">Mode</span>
-      <select id="selectionMode" class="researcher-toolbar-select" aria-label="Researcher mode">
-        <option value="bo">BO</option>
-        <option value="control">Control</option>
-      </select>
-    </div>
-
     <h1>Collaborative Game Study</h1>
 
     <!-- Page 1: Prolific + Demographics -->
@@ -580,7 +572,7 @@
         <p>This study investigates how humans collaborate with an AI agent in the collaborative game Overcooked.</p>
         <p>The study is organized by researchers from Aalto University in Finland.</p>
         <p>This study aims to understand behavior and experience in human–AI collaboration. Participation is voluntary and you may withdraw at any time. Data will be stored anonymously and used for research only. There are no known risks; if you feel uncomfortable, you may stop immediately.</p>
-        <p>Compensation is based on participation and compliance with the study instructions, not on game score. Participants who fail the instruction/comprehension check will receive the minimum compensation and will not continue to the main experiment. Participants who complete the study and follow the instructions appropriately throughout the session will receive the highest compensation. Participants who remain in the session but show clear non-compliance or insufficient engagement with the task will receive reduced compensation.</p>
+        <p>Compensation is based on participation and compliance with the study instructions, not on game score. Participants who fail the instruction/comprehension check will receive the minimum compensation and will not continue to the main experiment. Participants who complete the study and follow the instructions appropriately throughout the session will receive the full compensation.</p>
         <p>By checking the box and continuing, you indicate that you have read and agree to participate.</p>
       </div>
       <div class="inline">
@@ -854,7 +846,7 @@
           <div id="quiz-q2c">
             <label class="role-item">
               <input type="radio" name="q2c" value="correct">
-              <span>Keep playing seriously and give honest feedback afterward.</span>
+              <span>Keep playing seriously, and from the second round onward skip the rest of the episode if the AI is clearly not working for me.</span>
             </label>
             <label class="role-item">
               <input type="radio" name="q2c" value="wrong">
@@ -862,7 +854,7 @@
             </label>
             <label class="role-item">
               <input type="radio" name="q2c" value="wrong">
-              <span>Wait without moving until the episode ends.</span>
+              <span>Immediately skip any bad episode, even in the first round.</span>
             </label>
           </div>
         </div>
