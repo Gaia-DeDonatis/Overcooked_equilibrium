@@ -90,7 +90,7 @@ class Overcooked_equilibrium(gym.Env):
             if self.n_agent == 1:
                 if self.mapType == "circle":
                     map =  [[1, 1, 1, 7, 1],
-                            [1, 0, 0, 2, 5],
+                            [1, 0, 0, 0, 5],
                             [6, 0, 1, 0, 5],
                             [4, 2, 0, 0, 1],
                             [1, 4, 1, 1, 1]] 

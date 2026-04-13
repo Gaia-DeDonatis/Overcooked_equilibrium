@@ -185,43 +185,38 @@ function drawGame(state, canvasId) {
     });
 
     // === Agents ===
-    (state.agents||[]).forEach((agent, agentIdx) => {
-        // If this is a solo BO episode, don't draw the AI teammate (agent 0)
+    (state.agents || []).forEach((agent, agentIdx) => {
         const epNum = (STATE && STATE.episodeIndex) ? STATE.episodeIndex : 1;
-        if (agentIdx === 0 && (typeof isSoloEpisode === 'function') && isSoloEpisode(epNum)) return;
-        // Agent Image
+        const soloNow = (typeof isSoloEpisode === 'function') ? isSoloEpisode(epNum) : false;
+        const hasMultipleAgents = Array.isArray(state.agents) && state.agents.length > 1;
+
+        // In solo mode, hide only a real robot teammate, not index 0 blindly.
+        if (soloNow && hasMultipleAgents && agent.color === "robot") return;
+
         let agentImg = null;
         if (agent.color === "robot") {
-            // Solo BO episodes: hide the AI teammate entirely
-            const epNum = (STATE && STATE.episodeIndex) ? STATE.episodeIndex : 1;
-            const soloNow = (typeof isSoloEpisode === 'function') ? isSoloEpisode(epNum) : false;
-            if (soloNow) return;
-
-            // Rotate robot skin by AI-episode ordinal so solo episodes don't "consume" a color.
             const skins = (typeof ROBOT_SKINS !== 'undefined' && Array.isArray(ROBOT_SKINS) && ROBOT_SKINS.length)
-              ? ROBOT_SKINS
-              : ["agent-robot.png"]; 
+            ? ROBOT_SKINS
+            : ["agent-robot.png"];
 
             const soloBefore = (typeof countSoloBeforeEpisode === 'function') ? countSoloBeforeEpisode(epNum) : 0;
             const aiOrdinal = Math.max(1, epNum - soloBefore);
             const idx = Math.max(0, aiOrdinal - 1) % skins.length;
             const skinName = skins[idx];
-            agentImg = images[skinName] || images["agent-robot.png"]; 
+            agentImg = images[skinName] || images["agent-robot.png"];
         } else {
             agentImg = images[`agent-${agent.color}.png`];
         }
-        
+
         if (agentImg) {
             ctx.drawImage(agentImg, offX + agent.y*cell, offY + agent.x*cell, cell, cell);
         }
 
-        // Held Item
         if (agent.holding) {
             const holdName = agent.holding;
             const holdImg = resolveImage(holdName);
-            
+
             if (holdImg) {
-                // Position: Bottom Right
                 const SCALE_IN_HAND = 0.5;
                 const w = cell * SCALE_IN_HAND;
                 const h = cell * SCALE_IN_HAND;
@@ -229,12 +224,9 @@ function drawGame(state, canvasId) {
                 const y = offY + agent.x*cell + (cell - h);
 
                 if (holdName === "plate" || holdName === "dirtyplate") {
-                    // Logic for plate in hand (uses helper)
-                    // Note: Ensure your backend sends 'holding_containing', otherwise this is null
-                    const contentName = agent.holding_containing || null; 
+                    const contentName = agent.holding_containing || null;
                     drawPlateWithContent(x, y, w, h, holdName, contentName);
                 } else {
-                    // Normal item in hand
                     ctx.drawImage(holdImg, x, y, w, h);
                 }
             }

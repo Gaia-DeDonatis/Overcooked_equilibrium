@@ -83,7 +83,7 @@ function showPage(pageId) {
     const pages = [
         'page-intro', 'page-consent', 'page-instruction-1',
         'page-instruction-2a','page-instruction-2b','page-instruction-2c',
-        'page-game', 'page-episode-break',
+        'page-game', 'page-episode-break', 'page-submitting',
         'page-end', 'page-quiz-fail'
     ];
     
@@ -595,6 +595,18 @@ async function actuallySkipCurrentPolicyEpisode() {
   DataManager.endRound();
   await DataManager.saveProgressToServer('episode_skipped');
 
+  const soloNow = (typeof isSoloEpisode === 'function') ? isSoloEpisode(STATE.episodeIndex) : false;
+  const replayNow = ['bo_replay_best', 'replay_optimal'].includes(STATE.episodePhase);
+  const shouldTell = !soloNow && !replayNow && getSelectionMode() === 'bo';
+
+  if (shouldTell) {
+    await api('/tell', {
+      prolificId: STATE.prolificId,
+      map_type: STATE.assignment.layout,
+      selection_mode: getSelectionMode()
+    });
+  }
+
   showEpisodeBreak();
 }
 
@@ -690,8 +702,8 @@ async function finishTimeBasedRound() {
         console.log(`Episode ${STATE.episodeIndex} Complete!`);
         const soloNow = (typeof isSoloEpisode === 'function') ? isSoloEpisode(STATE.episodeIndex) : false;
         const replayNow = ['bo_replay_best', 'replay_optimal'].includes(STATE.episodePhase);
-        // const shouldTell = !soloNow && !replayNow && getSelectionMode() === 'bo';
-        const shouldTell = !soloNow;
+        const shouldTell = !soloNow && !replayNow && getSelectionMode() === 'bo';
+        
         if (shouldTell) {
           await api('/tell', {
             prolificId: STATE.prolificId,
@@ -839,6 +851,12 @@ async function finishEpisodeBreak() {
   if (STATE.episodeIndex < CONFIG.TOTAL_EPISODES) {
     await startEpisode(STATE.episodeIndex + 1);
   } else {
+    const btn = document.getElementById('breakContinueBtn');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerText = 'Saving...';
+    }
+
     await submitData();
   }
 }
@@ -1129,7 +1147,7 @@ function setupQuestionGate(questionNames, buttonId) {
 // Enable Next/Submit only when all answers on that page are selected
 setupQuestionGate(['q1', 'q1b', 'q1c'], 'btn-next-2a');
 setupQuestionGate(['q2a', 'q2b', 'q2c'], 'btn-next-2b');
-setupQuestionGate(['q3a', 'q3b', 'q3c'], 'btn-submit-quiz');
+setupQuestionGate(['q3a', 'q3c'], 'btn-submit-quiz');
 
 // --- BUTTON LISTENERS ---
 
@@ -1165,9 +1183,9 @@ if (btnNext2b) {
 const btnSubmitQuiz = document.getElementById('btn-submit-quiz');
 if (btnSubmitQuiz) {
     btnSubmitQuiz.onclick = () => {
-        if (!areAllQuestionsAnswered(['q3a', 'q3b', 'q3c'])) return;
+        if (!areAllQuestionsAnswered(['q3a', 'q3c'])) return;
 
-        const errors = calculatePageErrors(['q3a', 'q3b', 'q3c']);
+        const errors = calculatePageErrors(['q3a', 'q3c']);
         QUIZ_ERRORS += errors;
 
         console.log(`Final Check. Total Cumulative Errors: ${QUIZ_ERRORS}`);
@@ -1208,6 +1226,11 @@ if (btnStartTask) {
 
 // --- 10. FINAL SUBMISSION ---
 async function submitData() {
+    showPage('page-submitting');
+
+    // Let the browser paint the loading page before the network work starts
+    await new Promise(resolve => setTimeout(resolve, 50));
+
     try {
         const response = await DataManager.submitToServer();
 
@@ -1215,10 +1238,12 @@ async function submitData() {
             showPage('page-end');
         } else {
             alert("Submission failed. Please contact the researcher.");
+            showPage('page-episode-break');
         }
     } catch (err) {
         console.error("Submission error:", err);
         alert("Network error during submission. Please contact the researcher.");
+        showPage('page-episode-break');
     }
 }
 

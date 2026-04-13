@@ -14,7 +14,7 @@
     "tick_ms": null,
     "resume_meta": {
       "sessionId": null,
-      "prolificId": "unknown",
+      "prolificId": "test",
       "phase": 0,
       "configId": null,
       "episodeIndex": 1,
@@ -25,7 +25,8 @@
       "condition": "bo",
       "timeLeft": 0,
       "isPlaying": false,
-      "gameOver": false
+      "gameOver": false,
+      "canResume": false
     }
   },
   "episodes": [],

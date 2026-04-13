@@ -1099,13 +1099,9 @@ def extract_state(sess: Session):
             "holding": get_type_name(holding) if holding else None,
             "holding_containing": get_contained_name(holding) if holding else None
         })
-    # If env has only 1 agent (human-alone), pad a dummy AI agent at index 0
-    # so the frontend can keep assuming agents[0]=AI, agents[1]=human.
+    
     if getattr(env, 'n_agent', None) == 1 and len(state['agents']) == 1:
-        human_agent = state['agents'][0]
-        human_agent['color'] = "blue"
-        dummy_ai = {"x": -1, "y": -1, "color": "gray", "holding": None, "holding_containing": None}
-        state['agents'] = [dummy_ai, human_agent]
+        state['agents'][0]['color'] = "blue"
 
     return state
 
@@ -1559,11 +1555,11 @@ def tell():
 
     sid = data.get('session_id')
 
-    # if sid:
-    #     sess = SESSION_MGR.ensure(sid)
-    #     with sess.lock:
-    #         if getattr(sess, "episode_phase", None) in ("bo_replay_best", "replay_optimal"):
-    #             return jsonify(success=True, skipped=True, reason="replay episode")
+    if sid:
+         sess = SESSION_MGR.ensure(sid)
+         with sess.lock:
+             if getattr(sess, "episode_phase", None) in ("bo_replay_best", "replay_optimal"):
+                 return jsonify(success=True, skipped=True, reason="replay episode")
 
     # Preferred: use server-side AI reward (computed in /key_event) for BO.
     score_raw = data.get('score')

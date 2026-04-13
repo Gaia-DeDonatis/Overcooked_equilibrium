@@ -488,6 +488,21 @@
       background: #f3f4f6;
     }
 
+    .loader-spinner{
+      width: 56px;
+      height: 56px;
+      margin: 0 auto;
+      border: 6px solid #dbeafe;
+      border-top: 6px solid #2563eb;
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin{
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
   </style>
 </head>
 
@@ -846,7 +861,7 @@
           <div id="quiz-q2c">
             <label class="role-item">
               <input type="radio" name="q2c" value="correct">
-              <span>Keep playing seriously, and from the second round onward skip the rest of the episode if the AI is clearly not working for me.</span>
+              <span>Keep playing seriously, and in case skip the rest of the episode.</span>
             </label>
             <label class="role-item">
               <input type="radio" name="q2c" value="wrong">
@@ -896,22 +911,6 @@
             <label class="role-item">
               <input type="radio" name="q3a" value="wrong">
               <span>I should ignore the ratings because they do not matter.</span>
-            </label>
-          </div>
-
-          <p style="margin-top:18px; margin-bottom:8px; font-weight:600;">2. What is compensation based on?</p>
-          <div id="quiz-q3b">
-            <label class="role-item">
-              <input type="radio" name="q3b" value="wrong">
-              <span>Only on my final game score.</span>
-            </label>
-            <label class="role-item">
-              <input type="radio" name="q3b" value="correct">
-              <span>On how seriously I take my participation and follow the instructions.</span>
-            </label>
-            <label class="role-item">
-              <input type="radio" name="q3b" value="wrong">
-              <span>Only on how quickly I finish the study.</span>
             </label>
           </div>
 
@@ -1118,6 +1117,14 @@
           You can continue when the timer reaches 0 and you have answered both questions.
         </p>
       </div>
+    </section>
+
+    <section id="page-submitting" class="card hidden center" style="padding: 60px 20px;">
+      <div class="loader-spinner" aria-hidden="true"></div>
+      <h2 style="color:#2563eb; font-size: 30px; margin-top:18px;">Saving your data...</h2>
+      <p style="font-size: 17px; color: #4b5563; max-width: 520px; margin: 12px auto 0 auto;">
+        Please wait a few seconds. Do not close this window.
+      </p>
     </section>
 
     <!-- End page-->

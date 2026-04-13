@@ -74,7 +74,7 @@ const DataManager = {
       episode_phase: episode_phase ?? null,
       experiment_phase: null,
       policy_id: null,
-      optimal_policy_id: null,
+      /* optimal_policy_id: null,*/
       startTimeISO: new Date().toISOString(),
       feedback: {
         scale: "tlx_20",
@@ -122,9 +122,9 @@ const DataManager = {
     const ep = this._ensureEpisode(episode_index, episode_phase);
     if (ep && experiment_phase != null) ep.experiment_phase = experiment_phase;
     if (ep && extraMeta.policyId != null) ep.policy_id = extraMeta.policyId;
-    if (['stress', 'bo_replay_best', 'replay_optimal'].includes(episode_phase) && ep && extraMeta.optimalPolicyId != null) {
+    /*if (['stress', 'bo_replay_best', 'replay_optimal'].includes(episode_phase) && ep && extraMeta.optimalPolicyId != null) {
       ep.optimal_policy_id = extraMeta.optimalPolicyId;
-    }
+    }*/
 
     if (this.LOGS.meta.tick_ms == null && extraMeta.tick_ms != null) this.LOGS.meta.tick_ms = extraMeta.tick_ms;
     if (this.LOGS.meta.round_duration_sec == null && extraMeta.round_duration_sec != null) this.LOGS.meta.round_duration_sec = extraMeta.round_duration_sec;
@@ -248,8 +248,12 @@ const DataManager = {
     const state = serverData.state || {};
     const agents = Array.isArray(state.agents) ? state.agents : [];
 
-    const ai = agents[0] || {};
-    const human = agents[1] || {};
+    const soloNow =
+      (r?.policy_id === 'no_ai') ||
+      (Array.isArray(agents) && agents.length === 1);
+
+    const ai = soloNow ? {} : (agents[0] || {});
+    const human = soloNow ? (agents[0] || {}) : (agents[1] || {});
 
     const t = (typeof state.cur_step === 'number') ? state.cur_step : r.action_log.human.length;
     const wall_ms = (this.OPTS.LOG_WALL_MS && r._roundStartWallMs != null)
