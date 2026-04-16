@@ -2,7 +2,7 @@
 
 const DataManager = {
   OPTS: {
-    LOG_STATE_EACH_TICK: true,
+    LOG_STATE_EACH_TICK: false,
     LOG_COUNTERS_EACH_TICK: true,
     LOG_WALL_MS: true
   },
@@ -188,7 +188,7 @@ const DataManager = {
     const compact = this._compactState(state);
     if (r.initial_state == null) r.initial_state = compact;
 
-    if (this.OPTS.LOG_STATE_EACH_TICK) {
+    /*if (this.OPTS.LOG_STATE_EACH_TICK) {
       const alreadyLoggedReset = Array.isArray(r.state_log) && r.state_log.some(entry => entry && entry.kind === "reset_state");
       if (!alreadyLoggedReset) {
         r.state_log.push({
@@ -198,7 +198,7 @@ const DataManager = {
           state: compact
         });
       }
-    }
+    }*/
   },
 
   endRound(extra = {}) {
@@ -334,13 +334,13 @@ const DataManager = {
       });
     }
 
-    if (this.OPTS.LOG_STATE_EACH_TICK) {
+    /*if (this.OPTS.LOG_STATE_EACH_TICK) {
       r.state_log.push({
         t,
         ...(this.OPTS.LOG_WALL_MS ? { wall_ms } : {}),
         state: this._compactState(state)
       });
-    }
+    }*/
   },
 
   saveEpisodeSurvey(episode_index, episode_phase, answers) {

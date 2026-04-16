@@ -1373,7 +1373,7 @@ def key_event():
             ai_prev_loc = [sess.env_mac.agent[0].x, sess.env_mac.agent[0].y]
 
             AI_DECISION_EVERY = 2  # AI updates every 2 game ticks
-            AI_MOVE_EVERY = 3      # AI physically moves only every 2 ticks
+            AI_MOVE_EVERY = 2      # AI physically moves only every 2 ticks
 
             sess.ai_tick_counter += 1
 
@@ -1684,23 +1684,208 @@ def write_round_summary_csv(log_payload, out_csv_path):
                 "performance_score": feedback.get("performance"),
             })
 
+
+def write_participant_summary_csv(log_payload, out_csv_path):
+    meta = log_payload.get("meta", {}) or {}
+    assignment = meta.get("assignment", {}) or {}
+    rounds = log_payload.get("rounds", []) or []
+    episodes = log_payload.get("episodes", []) or []
+
+    total_dishes = 0
+    total_human_steps = 0
+    total_ai_steps = 0
+
+    for r in rounds:
+        summary = r.get("summary", {}) or {}
+        total_dishes += summary.get("dishes_served", 0) or 0
+        total_human_steps += summary.get("human_steps", 0) or 0
+        total_ai_steps += summary.get("ai_steps", 0) or 0
+
+    fieldnames = [
+        "prolific_id",
+        "age",
+        "gender",
+        "experience",
+        "assigned_condition",
+        "assigned_map",
+        "consent_given",
+        "start_time_iso",
+        "n_episodes_saved",
+        "n_rounds_saved",
+        "total_dishes_served",
+        "total_human_steps",
+        "total_ai_steps",
+    ]
+
+    with open(out_csv_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerow({
+            "prolific_id": log_payload.get("prolificId"),
+            "age": meta.get("age"),
+            "gender": meta.get("gender"),
+            "experience": meta.get("experience"),
+            "assigned_condition": assignment.get("condition"),
+            "assigned_map": assignment.get("map"),
+            "consent_given": meta.get("consentGiven"),
+            "start_time_iso": meta.get("startTimeISO"),
+            "n_episodes_saved": len(episodes),
+            "n_rounds_saved": len(rounds),
+            "total_dishes_served": total_dishes,
+            "total_human_steps": total_human_steps,
+            "total_ai_steps": total_ai_steps,
+        })
+
+
+def write_episode_summary_csv(log_payload, out_csv_path):
+    prolific = str(log_payload.get("prolificId", "unknown")).strip().replace("/", "_")
+    episodes = log_payload.get("episodes", []) or []
+    rounds = log_payload.get("rounds", []) or []
+
+    rounds_by_episode = {}
+    for r in rounds:
+        ep_idx = r.get("episode_index")
+        rounds_by_episode.setdefault(ep_idx, []).append(r)
+
+    fieldnames = [
+        "prolific_id",
+        "episode_index",
+        "episode_phase",
+        "experiment_phase",
+        "policy_id",
+        "mental_demand",
+        "performance",
+        "n_rounds",
+        "total_dishes_served",
+        "total_human_steps",
+        "total_ai_steps",
+        "total_team_reward_score",
+        "total_human_reward_score",
+        "total_ai_reward_score",
+    ]
+
+    with open(out_csv_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+
+        for ep in sorted(episodes, key=lambda x: x.get("episode_index", 0)):
+            ep_idx = ep.get("episode_index")
+            ep_rounds = rounds_by_episode.get(ep_idx, [])
+            fb = ep.get("feedback", {}) or {}
+
+            total_dishes = 0
+            total_human_steps = 0
+            total_ai_steps = 0
+            total_team_reward_score = 0
+            total_human_reward_score = 0
+            total_ai_reward_score = 0
+
+            for r in ep_rounds:
+                summary = r.get("summary", {}) or {}
+                total_dishes += summary.get("dishes_served", 0) or 0
+                total_human_steps += summary.get("human_steps", 0) or 0
+                total_ai_steps += summary.get("ai_steps", 0) or 0
+                total_team_reward_score += summary.get("team_reward_score", 0) or 0
+                total_human_reward_score += summary.get("human_reward_score", 0) or 0
+                total_ai_reward_score += summary.get("ai_reward_score", 0) or 0
+
+            writer.writerow({
+                "prolific_id": prolific,
+                "episode_index": ep_idx,
+                "episode_phase": ep.get("episode_phase"),
+                "experiment_phase": ep.get("experiment_phase"),
+                "policy_id": ep.get("policy_id"),
+                "mental_demand": fb.get("mental_demand"),
+                "performance": fb.get("performance"),
+                "n_rounds": len(ep_rounds),
+                "total_dishes_served": total_dishes,
+                "total_human_steps": total_human_steps,
+                "total_ai_steps": total_ai_steps,
+                "total_team_reward_score": total_team_reward_score,
+                "total_human_reward_score": total_human_reward_score,
+                "total_ai_reward_score": total_ai_reward_score,
+            })
+
+
+def write_rounds_long_csv(log_payload, out_csv_path):
+    prolific = str(log_payload.get("prolificId", "unknown")).strip().replace("/", "_")
+    rounds = log_payload.get("rounds", []) or []
+
+    fieldnames = [
+        "prolific_id",
+        "round_index_global",
+        "episode_index",
+        "round_in_episode",
+        "episode_phase",
+        "experiment_phase",
+        "map",
+        "policy_id",
+        "config_id",
+        "dishes_served",
+        "human_steps",
+        "ai_steps",
+        "team_reward_score",
+        "human_reward_score",
+        "ai_reward_score",
+        "end_time_iso",
+    ]
+
+    with open(out_csv_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+
+        for r in sorted(rounds, key=lambda x: x.get("round_index_global", 0)):
+            summary = r.get("summary", {}) or {}
+
+            writer.writerow({
+                "prolific_id": prolific,
+                "round_index_global": r.get("round_index_global"),
+                "episode_index": r.get("episode_index"),
+                "round_in_episode": r.get("round_in_episode"),
+                "episode_phase": r.get("episode_phase"),
+                "experiment_phase": r.get("experiment_phase"),
+                "map": r.get("map"),
+                "policy_id": r.get("policy_id"),
+                "config_id": r.get("configId"),
+                "dishes_served": summary.get("dishes_served"),
+                "human_steps": summary.get("human_steps"),
+                "ai_steps": summary.get("ai_steps"),
+                "team_reward_score": summary.get("team_reward_score"),
+                "human_reward_score": summary.get("human_reward_score"),
+                "ai_reward_score": summary.get("ai_reward_score"),
+                "end_time_iso": r.get("endTimeISO"),
+            })
+
+
 def save_participant_snapshot(log_payload):
-    """Save the participant snapshot using the SAME filenames as final submission."""
+    """Save participant data in both raw and analysis-friendly formats."""
     prolific = str(log_payload.get('prolificId', 'unknown')).strip().replace('/', '_')
 
     participant_dir = os.path.join('submissions', prolific)
     os.makedirs(participant_dir, exist_ok=True)
 
-    # 1) Save latest JSON snapshot
+    # 1) Save full raw JSON
     result_filename = os.path.join(participant_dir, 'final_result.json')
     with open(result_filename, 'w', encoding='utf-8') as f:
         json.dump(log_payload, f, ensure_ascii=False, indent=2)
 
-    # 2) Save latest CSV snapshot
+    # 2) Keep your existing compact round summary
     csv_filename = os.path.join(participant_dir, 'round_summary.csv')
     write_round_summary_csv(log_payload, csv_filename)
 
-    # 3) Save BayesOpt state(s) for this participant, if any exist
+    # 3) New: one-row participant summary
+    participant_csv = os.path.join(participant_dir, 'participant_summary.csv')
+    write_participant_summary_csv(log_payload, participant_csv)
+
+    # 4) New: one row per episode
+    episode_csv = os.path.join(participant_dir, 'episode_summary.csv')
+    write_episode_summary_csv(log_payload, episode_csv)
+
+    # 5) New: one row per round
+    rounds_csv = os.path.join(participant_dir, 'rounds_long.csv')
+    write_rounds_long_csv(log_payload, rounds_csv)
+
+    # 6) Save BayesOpt state(s) for this participant, if any exist
     for (pid, map_name), optimizer in OPTIMIZER_MGR.optimizers.items():
         if pid != prolific:
             continue

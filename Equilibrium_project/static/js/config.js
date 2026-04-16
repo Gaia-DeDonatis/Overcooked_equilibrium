@@ -10,14 +10,14 @@ const CONFIG = {
 
     // Episode structure
   ROUNDS_PER_EPISODE: 3, // 3
-  EPISODES_SEED: 5,      // put 5  # LOGIC BREAKS IF THIS IS <2
+  EPISODES_SEED: 5,      // put 5  
   EPISODES_BO: 5,        // put 5 BO + 2 without AI
   EPISODES_BO_SOLO: 2,   //2
   BO_SOLO_POSITIONS: [3,5],
   EPISODES_BO_REPLAY_BEST: 1,
   EPISODES_STRESS: 3,    // put 3 kNN
   EPISODES_REPLAY_OPTIMAL: 1,
-  EPISODE_BREAK_SEC: 1  // 10
+  EPISODE_BREAK_SEC: 10  // 10
 };
 
 CONFIG.EXPERIMENT_MAPS = ["circle", "counter", "thinpath"];

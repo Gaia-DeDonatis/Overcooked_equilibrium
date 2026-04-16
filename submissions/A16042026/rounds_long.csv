@@ -1,0 +1,4 @@
+prolific_id,round_index_global,episode_index,round_in_episode,episode_phase,experiment_phase,map,policy_id,config_id,dishes_served,human_steps,ai_steps,team_reward_score,human_reward_score,ai_reward_score,end_time_iso
+A16042026,1,1,1,seed,1,"thinpath_5,7",[equilibrium][thinpath]agent0_a0sp_0_a1sp_1_helping0_False_helping1_True_gamma0.8_0.8,experiment,1,74,172,84,166,-82,2026-04-16T09:07:30.239Z
+A16042026,2,1,2,seed,1,"thinpath_5,7",[equilibrium][thinpath]agent0_a0sp_0_a1sp_1_helping0_False_helping1_True_gamma0.8_0.8,experiment,0,64,97,-71,-24,-47,2026-04-16T09:08:00.286Z
+A16042026,3,2,1,seed,1,"thinpath_5,7",[equilibrium][thinpath]agent0_a0sp_1_a1sp_0_helping0_False_helping1_True_gamma0.8_0.8,experiment,3,79,144,297,-79,376,2026-04-16T09:08:56.419Z

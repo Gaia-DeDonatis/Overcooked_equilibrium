@@ -1,0 +1,4 @@
+episode,round,human_steps,ai_steps,human_reward_score,ai_reward_score,dishes,mental_demand,performance_score
+1,1,74,172,166,-82,1,17,2
+1,2,64,97,-24,-47,0,17,2
+2,1,79,144,-79,376,3,,

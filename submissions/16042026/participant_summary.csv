@@ -1,0 +1,2 @@
+prolific_id,age,gender,experience,assigned_condition,assigned_map,consent_given,start_time_iso,n_episodes_saved,n_rounds_saved,total_dishes_served,total_human_steps,total_ai_steps
+16042026,23,Female,regular,bo,"thinpath_5,7",True,2026-04-16T07:33:13.528Z,17,50,151,4587,4155

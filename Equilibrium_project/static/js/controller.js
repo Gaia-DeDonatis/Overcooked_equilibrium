@@ -107,6 +107,28 @@ function showPage(pageId) {
     }
 }
 
+function setupSuccessCompletionUI() {
+  const wrapEl = document.getElementById('completionCodeWrap');
+  const codeEl = document.getElementById('completionCode');
+  const codeInlineEl = document.getElementById('completionCodeInline');
+  const linkEl = document.getElementById('prolificReturnLink');
+
+  if (wrapEl) wrapEl.classList.remove('hidden');
+  if (codeEl) codeEl.innerText = PROLIFIC_SUCCESS_CODE;
+  if (codeInlineEl) codeInlineEl.innerText = PROLIFIC_SUCCESS_CODE;
+  if (linkEl) linkEl.href = PROLIFIC_SUCCESS_URL;
+}
+
+function setupFailCompletionUI() {
+  const codeEl = document.getElementById('failCompletionCode');
+  const codeInlineEl = document.getElementById('failCompletionCodeInline');
+  const linkEl = document.getElementById('failProlificReturnLink');
+
+  if (codeEl) codeEl.innerText = PROLIFIC_FAIL_CODE;
+  if (codeInlineEl) codeInlineEl.innerText = PROLIFIC_FAIL_CODE;
+  if (linkEl) linkEl.href = PROLIFIC_FAIL_URL;
+}
+
 function focusGameSurface() {
   const canvasId = (STATE.phase === 0) ? 'gameCanvas_practice' : 'gameCanvas';
 
@@ -148,6 +170,12 @@ const AUTOSAVE_MS = 10000;
 
 let bufferedHumanKey = 'Stay';
 
+const PROLIFIC_SUCCESS_CODE = 'CK4KW637';
+const PROLIFIC_SUCCESS_URL = 'https://app.prolific.com/submissions/complete?cc=CK4KW637';
+
+const PROLIFIC_FAIL_CODE = 'CGDMBD6O';
+const PROLIFIC_FAIL_URL = 'https://app.prolific.com/submissions/complete?cc=CGDMBD6O';
+
 
 function stopAiTick() {
   if (aiTickTimer) {
@@ -168,7 +196,7 @@ function startAutosave() {
   stopAutosave();
   autosaveTimer = setInterval(() => {
     if (!STATE.isPlaying || STATE.gameOver) return;
-    DataManager.saveProgressToServer('interval_autosave');
+    DataManager.persistLocalBackup('interval_autosave');
   }, AUTOSAVE_MS);
 }
 
@@ -649,7 +677,7 @@ async function finishTimeBasedRound() {
     bufferedHumanKey = 'Stay';
 
     DataManager.endRound();
-    await DataManager.saveProgressToServer('round_complete');
+    DataManager.saveProgressToServer('round_complete').catch(console.warn);
 
     const overlay = document.getElementById('round-overlay');
     const title   = document.getElementById('overlay-title');
@@ -1191,14 +1219,15 @@ if (btnSubmitQuiz) {
         console.log(`Final Check. Total Cumulative Errors: ${QUIZ_ERRORS}`);
 
         if (QUIZ_ERRORS > 2) {
-            // Disqualify
-            STATE.isPlaying = false;
-            STATE.gameOver = true;
-            stopAiTick();
-            stopAutosave();
-            if (gameTimer) clearInterval(gameTimer);
-            showPage('page-quiz-fail');
-            return;
+          STATE.isPlaying = false;
+          STATE.gameOver = true;
+          stopAiTick();
+          stopAutosave();
+          if (gameTimer) clearInterval(gameTimer);
+
+          showPage('page-quiz-fail');
+          setupFailCompletionUI();
+          return;
         } else {
             console.log("Quiz Passed. Revealing start button.");
             document.getElementById('submit-quiz-container').classList.add('hidden');
@@ -1236,6 +1265,7 @@ async function submitData() {
 
         if (response.success) {
             showPage('page-end');
+            setupSuccessCompletionUI();
         } else {
             alert("Submission failed. Please contact the researcher.");
             showPage('page-episode-break');
