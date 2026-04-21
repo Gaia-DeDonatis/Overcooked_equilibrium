@@ -1384,6 +1384,11 @@ def key_event():
                     sess.last_ai_action_int = _as_int_action(ai_action)
 
                 ai_action_int = sess.last_ai_action_int
+                print(
+                    f"[AI DEBUG] step={sess.cur_step} "
+                    f"pos=({sess.env_mac.agent[0].x},{sess.env_mac.agent[0].y}) "
+                    f"macro_action={ai_action_int}"
+                )
             else:
                 # No model loaded (practice), keep a placeholder macro id
                 ai_action_int = 4
@@ -1423,6 +1428,15 @@ def key_event():
 
             robot_low = int(action[0])
             robot_key = ACTION_TO_KEY.get(robot_low, 'Unknown')
+
+            print(
+                f"[AI DEBUG] step={sess.cur_step} "
+                f"pos_before=({ai_prev_loc[0]},{ai_prev_loc[1]}) "
+                f"macro_action={ai_action_int} "
+                f"low_level={robot_low} "
+                f"arrow={robot_key}"
+            )
+
             sess.robot_steps.append({
                 'step': int(sess.cur_step + 1),
                 'ai_macro_action': int(ai_action_int),
@@ -1436,6 +1450,12 @@ def key_event():
             # determine if AI moved this step (for step-penalty shaping)
             ai_cur_loc = [sess.env_mac.agent[0].x, sess.env_mac.agent[0].y]
             ai_moved = (ai_prev_loc != ai_cur_loc)
+
+            print(
+                f"[AI DEBUG] step={sess.cur_step} "
+                f"pos_after=({ai_cur_loc[0]},{ai_cur_loc[1]}) "
+                f"moved={ai_moved}"
+            )
 
         r_env = 0.0
         r_adjusted = 0.0

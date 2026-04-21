@@ -1,0 +1,2 @@
+prolific_id,age,gender,experience,assigned_condition,assigned_map,consent_given,start_time_iso,n_episodes_saved,n_rounds_saved,total_dishes_served,total_human_steps,total_ai_steps
+20042026,23,Female,regular,bo,"counter_5,8",True,2026-04-20T13:36:57.029Z,1,2,1,101,226
