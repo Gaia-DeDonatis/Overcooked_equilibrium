@@ -1,0 +1,1 @@
+prolific_id,round_index_global,episode_index,round_in_episode,episode_phase,experiment_phase,map,policy_id,config_id,dishes_served,human_steps,ai_steps,team_reward_score,human_reward_score,ai_reward_score,end_time_iso

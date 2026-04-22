@@ -102,13 +102,21 @@ if torch.cuda.is_available():
 def _seed_env_everything(env, seed: int):
     try:
         env.reset(seed=seed)
-    except TypeError:
-        env.seed(seed)
-        env.reset()
-    try: env.action_space.seed(seed)
-    except: pass
-    try: env.observation_space.seed(seed)
-    except: pass
+    except Exception:
+        try:
+            env.reset()
+        except Exception:
+            pass
+
+    try:
+        env.action_space.seed(seed)
+    except Exception:
+        pass
+
+    try:
+        env.observation_space.seed(seed)
+    except Exception:
+        pass
 
 
 
@@ -119,6 +127,7 @@ ACTION_TO_KEY[4] = "Stay"
 
 
 MAX_STEPS = 200
+AI_STUCK_WINDOW = 5
 
 # =========================
 # map registry / policy pools
@@ -373,7 +382,62 @@ def _as_int_action(a):
         return int(a_np.item())
     return int(a_np.flatten()[0])
 
+def _reset_ai_position_history(sess, env):
+    sess.ai_position_history = deque(maxlen=AI_STUCK_WINDOW)
+    try:
+        agent = env.agent[0]
+        sess.ai_position_history.append((int(agent.x), int(agent.y)))
+    except Exception:
+        pass
 
+
+def _record_ai_position(sess, env):
+    history = getattr(sess, 'ai_position_history', None)
+    if not isinstance(history, deque):
+        history = deque(maxlen=AI_STUCK_WINDOW)
+        sess.ai_position_history = history
+    try:
+        agent = env.agent[0]
+        history.append((int(agent.x), int(agent.y)))
+    except Exception:
+        pass
+
+
+def _ai_has_been_stuck(sess) -> bool:
+    history = getattr(sess, 'ai_position_history', None)
+    if not isinstance(history, deque) or len(history) < AI_STUCK_WINDOW:
+        return False
+    first = history[0]
+    return all(pos == first for pos in history)
+
+
+def _pick_random_legal_ai_move(env, agent_index: int = 0):
+    try:
+        agent = env.agent[agent_index]
+    except Exception:
+        return None
+
+    candidates = []
+    directions = [
+        (0, 1, 0),   # right
+        (1, 0, 1),   # down
+        (0, -1, 2),  # left
+        (-1, 0, 3),  # up
+    ]
+
+    for dx, dy, action_int in directions:
+        nx = int(agent.x) + dx
+        ny = int(agent.y) + dy
+        try:
+            tile_name = ITEMNAME[env.map[nx][ny]]
+        except Exception:
+            continue
+        if tile_name == 'space':
+            candidates.append(action_int)
+
+    if not candidates:
+        return None
+    return random.choice(candidates)
 
 
 # =========================
@@ -723,6 +787,8 @@ class Session:
         self.chosen_ckpt_path = None
         self.ai_tick_counter = 0
         self.last_ai_action_int = 4
+        self.ai_position_history = deque(maxlen=AI_STUCK_WINDOW)
+        self.ai_blocked_move_streak = 0
        
         # Experiment structure (episodes)
         self.episode_index = None
@@ -1036,6 +1102,9 @@ def create_envs_for_session(
 
     sess.ai_tick_counter = 0
     sess.last_ai_action_int = 4
+    sess.ai_blocked_move_streak = 0
+
+    _reset_ai_position_history(sess, sess.env_mac)
 
 # =========================
 # Collect the current state into a json.
@@ -1421,10 +1490,30 @@ def key_event():
 
             action = [4] * sess.env.n_agent
             action[1] = human_low
+
             if sess.ai_tick_counter % AI_MOVE_EVERY == 1:
-                action[0] = int(primitive_action[0])
+                intended_ai_low = int(primitive_action[0])
+                action[0] = intended_ai_low
             else:
+                intended_ai_low = 4
                 action[0] = 4
+
+            unstuck_override = False
+            anti_stuck_enabled = (
+                sess.model is not None
+                and getattr(sess, "current_map_name", None) != "practice"
+            )
+
+            if anti_stuck_enabled and getattr(sess, "ai_blocked_move_streak", 0) >= 3:
+                forced_move = _pick_random_legal_ai_move(sess.env_mac, agent_index=0)
+                if forced_move is not None:
+                    action[0] = int(forced_move)
+                    unstuck_override = True
+                    logger.info(
+                        f"[AI UNSTUCK] sid={sid}, step={sess.cur_step}, "
+                        f"blocked_streak={sess.ai_blocked_move_streak}, "
+                        f"forced_low_level={action[0]}"
+                    )
 
             robot_low = int(action[0])
             robot_key = ACTION_TO_KEY.get(robot_low, 'Unknown')
@@ -1443,13 +1532,23 @@ def key_event():
                 'low_level_action': robot_low,
                 'arrow': robot_key,
                 'timestamp': time.time(),
+                'unstuck_override': bool(unstuck_override),
             })
 
             sess.obs, rewards, dones, info = sess.wrapper.step(action[0], action[1])
+            _record_ai_position(sess, sess.env_mac)
 
             # determine if AI moved this step (for step-penalty shaping)
             ai_cur_loc = [sess.env_mac.agent[0].x, sess.env_mac.agent[0].y]
             ai_moved = (ai_prev_loc != ai_cur_loc)
+            if anti_stuck_enabled:
+                if unstuck_override:
+                    sess.ai_blocked_move_streak = 0
+                elif intended_ai_low != 4:
+                    if not ai_moved:
+                        sess.ai_blocked_move_streak += 1
+                    else:
+                        sess.ai_blocked_move_streak = 0
 
             print(
                 f"[AI DEBUG] step={sess.cur_step} "
@@ -2007,6 +2106,10 @@ def submit_log():
 
 #     app.run(host='0.0.0.0', port=5000, debug=True)
 
+#if __name__ == '__main__':
+#    from waitress import serve
+#    serve(app, host='0.0.0.0', port=5000, threads=8)
+
 if __name__ == '__main__':
-    from waitress import serve
-    serve(app, host='0.0.0.0', port=5000, threads=8)
+    print("STARTING BACKEND")
+    app.run(host='127.0.0.1', port=5050, debug=True, use_reloader=False)

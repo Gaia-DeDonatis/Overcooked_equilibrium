@@ -1,0 +1,2 @@
+prolific_id,age,gender,experience,assigned_condition,assigned_map,consent_given,start_time_iso,n_episodes_saved,n_rounds_saved,total_dishes_served,total_human_steps,total_ai_steps
+unknown,,,,,,False,,0,0,0,0,0

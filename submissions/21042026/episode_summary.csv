@@ -1,0 +1,4 @@
+prolific_id,episode_index,episode_phase,experiment_phase,policy_id,mental_demand,performance,n_rounds,total_dishes_served,total_human_steps,total_ai_steps,total_team_reward_score,total_human_reward_score,total_ai_reward_score
+21042026,1,seed,1,[equilibrium][thinpath]agent0_a0sp_0_a1sp_1_helping0_False_helping1_True_gamma0.8_0.8,15,5,3,7,261,387,1192,1029,163
+21042026,2,seed,1,[equilibrium][thinpath]agent0_a0sp_1_a1sp_0_helping0_False_helping1_True_gamma0.8_0.8,13,8,3,11,238,434,1708,-198,1906
+21042026,3,seed,1,[equilibrium][thinpath]agent0_a0sp_1_a1sp_3_helping0_True_helping1_False_gamma0.8_0.95,,,3,6,274,477,699,1056,-357
