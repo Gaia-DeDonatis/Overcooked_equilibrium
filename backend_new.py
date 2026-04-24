@@ -4,10 +4,29 @@ import numpy as np
 import sys
 from BayesOpt import TSNEBayesOptimizer, create_surrogate_spec
 import csv
+import pandas as pd
 
 # Equilibrium_project" folder
 current_dir = os.path.dirname(os.path.abspath(__file__))
 target_folder = os.path.join(current_dir, 'Equilibrium_project')
+
+# =========================
+# SUBMISSIONS ROOT
+# =========================
+
+# DEFAULT (pilot tests): save locally in ./submissions
+SUBMISSIONS_ROOT = os.path.join(current_dir, "submissions")
+
+# FUTURE: when pilot tests are finished and the real experiment starts,
+# comment the line above and uncomment ONE of the options below.
+
+# --- Option A: TeamWork path on Windows (if backend runs on your Windows PC) ---
+# SUBMISSIONS_ROOT = r"\\work.org.aalto.fi\T412\T40710\OverCookedHAIC\participant_logs\main_study"
+
+# --- Option B: TeamWork path on Linux/server ---
+# Use this ONLY if TeamWork has first been mounted on the server.
+# Example mount point:
+# SUBMISSIONS_ROOT = "/mnt/teamwork/OverCookedHAIC/participant_logs/main_study"
 
 # Insert at index 0 so this folder takes priority over everything else
 sys.path.insert(0, target_folder) 
@@ -1755,11 +1774,259 @@ def get_state():
         return jsonify(success=True, state=extract_state(sess))
 
 
+def _normalize_action_token(action_value):
+    if action_value is None:
+        return None
+    token = str(action_value).strip().upper()
+    if token in ("", "NONE", "NULL"):
+        return None
+    return token
+
+
+def _extract_human_action_sequence(round_obj):
+    human_log = ((round_obj.get("action_log", {}) or {}).get("human", []) or [])
+    seq = []
+    for entry in human_log:
+        token = _normalize_action_token(entry.get("action"))
+        if token is not None:
+            seq.append(token)
+    return seq
+
+
+def _extract_ai_action_sequence(round_obj):
+    ai_log = ((round_obj.get("action_log", {}) or {}).get("ai", []) or [])
+    seq = []
+    for entry in ai_log:
+        token = _normalize_action_token(entry.get("arrow"))
+        if token is not None:
+            seq.append(token)
+    return seq
+
+
+def _extract_joint_action_sequence(round_obj):
+    human_seq = _extract_human_action_sequence(round_obj)
+    ai_seq = _extract_ai_action_sequence(round_obj)
+    n = min(len(human_seq), len(ai_seq))
+    if n == 0:
+        return []
+    return list(zip(human_seq[:n], ai_seq[:n]))
+
+
+def _sequence_similarity(seq_a, seq_b):
+    n = min(len(seq_a), len(seq_b))
+    if n == 0:
+        return None
+    matches = sum(1 for i in range(n) if seq_a[i] == seq_b[i])
+    return matches / n
+
+
+def _round_has_ai(round_obj):
+    policy_id = str(round_obj.get("policy_id", "") or "").strip().lower()
+    if policy_id in ("solo", "no_ai"):
+        return False
+
+    ai_log = ((round_obj.get("action_log", {}) or {}).get("ai", []) or [])
+    return len(ai_log) > 0
+
+def _safe_mean(values):
+    vals = [float(v) for v in values if v is not None and not pd.isna(v)]
+    if not vals:
+        return None
+    return sum(vals) / len(vals)
+
+
+def _minmax_dict(values_by_key):
+    numeric = {k: v for k, v in values_by_key.items() if v is not None and not pd.isna(v)}
+    if not numeric:
+        return {k: None for k in values_by_key}
+
+    vmin = min(numeric.values())
+    vmax = max(numeric.values())
+
+    if vmin == vmax:
+        return {k: 0.5 if values_by_key[k] is not None and not pd.isna(values_by_key[k]) else None
+                for k in values_by_key}
+
+    out = {}
+    for k, v in values_by_key.items():
+        if v is None or pd.isna(v):
+            out[k] = None
+        else:
+            out[k] = (v - vmin) / (vmax - vmin)
+    return out
+
+def write_coadaptation_summary_csv(log_payload, out_csv_path):
+
+    episodes = log_payload.get("episodes", []) or []
+    rounds = log_payload.get("rounds", []) or []
+
+    feedback_by_episode = {}
+    for ep in episodes:
+        ep_idx = ep.get("episode_index")
+        fb = ep.get("feedback", {}) or {}
+        feedback_by_episode[ep_idx] = {
+            "mental_demand": fb.get("mental_demand"),
+            "performance_score": fb.get("performance"),
+        }
+
+    sorted_rounds = sorted(rounds, key=lambda r: r.get("round_index_global", 0))
+    prev_ai_round = None
+    rows = []
+
+    # First pass: build round-level rows
+    for r in sorted_rounds:
+        if not _round_has_ai(r):
+            continue
+
+        summary = r.get("summary", {}) or {}
+        ep_idx = r.get("episode_index")
+        feedback = feedback_by_episode.get(ep_idx, {})
+
+        human_stability = None
+        ai_stability = None
+        joint_stability = None
+
+        if prev_ai_round is not None:
+            curr_human = _extract_human_action_sequence(r)
+            prev_human = _extract_human_action_sequence(prev_ai_round)
+
+            curr_ai = _extract_ai_action_sequence(r)
+            prev_ai = _extract_ai_action_sequence(prev_ai_round)
+
+            curr_joint = _extract_joint_action_sequence(r)
+            prev_joint = _extract_joint_action_sequence(prev_ai_round)
+
+            human_stability = _sequence_similarity(prev_human, curr_human)
+            ai_stability = _sequence_similarity(prev_ai, curr_ai)
+            joint_stability = _sequence_similarity(prev_joint, curr_joint)
+
+        rows.append({
+            "episode_index": r.get("episode_index"),
+            "round_in_episode": r.get("round_in_episode"),
+            "policy_id": r.get("policy_id"),
+            "human_stability_prev_ai_round": human_stability,
+            "ai_stability_prev_ai_round": ai_stability,
+            "joint_stability_prev_ai_round": joint_stability,
+            "mental_demand": feedback.get("mental_demand"),
+            "performance_score": feedback.get("performance_score"),
+            "dishes_served": summary.get("dishes_served"),
+            "team_reward_score": summary.get("team_reward_score"),
+            "human_steps": summary.get("human_steps"),
+            "ai_steps": summary.get("ai_steps"),
+        })
+
+        prev_ai_round = r
+
+    if not rows:
+        fieldnames = [
+            "episode_index",
+            "round_in_episode",
+            "policy_id",
+            "human_stability_prev_ai_round",
+            "ai_stability_prev_ai_round",
+            "joint_stability_prev_ai_round",
+            "mental_demand",
+            "performance_score",
+            "dishes_served",
+            "team_reward_score",
+            "human_steps",
+            "ai_steps",
+            "episode_coadaptation_score",
+        ]
+        with open(out_csv_path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+        return
+
+    # Second pass: compute episode-level score
+    df = pd.DataFrame(rows)
+
+    episode_stats = (
+        df.groupby("episode_index", dropna=False)
+        .agg(
+            mean_human_stability=("human_stability_prev_ai_round", "mean"),
+            mean_ai_stability=("ai_stability_prev_ai_round", "mean"),
+            mean_joint_stability=("joint_stability_prev_ai_round", "mean"),
+            mental_demand=("mental_demand", "mean"),
+            performance_score=("performance_score", "mean"),
+            total_dishes_served=("dishes_served", "sum"),
+            total_team_reward_score=("team_reward_score", "sum"),
+            mean_ai_steps=("ai_steps", "mean"),
+        )
+        .reset_index()
+    )
+
+    # Normalize subjective + outcome within participant
+    md_norm = _minmax_dict(dict(zip(episode_stats["episode_index"], episode_stats["mental_demand"])))
+    perf_norm = _minmax_dict(dict(zip(episode_stats["episode_index"], episode_stats["performance_score"])))
+    dishes_norm = _minmax_dict(dict(zip(episode_stats["episode_index"], episode_stats["total_dishes_served"])))
+    reward_norm = _minmax_dict(dict(zip(episode_stats["episode_index"], episode_stats["total_team_reward_score"])))
+
+    score_by_episode = {}
+
+    for _, ep_row in episode_stats.iterrows():
+        ep_idx = ep_row["episode_index"]
+
+        behavior_score = (
+            0.2 * (ep_row["mean_human_stability"] if pd.notna(ep_row["mean_human_stability"]) else 0.0) +
+            0.2 * (ep_row["mean_ai_stability"] if pd.notna(ep_row["mean_ai_stability"]) else 0.0) +
+            0.6 * (ep_row["mean_joint_stability"] if pd.notna(ep_row["mean_joint_stability"]) else 0.0)
+        )
+
+        subjective_score = (
+            0.5 * (1 - (md_norm.get(ep_idx) if md_norm.get(ep_idx) is not None else 0.5)) +
+            0.5 * ((perf_norm.get(ep_idx) if perf_norm.get(ep_idx) is not None else 0.5))
+        )
+
+        outcome_score = (
+            0.5 * ((dishes_norm.get(ep_idx) if dishes_norm.get(ep_idx) is not None else 0.5)) +
+            0.5 * ((reward_norm.get(ep_idx) if reward_norm.get(ep_idx) is not None else 0.5))
+        )
+
+        score = 100 * (
+            0.45 * behavior_score +
+            0.30 * subjective_score +
+            0.25 * outcome_score
+        )
+
+        # Penalty for almost-frozen AI
+        mean_ai_steps = ep_row["mean_ai_steps"] if pd.notna(ep_row["mean_ai_steps"]) else 0
+        total_dishes = ep_row["total_dishes_served"] if pd.notna(ep_row["total_dishes_served"]) else 0
+        if mean_ai_steps < 5 and total_dishes <= 1:
+            score -= 10
+
+        score = max(0, min(100, score))
+        score_by_episode[ep_idx] = score
+
+    df["episode_coadaptation_score"] = df["episode_index"].map(score_by_episode)
+
+    fieldnames = [
+        "episode_index",
+        "round_in_episode",
+        "policy_id",
+        "human_stability_prev_ai_round",
+        "ai_stability_prev_ai_round",
+        "joint_stability_prev_ai_round",
+        "mental_demand",
+        "performance_score",
+        "dishes_served",
+        "team_reward_score",
+        "human_steps",
+        "ai_steps",
+        "episode_coadaptation_score",
+    ]
+
+    with open(out_csv_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in df.to_dict(orient="records"):
+            writer.writerow(row)
 
 
 def write_round_summary_csv(log_payload, out_csv_path):
-    episodes = log_payload.get("episodes", [])
-    rounds = log_payload.get("rounds", [])
+    prolific = str(log_payload.get("prolificId", "unknown")).strip().replace("/", "_")
+    episodes = log_payload.get("episodes", []) or []
+    rounds = log_payload.get("rounds", []) or []
 
     feedback_by_episode = {}
     for ep in episodes:
@@ -1771,168 +2038,7 @@ def write_round_summary_csv(log_payload, out_csv_path):
         }
 
     fieldnames = [
-        "episode",
-        "round",
-        "human_steps",
-        "ai_steps",
-        "human_reward_score",
-        "ai_reward_score",
-        "dishes",
-        "mental_demand",
-        "performance_score",
-    ]
-
-    with open(out_csv_path, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-
-        for r in rounds:
-            summary = r.get("summary", {}) or {}
-            ep_idx = r.get("episode_index")
-            feedback = feedback_by_episode.get(ep_idx, {})
-
-            writer.writerow({
-                "episode": ep_idx,
-                "round": r.get("round_in_episode"),
-                "human_steps": summary.get("human_steps"),
-                "ai_steps": summary.get("ai_steps"),
-                "human_reward_score": summary.get("human_reward_score"),
-                "ai_reward_score": summary.get("ai_reward_score"),
-                "dishes": summary.get("dishes_served"),
-                "mental_demand": feedback.get("mental_demand"),
-                "performance_score": feedback.get("performance"),
-            })
-
-
-def write_participant_summary_csv(log_payload, out_csv_path):
-    meta = log_payload.get("meta", {}) or {}
-    assignment = meta.get("assignment", {}) or {}
-    rounds = log_payload.get("rounds", []) or []
-    episodes = log_payload.get("episodes", []) or []
-
-    total_dishes = 0
-    total_human_steps = 0
-    total_ai_steps = 0
-
-    for r in rounds:
-        summary = r.get("summary", {}) or {}
-        total_dishes += summary.get("dishes_served", 0) or 0
-        total_human_steps += summary.get("human_steps", 0) or 0
-        total_ai_steps += summary.get("ai_steps", 0) or 0
-
-    fieldnames = [
         "prolific_id",
-        "age",
-        "gender",
-        "experience",
-        "assigned_condition",
-        "assigned_map",
-        "consent_given",
-        "start_time_iso",
-        "n_episodes_saved",
-        "n_rounds_saved",
-        "total_dishes_served",
-        "total_human_steps",
-        "total_ai_steps",
-    ]
-
-    with open(out_csv_path, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerow({
-            "prolific_id": log_payload.get("prolificId"),
-            "age": meta.get("age"),
-            "gender": meta.get("gender"),
-            "experience": meta.get("experience"),
-            "assigned_condition": assignment.get("condition"),
-            "assigned_map": assignment.get("map"),
-            "consent_given": meta.get("consentGiven"),
-            "start_time_iso": meta.get("startTimeISO"),
-            "n_episodes_saved": len(episodes),
-            "n_rounds_saved": len(rounds),
-            "total_dishes_served": total_dishes,
-            "total_human_steps": total_human_steps,
-            "total_ai_steps": total_ai_steps,
-        })
-
-
-def write_episode_summary_csv(log_payload, out_csv_path):
-    prolific = str(log_payload.get("prolificId", "unknown")).strip().replace("/", "_")
-    episodes = log_payload.get("episodes", []) or []
-    rounds = log_payload.get("rounds", []) or []
-
-    rounds_by_episode = {}
-    for r in rounds:
-        ep_idx = r.get("episode_index")
-        rounds_by_episode.setdefault(ep_idx, []).append(r)
-
-    fieldnames = [
-        "prolific_id",
-        "episode_index",
-        "episode_phase",
-        "experiment_phase",
-        "policy_id",
-        "mental_demand",
-        "performance",
-        "n_rounds",
-        "total_dishes_served",
-        "total_human_steps",
-        "total_ai_steps",
-        "total_team_reward_score",
-        "total_human_reward_score",
-        "total_ai_reward_score",
-    ]
-
-    with open(out_csv_path, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-
-        for ep in sorted(episodes, key=lambda x: x.get("episode_index", 0)):
-            ep_idx = ep.get("episode_index")
-            ep_rounds = rounds_by_episode.get(ep_idx, [])
-            fb = ep.get("feedback", {}) or {}
-
-            total_dishes = 0
-            total_human_steps = 0
-            total_ai_steps = 0
-            total_team_reward_score = 0
-            total_human_reward_score = 0
-            total_ai_reward_score = 0
-
-            for r in ep_rounds:
-                summary = r.get("summary", {}) or {}
-                total_dishes += summary.get("dishes_served", 0) or 0
-                total_human_steps += summary.get("human_steps", 0) or 0
-                total_ai_steps += summary.get("ai_steps", 0) or 0
-                total_team_reward_score += summary.get("team_reward_score", 0) or 0
-                total_human_reward_score += summary.get("human_reward_score", 0) or 0
-                total_ai_reward_score += summary.get("ai_reward_score", 0) or 0
-
-            writer.writerow({
-                "prolific_id": prolific,
-                "episode_index": ep_idx,
-                "episode_phase": ep.get("episode_phase"),
-                "experiment_phase": ep.get("experiment_phase"),
-                "policy_id": ep.get("policy_id"),
-                "mental_demand": fb.get("mental_demand"),
-                "performance": fb.get("performance"),
-                "n_rounds": len(ep_rounds),
-                "total_dishes_served": total_dishes,
-                "total_human_steps": total_human_steps,
-                "total_ai_steps": total_ai_steps,
-                "total_team_reward_score": total_team_reward_score,
-                "total_human_reward_score": total_human_reward_score,
-                "total_ai_reward_score": total_ai_reward_score,
-            })
-
-
-def write_rounds_long_csv(log_payload, out_csv_path):
-    prolific = str(log_payload.get("prolificId", "unknown")).strip().replace("/", "_")
-    rounds = log_payload.get("rounds", []) or []
-
-    fieldnames = [
-        "prolific_id",
-        "round_index_global",
         "episode_index",
         "round_in_episode",
         "episode_phase",
@@ -1946,6 +2052,8 @@ def write_rounds_long_csv(log_payload, out_csv_path):
         "team_reward_score",
         "human_reward_score",
         "ai_reward_score",
+        "mental_demand",
+        "performance_score",
         "end_time_iso",
     ]
 
@@ -1955,11 +2063,12 @@ def write_rounds_long_csv(log_payload, out_csv_path):
 
         for r in sorted(rounds, key=lambda x: x.get("round_index_global", 0)):
             summary = r.get("summary", {}) or {}
+            ep_idx = r.get("episode_index")
+            feedback = feedback_by_episode.get(ep_idx, {})
 
             writer.writerow({
                 "prolific_id": prolific,
-                "round_index_global": r.get("round_index_global"),
-                "episode_index": r.get("episode_index"),
+                "episode_index": ep_idx,
                 "round_in_episode": r.get("round_in_episode"),
                 "episode_phase": r.get("episode_phase"),
                 "experiment_phase": r.get("experiment_phase"),
@@ -1972,39 +2081,80 @@ def write_rounds_long_csv(log_payload, out_csv_path):
                 "team_reward_score": summary.get("team_reward_score"),
                 "human_reward_score": summary.get("human_reward_score"),
                 "ai_reward_score": summary.get("ai_reward_score"),
+                "mental_demand": feedback.get("mental_demand"),
+                "performance_score": feedback.get("performance"),
                 "end_time_iso": r.get("endTimeISO"),
             })
 
 
+def write_participant_summary_csv(log_payload, out_csv_path):
+    meta = log_payload.get("meta", {}) or {}
+    assignment = meta.get("assignment", {}) or {}
+    rounds = log_payload.get("rounds", []) or []
+    episodes = log_payload.get("episodes", []) or []
+
+    replayed_best_policy_id = None
+    for ep in episodes:
+        if ep.get("episode_phase") in ("bo_replay_best", "replay_optimal"):
+            replayed_best_policy_id = ep.get("optimal_policy_id") or ep.get("policy_id")
+            if replayed_best_policy_id:
+                break
+
+    fieldnames = [
+        "prolific_id",
+        "age",
+        "gender",
+        "experience",
+        "assigned_map",
+        "consent_given",
+        "start_time_iso",
+        "n_episodes_saved",
+        "n_rounds_saved",
+        "replayed_best_policy_id",
+    ]
+
+    with open(out_csv_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerow({
+            "prolific_id": log_payload.get("prolificId"),
+            "age": meta.get("age"),
+            "gender": meta.get("gender"),
+            "experience": meta.get("experience"),
+            "assigned_map": assignment.get("map"),
+            "consent_given": meta.get("consentGiven"),
+            "start_time_iso": meta.get("startTimeISO"),
+            "n_episodes_saved": len(episodes),
+            "n_rounds_saved": len(rounds),
+            "replayed_best_policy_id": replayed_best_policy_id,
+        })
+
+
 def save_participant_snapshot(log_payload):
-    """Save participant data in both raw and analysis-friendly formats."""
+    """Save participant data in the final agreed format."""
     prolific = str(log_payload.get('prolificId', 'unknown')).strip().replace('/', '_')
 
-    participant_dir = os.path.join('submissions', prolific)
+    participant_dir = os.path.join(SUBMISSIONS_ROOT, prolific)
     os.makedirs(participant_dir, exist_ok=True)
 
-    # 1) Save full raw JSON
+    # 1) Full raw JSON
     result_filename = os.path.join(participant_dir, 'final_result.json')
     with open(result_filename, 'w', encoding='utf-8') as f:
         json.dump(log_payload, f, ensure_ascii=False, indent=2)
 
-    # 2) Keep your existing compact round summary
-    csv_filename = os.path.join(participant_dir, 'round_summary.csv')
-    write_round_summary_csv(log_payload, csv_filename)
+    # 2) Main analysis CSV: one row per round
+    round_csv = os.path.join(participant_dir, 'round_summary.csv')
+    write_round_summary_csv(log_payload, round_csv)
 
-    # 3) New: one-row participant summary
+    # 3) Participant-level summary CSV
     participant_csv = os.path.join(participant_dir, 'participant_summary.csv')
     write_participant_summary_csv(log_payload, participant_csv)
 
-    # 4) New: one row per episode
-    episode_csv = os.path.join(participant_dir, 'episode_summary.csv')
-    write_episode_summary_csv(log_payload, episode_csv)
+    # 4) Co-adaptation summary CSV
+    coadapt_csv = os.path.join(participant_dir, 'coadaptation_summary.csv')
+    write_coadaptation_summary_csv(log_payload, coadapt_csv)
 
-    # 5) New: one row per round
-    rounds_csv = os.path.join(participant_dir, 'rounds_long.csv')
-    write_rounds_long_csv(log_payload, rounds_csv)
-
-    # 6) Save BayesOpt state(s) for this participant, if any exist
+    # Optional: keep BayesOpt state if present
     for (pid, map_name), optimizer in OPTIMIZER_MGR.optimizers.items():
         if pid != prolific:
             continue

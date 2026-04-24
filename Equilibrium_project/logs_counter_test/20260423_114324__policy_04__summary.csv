@@ -1,2 +1,0 @@
-policy_name,round,dishes_served,human_steps,ai_steps,human_reward,ai_reward,team_reward
-[coplay][equilibrium][counter]agent0_a0sp_0_helping0_True_gamma0.8,1,5,87,117,62.0,792.0,32.0

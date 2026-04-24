@@ -6,7 +6,7 @@ const SERVER_URL = window.location.origin;
 // Experiment Configuration
 const CONFIG = {
   PRACTICE_SCORE: 200,
-  ROUND_DURATION_SEC: 45, // put 45
+  ROUND_DURATION_SEC: 20, // put 45
 
     // Episode structure
   ROUNDS_PER_EPISODE: 3, // 3
@@ -17,7 +17,7 @@ const CONFIG = {
   EPISODES_BO_REPLAY_BEST: 1,
   EPISODES_STRESS: 3,    // put 3 kNN
   EPISODES_REPLAY_OPTIMAL: 1,
-  EPISODE_BREAK_SEC: 10  // 10
+  EPISODE_BREAK_SEC: 1  // 10
 };
 
 CONFIG.EXPERIMENT_MAPS = ["circle", "counter", "thinpath"];
