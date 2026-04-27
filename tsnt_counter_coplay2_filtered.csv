@@ -1,0 +1,11 @@
+policy,x,y
+a0sp_0_helping0_False_gamma0.8,-57.89377,1.8446459
+a0sp_0_helping0_False_gamma0.9,6.507859,7.3285604
+a0sp_0_helping0_False_gamma0.95,-1.4904047,80.28126
+a0sp_0_helping0_True_gamma0.9,-49.428947,-77.368416
+a0sp_1_helping0_False_gamma0.8,-4.7262373,-98.794586
+a0sp_3_helping0_False_gamma0.8,-78.39573,116.083084
+a0sp_3_helping0_False_gamma0.9,37.43218,-54.55561
+a0sp_3_helping0_False_gamma0.95,-38.37737,88.70555
+a0sp_3_helping0_True_gamma0.8,-27.839642,-50.23793
+a0sp_3_helping0_True_gamma0.95,-27.545086,35.63834
