@@ -10,17 +10,28 @@ register(
     entry_point='gym_macro_overcooked.overcooked_MA_equilibrium:Overcooked_MA_equilibrium',
 )
 
-register(
-    id='Overcooked-MA-equilibrium-v1',
-    entry_point='gym_macro_overcooked.overcooked_MA_equilibrium_counter:Overcooked_MA_equilibrium_counter',
-)
+#register(
+ #   id='Overcooked-MA-equilibrium-v1',
+  #  entry_point='gym_macro_overcooked.overcooked_MA_equilibrium_counter:Overcooked_MA_equilibrium_counter',
+#)
+
+#register(
+#    id='Overcooked-MA-equilibrium-v2',
+#    entry_point='gym_macro_overcooked.overcooked_MA_equilibrium_thinpath:Overcooked_MA_equilibrium_thinpath',
+#)
 
 register(
-    id='Overcooked-MA-equilibrium-v2',
-    entry_point='gym_macro_overcooked.overcooked_MA_equilibrium_thinpath:Overcooked_MA_equilibrium_thinpath',
+    id='Overcooked-MA-equilibrium-v3',
+    entry_point='gym_macro_overcooked.overcooked_MA_equilibrium_thinpath_flexible:Overcooked_MA_equilibrium_thinpath_flexible',
 )
+
 
 register(
     id='Overcooked-MA-equilibrium-v4',
     entry_point='gym_macro_overcooked.overcooked_MA_equilibrium_counter_flexible:Overcooked_MA_equilibrium_counter_flexible',
+)
+
+register(
+    id='Overcooked-MA-equilibrium-v5',
+    entry_point='gym_macro_overcooked.overcooked_MA_equilibrium_circle_flexible:Overcooked_MA_equilibrium_circle_flexible',
 )

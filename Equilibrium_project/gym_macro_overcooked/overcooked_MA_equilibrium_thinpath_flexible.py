@@ -53,7 +53,7 @@ class AStarAgent(object):
 
 
 # 里面多了一些从macro到primitive action的转化，以及一些函数的重写。具体的如何step，还是转化为执行low level action。此外，还制作了一个Wrapper，让gym env可以调用
-class Overcooked_MA_equilibrium_counter_flexible(Overcooked_equilibrium):
+class Overcooked_MA_equilibrium_thinpath_flexible(Overcooked_equilibrium):
 
     """
     Overcooked Domain Description
@@ -258,6 +258,7 @@ class Overcooked_MA_equilibrium_counter_flexible(Overcooked_equilibrium):
 
 
 
+
             if self.macroAgent[idx].cur_macro_action_done:
 
 
@@ -320,6 +321,20 @@ class Overcooked_MA_equilibrium_counter_flexible(Overcooked_equilibrium):
                     self.macroAgent[idx].cur_macro_action = macro_actions[idx]
                     macro_action = macro_actions[idx]
                     self.macroAgent[idx].cur_macro_action_done = False
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -391,8 +406,8 @@ class Overcooked_MA_equilibrium_counter_flexible(Overcooked_equilibrium):
                 counter_y = []
 
                 # 这里每次更换地图都要改
-                for x_i in [2]:
-                    for y_i in [2, 3, 4, 5]:
+                for x_i in [1, 3]:
+                    for y_i in [3]:
                         if ITEMNAME[agent.pomap[x_i][y_i]] == "counter":
                             counter_x.append(x_i)
                             counter_y.append(y_i)
