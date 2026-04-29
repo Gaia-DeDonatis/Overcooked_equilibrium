@@ -913,6 +913,12 @@ class OptimizerManager:
         
 OPTIMIZER_MGR = OptimizerManager()
 
+def _get_best_policy_name_from_optimizer(optimizer: TSNEBayesOptimizer) -> str:
+    """Return the current best policy name without creating a new optimizer trial."""
+    best_policy, _best_params, _prediction, _index, _name = optimizer.get_best()
+    if not best_policy:
+        raise ValueError("Could not determine best policy from optimizer.")
+    return str(best_policy)
 
 
 
@@ -973,7 +979,6 @@ def _parse_config_id(layout_id: str = None, model_id: str = None, config_id: str
     raise ValueError("Either 'config_id' or both 'layout_id' and 'model_id' must be provided.")
 
 
-
 def create_envs_for_session(
     sess: Session,
     config_id: str,
@@ -982,6 +987,7 @@ def create_envs_for_session(
     is_solo: bool | None = None,
     map_name: str | None = None,
     layout_id: str | None = None,
+    forced_policy_name: str | None = None,
 ):
     is_practice = (config_id == "layout_practice")
     is_solo = bool(getattr(sess, "solo_episode", False)) if is_solo is None else bool(is_solo)
@@ -1071,9 +1077,27 @@ def create_envs_for_session(
     
     else:
         used_policy_names = _get_used_policy_names(sess, active_map_name)
-        should_pick = bool(choose_new_policy) or map_changed or (not sess.chosen_ckpt_path)
+        should_pick = bool(forced_policy_name) or bool(choose_new_policy) or map_changed or (not sess.chosen_ckpt_path)
+
         if should_pick:
-            if optimizer is not None:
+            if forced_policy_name:
+                # Replay episodes should not ask the optimizer for a new trial.
+                # They should explicitly reload the saved/best policy.
+                logger.info(
+                    f"[POLICY - REPLAY] forcing policy={forced_policy_name} "
+                    f"for phase={getattr(sess, 'episode_phase', None)}"
+                )
+                chosen_dir, ckpt_path = _pick_policy_checkpoint(
+                    forced_policy_name,
+                    policy_pool_dir=policy_pool_dir,
+                    policy_prefix=policy_prefix,
+                    checkpoint_filename=checkpoint_filename,
+                )
+                sess.chosen_policy_dir = chosen_dir
+                sess.chosen_ckpt_path = ckpt_path
+                sess.model = _load_or_get_model_by_ckpt_path(ckpt_path)
+
+            elif optimizer is not None:
                 logger.info(f"[POLICY - PICK] picking policy using optimization pipeline for map={active_map_name}")
                 mapped_trials = optimizer.ask()
                 checkpoint = mapped_trials[optimizer._actual_trial_idx]["policy"]
@@ -1318,6 +1342,21 @@ def reset():
                 and (bool(new_episode) or episode_changed)
             )
 
+           
+            forced_policy_name = None
+
+            if choose_new_policy and episode_phase == "replay_optimal":
+                forced_policy_name = getattr(sess, "bo_best_policy_name", None)
+
+                if not forced_policy_name:
+                    if optimizer is None:
+                        raise ValueError(
+                            "Cannot replay optimal policy: no saved best policy and optimizer is not available."
+                        )
+
+                    forced_policy_name = _get_best_policy_name_from_optimizer(optimizer)
+                    sess.bo_best_policy_name = forced_policy_name
+
             # Persist metadata in the session.
             if episode_index_int is not None:
                 sess.episode_index = episode_index_int
@@ -1331,7 +1370,15 @@ def reset():
                 is_solo=sess.solo_episode,
                 map_name=map_type,
                 layout_id=layout_id,
+                forced_policy_name=forced_policy_name,
             )
+
+
+            if choose_new_policy and episode_phase == "bo_replay_best":
+                sess.bo_best_policy_name = sess.current_model_id
+                logger.info(
+                    f"[POLICY - SAVE BEST] bo_best_policy_name={sess.bo_best_policy_name}"
+                )
         
         except Exception as e:
             logger.exception(
@@ -1711,8 +1758,8 @@ def tell():
     if sid:
          sess = SESSION_MGR.ensure(sid)
          with sess.lock:
-             if getattr(sess, "episode_phase", None) in ("bo_replay_best", "replay_optimal"):
-                 return jsonify(success=True, skipped=True, reason="replay episode")
+            if getattr(sess, "episode_phase", None) == "replay_optimal":
+                return jsonify(success=True, skipped=True, reason="final replay episode")
 
     # Preferred: use server-side AI reward (computed in /key_event) for BO.
     score_raw = data.get('score')

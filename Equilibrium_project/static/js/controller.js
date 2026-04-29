@@ -624,8 +624,8 @@ async function actuallySkipCurrentPolicyEpisode() {
   await DataManager.saveProgressToServer('episode_skipped');
 
   const soloNow = (typeof isSoloEpisode === 'function') ? isSoloEpisode(STATE.episodeIndex) : false;
-  const replayNow = ['bo_replay_best', 'replay_optimal'].includes(STATE.episodePhase);
-  const shouldTell = !soloNow && !replayNow && getSelectionMode() === 'bo';
+  const finalReplayNow = STATE.episodePhase === 'replay_optimal';
+  const shouldTell = !soloNow && !finalReplayNow && getSelectionMode() === 'bo';
 
   if (shouldTell) {
     await api('/tell', {
@@ -729,9 +729,9 @@ async function finishTimeBasedRound() {
         // --- CASE B: EPISODE COMPLETE ---
         console.log(`Episode ${STATE.episodeIndex} Complete!`);
         const soloNow = (typeof isSoloEpisode === 'function') ? isSoloEpisode(STATE.episodeIndex) : false;
-        const replayNow = ['bo_replay_best', 'replay_optimal'].includes(STATE.episodePhase);
-        const shouldTell = !soloNow && !replayNow && getSelectionMode() === 'bo';
-        
+        const finalReplayNow = STATE.episodePhase === 'replay_optimal';
+        const shouldTell = !soloNow && !finalReplayNow && getSelectionMode() === 'bo';
+                
         if (shouldTell) {
           await api('/tell', {
             prolificId: STATE.prolificId,
