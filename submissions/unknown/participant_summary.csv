@@ -1,0 +1,2 @@
+prolific_id,age,gender,experience,assigned_map,consent_given,start_time_iso,n_episodes_saved,n_rounds_saved,replayed_best_policy_id
+unknown,,,,,False,,0,0,
