@@ -38,7 +38,7 @@ except Exception:
 # SETTINGS
 # =========================
 TOTAL_ROUNDS = 1
-ROUND_DURATION = 45
+ROUND_DURATION = 30
 SECONDS_PER_STEP = 0.25
 
 WINDOW_SIZE = (1200, 760)
@@ -53,7 +53,7 @@ IMAGE_DIR = os.path.join(CURRENT_DIR, "static", "images")
 
 # Choose which new coplay/flexible policy pool to test.
 # Options: "counter", "circle", "thinpath"
-MAP_TO_TEST = "counter"
+MAP_TO_TEST = "circle"
 
 MAP_CONFIGS = {
     "counter": {
@@ -222,11 +222,43 @@ def resolve_obj_image_name(obj):
     if obj is None:
         return None
 
-    # Plate content can be a list
+    # Plate content can be a list/tuple
     if isinstance(obj, (list, tuple)):
         if len(obj) == 0:
             return None
         return resolve_obj_image_name(obj[0])
+
+    # Sometimes the environment/content is stored as a string
+    if isinstance(obj, str):
+        n = obj.lower().replace("_", "").replace(" ", "").replace("-", "")
+
+        if n in ("lettuce", "freshlettuce"):
+            return "FreshLettuce.png"
+        if n in ("choppedlettuce", "lettucesalad", "salad"):
+            return "ChoppedLettuce.png"
+
+        if n in ("tomato", "freshtomato"):
+            return "FreshTomato.png"
+        if n == "choppedtomato":
+            return "ChoppedTomato.png"
+
+        if n in ("onion", "freshonion"):
+            return "FreshOnion.png"
+        if n == "choppedonion":
+            return "ChoppedOnion.png"
+
+        if n == "badlettuce":
+            return "BadLettuce.png"
+        if n == "plate":
+            return "plate.png"
+        if n == "dirtyplate":
+            return "dirtyplate.png"
+        if n in ("knife", "cutboard", "cuttingboard"):
+            return "cutboard.png"
+        if n == "delivery":
+            return "delivery.png"
+
+        return None
 
     cls = obj.__class__.__name__.lower()
 
@@ -246,6 +278,36 @@ def resolve_obj_image_name(obj):
         return "cutboard.png"
     if "delivery" in cls:
         return "delivery.png"
+
+    return None
+
+def get_plate_content(obj):
+    if obj is None:
+        return None
+
+    try:
+        containing = getattr(obj, "containing", None)
+        if containing:
+            return containing
+    except Exception:
+        pass
+
+    # Some object versions may use other names.
+    for attr in ("contained", "content", "contents"):
+        try:
+            value = getattr(obj, attr, None)
+            if value:
+                return value
+        except Exception:
+            pass
+
+    # Only try containedName last, and safely.
+    try:
+        value = getattr(obj, "containedName", None)
+        if value:
+            return value
+    except Exception:
+        pass
 
     return None
 
@@ -368,12 +430,27 @@ def draw_game(screen, env, images, policy_name, round_num, selected_agent, step_
             pygame.draw.rect(screen, (255, 255, 0), (px, py, cell, cell), 4)
 
         if getattr(agent, "holding", None) is not None:
-            hold_name = resolve_obj_image_name(agent.holding)
+            holding_obj = agent.holding
+            hold_name = resolve_obj_image_name(holding_obj)
+
             if hold_name:
-                hold_img = pygame.transform.smoothscale(images[hold_name], (int(cell * 0.5), int(cell * 0.5)))
-                hx = px + cell - hold_img.get_width()
-                hy = py + cell - hold_img.get_height()
-                screen.blit(hold_img, (hx, hy))
+                hold_cell = int(cell * 0.5)
+                hx = px + cell - hold_cell
+                hy = py + cell - hold_cell
+
+                if hold_name in {"plate.png", "dirtyplate.png"}:
+                    draw_plate_with_content(
+                        screen,
+                        images,
+                        hold_name,
+                        get_plate_content(holding_obj),
+                        hx,
+                        hy,
+                        hold_cell
+                    )
+                else:
+                    hold_img = pygame.transform.smoothscale(images[hold_name], (hold_cell, hold_cell))
+                    screen.blit(hold_img, (hx, hy))
 
     pygame.display.flip()
 

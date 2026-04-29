@@ -1,0 +1,2 @@
+policy_name,round,dishes_served,human_steps,ai_steps,human_reward,ai_reward,team_reward
+[coplay][flexible][circle]agent0_a0sp_0_helping0_False_gamma0.9,1,4,57,64,162.0,632.0,112.0
