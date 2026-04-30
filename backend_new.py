@@ -157,8 +157,8 @@ MAP_CONFIGS = {
     "circle": {
         "map_type": "circle",
         "grid_dim": [5, 5],
-        "policy_pool_dir": os.path.join(current_dir, "final_policy_pool_circle_coplay"),
-        "embedding_csv": os.path.join(current_dir, "tsnt_circle_coplay.csv"),
+        "policy_pool_dir": os.path.join(current_dir, "policy_pool_circle_coplay"),
+        "embedding_csv": os.path.join(current_dir, "tsnt_circle.csv"),
         "policy_prefix": "[coplay][flexible][circle]agent0_",
         "checkpoint_filename": "model_5000000.zip",
         "env_id": "Overcooked-equilibrium-v0",
@@ -170,8 +170,8 @@ MAP_CONFIGS = {
     "counter": {
         "map_type": "counter",
         "grid_dim": [5, 8],
-        "policy_pool_dir": os.path.join(current_dir, "final_policy_pool_counter_coplay"),
-        "embedding_csv": os.path.join(current_dir, "tsnt_counter_coplay.csv"),
+        "policy_pool_dir": os.path.join(current_dir, "policy_pool_counter_coplay"),
+        "embedding_csv": os.path.join(current_dir, "tsnt_counter.csv"),
         "policy_prefix": "[coplay][flexible][counter]agent0_",
         "checkpoint_filename": "model_5000000.zip",
         "env_id": "Overcooked-equilibrium-v0",
@@ -183,8 +183,8 @@ MAP_CONFIGS = {
     "thinpath": {
         "map_type": "thinpath",
         "grid_dim": [5, 7],
-        "policy_pool_dir": os.path.join(current_dir, "final_policy_pool_thinpath_coplay"),
-        "embedding_csv": os.path.join(current_dir, "tsnt_thinpath_coplay.csv"),
+        "policy_pool_dir": os.path.join(current_dir, "policy_pool_thinpath_coplay"),
+        "embedding_csv": os.path.join(current_dir, "tsnt_thinpath.csv"),
         "policy_prefix": "[coplay][flexible][thinpath]agent0_",
         "checkpoint_filename": "model_5000000.zip",
         "env_id": "Overcooked-equilibrium-v0",
