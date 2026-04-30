@@ -52,7 +52,7 @@ PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
 IMAGE_DIR = os.path.join(CURRENT_DIR, "static", "images")
 LOG_DIR = os.path.join(CURRENT_DIR, "logs_counter_test")
 
-POLICY_POOL_DIR = os.path.join(PROJECT_ROOT, "final_policy_pool_counter_coplay")
+POLICY_POOL_DIR = os.path.join(PROJECT_ROOT, "policy_pool_counter_coplay")
 CHECKPOINT_FILENAME = "model_1500000.zip"
 POLICY_PREFIX = "[coplay][equilibrium][counter]agent0_"
 

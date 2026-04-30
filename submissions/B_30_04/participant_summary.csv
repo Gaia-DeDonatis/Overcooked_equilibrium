@@ -1,0 +1,2 @@
+prolific_id,age,gender,experience,assigned_map,consent_given,start_time_iso,n_episodes_saved,n_rounds_saved,replayed_best_policy_id
+B_30_04,22,Female,regular,"circle_5,5",True,2026-04-30T07:46:13.090Z,2,6,

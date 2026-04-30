@@ -1,0 +1,2 @@
+prolific_id,age,gender,experience,assigned_map,consent_given,start_time_iso,n_episodes_saved,n_rounds_saved,replayed_best_policy_id
+30_04_2026_A,23,Female,regular,"counter_5,8",True,2026-04-30T06:57:50.333Z,17,51,[coplay][flexible][counter]agent0_a0sp_3_helping0_True_gamma0.95
