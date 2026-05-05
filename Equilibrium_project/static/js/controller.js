@@ -234,6 +234,30 @@ async function doOneTick() {
 
     const tLog0 = performance.now();
     DataManager.logStep(data, keyToSend);
+    
+
+    if (Array.isArray(data.work_events) && data.work_events.length > 0) {
+      const roundObj = DataManager.getCurrentRound();
+
+      if (roundObj) {
+        if (!Array.isArray(roundObj.work_events)) {
+          roundObj.work_events = [];
+        }
+
+        for (const ev of data.work_events) {
+          roundObj.work_events.push({
+            ...ev,
+            episode_index: STATE.episodeIndex,
+            round_in_episode: STATE.roundInEpisode,
+            episode_phase: STATE.episodePhase,
+            experiment_phase: STATE.experimentPhase,
+            policy_id: roundObj.policy_id,
+            tick_time_ms: performance.now()
+          });
+        }
+      }
+    }
+
     const tLog1 = performance.now();
 
     console.log(

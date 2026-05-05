@@ -224,6 +224,60 @@ class Overcooked_equilibrium(gym.Env):
         for key in self.itemDic:
             self.itemList += self.itemDic[key]
 
+    # =========================================
+    # CRC data collection test
+    # =========================================
+
+    def _work_agent_label(self, agent_idx):
+            # In two-agent mode: agent 0 = AI, agent 1 = human.
+            # In solo mode: there is only one agent, and it is the human.
+            if getattr(self, "n_agent", 2) == 1:
+                return "human"
+            return "ai" if int(agent_idx) == 0 else "human"
+
+
+    def _item_event_id(self, item):
+            if item is None:
+                return None
+
+            for name, item_list in [
+                ("lettuce", self.lettuce),
+                ("badlettuce", self.badlettuce),
+                ("tomato", self.tomato),
+                ("onion", self.onion),
+                ("plate", self.plate),
+                ("dirtyplate", self.dirtyplate),
+                ("knife", self.knife),
+                ("delivery", self.delivery),
+            ]:
+                for i, obj in enumerate(item_list):
+                    if obj is item:
+                        return f"{name}_{i + 1}"
+
+            return getattr(item, "rawName", type(item).__name__)
+
+
+    def _record_work_event(self, agent_idx, event_type, item=None, extra=None):
+            if not hasattr(self, "last_work_events"):
+                self.last_work_events = []
+
+            event = {
+                "agent_index": int(agent_idx),
+                "agent": self._work_agent_label(agent_idx),
+                "event_type": event_type,
+                "item": self._item_event_id(item),
+                "step": int(getattr(self, "step_count", 0)),
+            }
+
+            if extra:
+                event.update(extra)
+
+            self.last_work_events.append(event)
+
+
+    # =========================================
+    # CRC data collection test
+    # =========================================
 
     def _initObs(self):
         obs = []
@@ -1269,7 +1323,7 @@ class Overcooked_equilibrium(gym.Env):
 
         # 每调用一次step方法，计数加一
         self.step_count += 1
-
+        self.last_work_events = []
 
         # 执行任意一个action，都要花费一个step，都要先penalty一下
         self.reward = [self.rewardList[0]["step penalty"], self.rewardList[1]["step penalty"], self.rewardList[0]["step penalty"]]
@@ -1386,6 +1440,7 @@ class Overcooked_equilibrium(gym.Env):
                         if target_name == "tomato" or target_name == "lettuce" or target_name == "badlettuce" or target_name == "plate" or target_name == "onion" or target_name == "dirtyplate":
                             item = self._findItem(target_x, target_y, target_name)
                             agent.pickup(item)
+                            self._record_work_event(idx, "pickup", item)
                             # 因为取走了这些可移动的item了，所以把地图中对应的位置变成counter
                             self.map[target_x][target_y] = ITEMIDX["counter"]
 
@@ -1404,6 +1459,7 @@ class Overcooked_equilibrium(gym.Env):
                                 item = knife.holding
                                 knife.release()
                                 agent.pickup(item)
+                                self._record_work_event(idx, "pickup_from_knife", item)
                                 # reward += self.rewardList["metatask finished"]
                             # 如果切菜板上面是食物，则判断是否已经切好
                             elif isinstance(knife.holding, Food):
@@ -1412,6 +1468,7 @@ class Overcooked_equilibrium(gym.Env):
                                     item = knife.holding
                                     knife.release()
                                     agent.pickup(item)
+                                    self._record_work_event(idx, "pickup_from_knife", item)
                                     if self.first_time_pickup_chopped_food == True:
                                         self.reward[idx] += self.rewardList[idx]["goodtask finished"]
                                         self.reward[2] += self.rewardList[idx]["goodtask finished"]
@@ -1420,6 +1477,7 @@ class Overcooked_equilibrium(gym.Env):
                                 # ["tomato salad", "lettuce salad", "onion salad", "lettuce-tomato salad", "onion-tomato salad", "lettuce-onion salad", "lettuce-onion-tomato salad"]
                                 else:
                                     knife.holding.chop()
+                                    self._record_work_event(idx, "chop", knife.holding)
                                     self.reward[idx] += self.rewardList[idx]["goodtask finished"]
                                     self.reward[2] += self.rewardList[idx]["goodtask finished"]
 
@@ -1437,17 +1495,24 @@ class Overcooked_equilibrium(gym.Env):
                     #put down
                     # 如果agent当前已经持有东西
                     elif agent.holding:
-                        # 如果移动的目标是counter，则会放下手中的东西
+                        # Se l'agente sta guardando un counter, può appoggiare lì l'oggetto
                         if target_name == "counter":
+                            item = agent.holding
+
                             if agent.holding.rawName in ["tomato", "lettuce", "badlettuce", "onion", "plate", "dirtyplate"]:
-                                # 把该counter变成agent手中持有的可移动item，这个rawName应该是一些数字
                                 self.map[target_x][target_y] = ITEMIDX[agent.holding.rawName]
-                            # 恢复非持物状态
+
                             agent.putdown(target_x, target_y)
+
+                            self._record_work_event(idx, "place_on_counter", item, {
+                                "target_x": int(target_x),
+                                "target_y": int(target_y),
+                            })
 
                             self.reward[idx] += self.rewardList[idx]["metatask failed"]
                             self.reward[2] += self.rewardList[idx]["metatask failed"]
-                        # 如果移动目标是盘子
+
+
                         elif target_name == "plate" or target_name == "dirtyplate":
                             # 如果手中拿的是食物，判断是否切好，未切好不能装盘
                             if isinstance(agent.holding, Food):
@@ -1496,6 +1561,7 @@ class Overcooked_equilibrium(gym.Env):
                                     agent.putdown(target_x, target_y)
                                     # 把食物装进盘子里
                                     plate.contain(item)
+                                    self._record_work_event(idx, "assemble_salad", item)
                             else:
                                 self.reward[idx] += self.rewardList[idx]["metatask failed"]
                                 self.reward[2] += self.rewardList[idx]["metatask failed"]
@@ -1507,6 +1573,7 @@ class Overcooked_equilibrium(gym.Env):
                                 item = agent.holding
                                 agent.putdown(target_x, target_y)
                                 knife.hold(item)
+                                self._record_work_event(idx, "place_on_knife", item)
                                 if isinstance(item, Food):
 
 
@@ -1566,6 +1633,7 @@ class Overcooked_equilibrium(gym.Env):
 
                                     knife.release()
                                     agent.holding.contain(item)
+                                    self._record_work_event(idx, "assemble_salad", item)
                                 else:
                                     # 没切好就拿盘子装，减分
                                     self.reward[idx] += self.rewardList[idx]["metatask failed"]
@@ -1604,9 +1672,11 @@ class Overcooked_equilibrium(gym.Env):
                                         self.reward[2] += self.rewardList[idx]["penalize using dirty plate"]
 
                                     knife.release()
-                                    # a little different
                                     agent.pickup(plate_item)
+                                    self._record_work_event(idx, "pickup_from_knife", plate_item)
+
                                     agent.holding.contain(food_item)
+                                    self._record_work_event(idx, "assemble_salad", food_item)
                                 else:
                                     # 切菜板上是盘子，agent拿着没切好的食物，减分
                                     self.reward[idx] += self.rewardList[idx]["metatask failed"]
@@ -1680,11 +1750,12 @@ class Overcooked_equilibrium(gym.Env):
 
 
 
-
+                                        self._record_work_event(idx, "deliver_correct", item)
 
                                         """下面的代码也是让蔬菜进行刷新"""
                                         food = item.containing
                                         # 盘子release，刷新
+                                        
                                         item.release()
                                         item.refresh()
                                         self.map[item.x][item.y] = ITEMIDX[item.name]
@@ -1748,6 +1819,9 @@ class Overcooked_equilibrium(gym.Env):
                                         self.reward[idx] += self.rewardList[idx]["wrong delivery"]
                                         self.reward[2] += self.rewardList[idx]["wrong delivery"]
                                         item = agent.holding
+                                        self._record_work_event(idx, "deliver_wrong", item, {
+                                            "reason": "wrong_plate_content"
+                                        })
                                         agent.putdown(target_x, target_y)
                                         food = item.containing
                                         # 盘子release，刷新
@@ -1761,8 +1835,13 @@ class Overcooked_equilibrium(gym.Env):
                                 # 如果盘子里是空的，那是一种wrong delivery
                                 else:
                                     self.reward[idx] += self.rewardList[idx]["wrong delivery"]
+                                    
                                     self.reward[2] += self.rewardList[idx]["wrong delivery"]
                                     plate = agent.holding
+
+                                    self._record_work_event(idx, "deliver_wrong", plate, {
+                                        "reason": "empty_plate"
+                                    })
                                     # agent放下手中的东西，手头变空
                                     agent.putdown(target_x, target_y)
                                     # 下面两行是刷新盘子
@@ -1771,10 +1850,17 @@ class Overcooked_equilibrium(gym.Env):
                             # 如果把food直接deliver了，则是一种wrong delivery，此时会扣分，同时刷新（1）agent手中东西放下变空，（2）food刷新位置，
                             else:
                                 self.reward[idx] += self.rewardList[idx]["wrong delivery"]
+                                
                                 self.reward[2] += self.rewardList[idx]["wrong delivery"]
                                 food = agent.holding
+
+                                self._record_work_event(idx, "deliver_wrong", food, {
+                                    "reason": "food_without_plate"
+                                })
+                                
                                 # agent放下手中的东西，手头变空
                                 agent.putdown(target_x, target_y)
+
                                 # 下面两行是刷新food
                                 food.refresh()
                                 self.map[food.x][food.y] = ITEMIDX[food.rawName]
@@ -1832,6 +1918,7 @@ class Overcooked_equilibrium(gym.Env):
 
                                     
                                 agent.holding.contain(item)
+                                self._record_work_event(idx, "assemble_salad", item)
                                 self.map[target_x][target_y] = ITEMIDX["counter"]
                             elif not item.chopped and (isinstance(agent.holding, Plate) or isinstance(agent.holding, DirtyPlate)):
                                 # 如果食物没切好就想去装盘，减分

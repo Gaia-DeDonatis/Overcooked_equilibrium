@@ -167,6 +167,8 @@ const DataManager = {
         ai: []
       },
 
+      work_events: [],
+
       state_log: [],
       counter_log: [],
 

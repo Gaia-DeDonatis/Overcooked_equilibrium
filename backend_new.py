@@ -1483,6 +1483,8 @@ def key_event():
         human_low = int(KEYS_ACTIONS[key])
         solo_mode = bool(getattr(sess, 'solo_episode', False)) or (getattr(sess.env, 'n_agent', 2) == 1)
 
+        work_events = []
+
         if solo_mode:
             # Human-alone: no AI model; step env with a single human action.
             ai_action_int = 4
@@ -1491,8 +1493,10 @@ def key_event():
 
             try:
                 obs_all, rewards_list, dones, info = sess.env_mac.step([human_low])
+                work_events = getattr(sess.env_mac, "last_work_events", [])
             except Exception as e:
                 return jsonify(success=False, error=f'solo step failed: {e}'), 400
+            
 
             try:
                 sess.obs = sess.env_mac._get_macro_obs()[0]
@@ -1535,11 +1539,7 @@ def key_event():
                     sess.last_ai_action_int = _as_int_action(ai_action)
 
                 ai_action_int = sess.last_ai_action_int
-                print(
-                    f"[AI DEBUG] step={sess.cur_step} "
-                    f"pos=({sess.env_mac.agent[0].x},{sess.env_mac.agent[0].y}) "
-                    f"macro_action={ai_action_int}"
-                )
+                
             else:
                 # No model loaded (practice), keep a placeholder macro id
                 ai_action_int = 4
@@ -1600,14 +1600,6 @@ def key_event():
             robot_low = int(action[0])
             robot_key = ACTION_TO_KEY.get(robot_low, 'Unknown')
 
-            print(
-                f"[AI DEBUG] step={sess.cur_step} "
-                f"pos_before=({ai_prev_loc[0]},{ai_prev_loc[1]}) "
-                f"macro_action={ai_action_int} "
-                f"low_level={robot_low} "
-                f"arrow={robot_key}"
-            )
-
             sess.robot_steps.append({
                 'step': int(sess.cur_step + 1),
                 'ai_macro_action': int(ai_action_int),
@@ -1618,6 +1610,7 @@ def key_event():
             })
 
             sess.obs, rewards, dones, info = sess.wrapper.step(action[0], action[1])
+            work_events = getattr(sess.env_mac, "last_work_events", [])
             _record_ai_position(sess, sess.env_mac)
 
             # determine if AI moved this step (for step-penalty shaping)
@@ -1632,11 +1625,6 @@ def key_event():
                     else:
                         sess.ai_blocked_move_streak = 0
 
-            print(
-                f"[AI DEBUG] step={sess.cur_step} "
-                f"pos_after=({ai_cur_loc[0]},{ai_cur_loc[1]}) "
-                f"moved={ai_moved}"
-            )
 
         r_env = 0.0
         r_adjusted = 0.0
@@ -1742,6 +1730,7 @@ def key_event():
             layout_id=sess.current_layout_id,
             model_id=sess.current_model_id,
             dishes_served=sess.dishes_served,
+            work_events=work_events,
             robot_last_action=(sess.robot_steps[-1] if sess.robot_steps else None)
         )
 
@@ -2153,6 +2142,108 @@ def write_round_summary_csv(log_payload, out_csv_path):
                 "end_time_iso": r.get("endTimeISO"),
             })
 
+def _work_event_column(event):
+    event_type = str(event.get("event_type", "") or "")
+    item = str(event.get("item", "") or "")
+
+    if event_type == "pickup":
+        if item in ("lettuce_1", "lettuce_2", "plate_1", "plate_2"):
+            return f"pickup_{item}"
+        return "other_work_action"
+
+    if event_type == "pickup_from_knife":
+        return "pickup_from_knife"
+
+    if event_type == "place_on_counter":
+        return "place_on_counter"
+
+    if event_type == "place_on_knife":
+        return "place_on_knife"
+
+    if event_type == "chop":
+        return "chop"
+
+    if event_type == "assemble_salad":
+        return "assemble_salad"
+
+    if event_type == "deliver_correct":
+        return "deliver_correct"
+
+    if event_type == "deliver_wrong":
+        return "deliver_wrong"
+
+    return "other_work_action"
+
+
+def write_task_division_csv(log_payload, out_csv_path):
+    prolific = str(log_payload.get("prolificId", "unknown")).strip().replace("/", "_")
+    rounds = log_payload.get("rounds", []) or []
+
+    work_columns = [
+        "pickup_lettuce_1",
+        "pickup_lettuce_2",
+        "pickup_plate_1",
+        "pickup_plate_2",
+        "pickup_from_knife",
+        "place_on_counter",
+        "place_on_knife",
+        "chop",
+        "assemble_salad",
+        "deliver_correct",
+        "deliver_wrong",
+        "other_work_action",
+    ]
+
+    fieldnames = [
+        "prolific_id",
+        "episode_index",
+        "round_in_episode",
+        "episode_phase",
+        "experiment_phase",
+        "map",
+        "policy_id",
+        "agent",
+        "steps",
+        "total_work_actions",
+    ] + work_columns
+
+    with open(out_csv_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+
+        for r in sorted(rounds, key=lambda x: x.get("round_index_global", 0)):
+            summary = r.get("summary", {}) or {}
+            events = r.get("work_events", []) or []
+
+            for agent_name in ["human", "ai"]:
+                row = {
+                    "prolific_id": prolific,
+                    "episode_index": r.get("episode_index"),
+                    "round_in_episode": r.get("round_in_episode"),
+                    "episode_phase": r.get("episode_phase"),
+                    "experiment_phase": r.get("experiment_phase"),
+                    "map": r.get("map"),
+                    "policy_id": r.get("policy_id"),
+                    "agent": agent_name,
+                    "steps": summary.get("human_steps") if agent_name == "human" else summary.get("ai_steps"),
+                    "total_work_actions": 0,
+                }
+
+                for col in work_columns:
+                    row[col] = 0
+
+                for ev in events:
+                    if ev.get("agent") != agent_name:
+                        continue
+
+                    col = _work_event_column(ev)
+                    if col not in row:
+                        col = "other_work_action"
+
+                    row[col] += 1
+                    row["total_work_actions"] += 1
+
+                writer.writerow(row)
 
 def write_participant_summary_csv(log_payload, out_csv_path):
     meta = log_payload.get("meta", {}) or {}
@@ -2212,6 +2303,10 @@ def save_participant_snapshot(log_payload):
     # 2) Main analysis CSV: one row per round
     round_csv = os.path.join(participant_dir, 'round_summary.csv')
     write_round_summary_csv(log_payload, round_csv)
+
+    # 2b) Task division CSV: two rows per round, human and AI
+    task_division_csv = os.path.join(participant_dir, "task_division_summary.csv")
+    write_task_division_csv(log_payload, task_division_csv)
 
     # 3) Participant-level summary CSV
     participant_csv = os.path.join(participant_dir, 'participant_summary.csv')

@@ -62,7 +62,7 @@
     "status_quo": null,
     "time_created": {
       "__type": "datetime",
-      "value": "2026-05-04 13:41:19.808025"
+      "value": "2026-05-05 15:59:42.197297"
     },
     "trials": {
       "0": {
@@ -76,16 +76,16 @@
         },
         "time_created": {
           "__type": "datetime",
-          "value": "2026-05-04 13:41:20.953763"
+          "value": "2026-05-05 15:59:43.360285"
         },
         "time_completed": {
           "__type": "datetime",
-          "value": "2026-05-04 13:41:20.953763"
+          "value": "2026-05-05 15:59:43.362335"
         },
         "time_staged": null,
         "time_run_started": {
           "__type": "datetime",
-          "value": "2026-05-04 13:41:20.953763"
+          "value": "2026-05-05 15:59:43.360285"
         },
         "status_reason": null,
         "run_metadata": {},
@@ -109,7 +109,7 @@
           "search_space": null,
           "time_created": {
             "__type": "datetime",
-            "value": "2026-05-04 13:41:20.953763"
+            "value": "2026-05-05 15:59:43.360285"
           },
           "model_predictions": null,
           "best_arm_predictions": null,
@@ -143,16 +143,16 @@
         },
         "time_created": {
           "__type": "datetime",
-          "value": "2026-05-04 13:41:20.953763"
+          "value": "2026-05-05 15:59:43.362335"
         },
         "time_completed": {
           "__type": "datetime",
-          "value": "2026-05-04 13:43:45.241260"
+          "value": "2026-05-05 16:02:06.764728"
         },
         "time_staged": null,
         "time_run_started": {
           "__type": "datetime",
-          "value": "2026-05-04 13:41:20.953763"
+          "value": "2026-05-05 15:59:43.362335"
         },
         "status_reason": null,
         "run_metadata": {},
@@ -176,7 +176,7 @@
           "search_space": null,
           "time_created": {
             "__type": "datetime",
-            "value": "2026-05-04 13:41:20.953763"
+            "value": "2026-05-05 15:59:43.362335"
           },
           "model_predictions": null,
           "best_arm_predictions": null,
@@ -207,16 +207,16 @@
         },
         "time_created": {
           "__type": "datetime",
-          "value": "2026-05-04 13:43:58.979786"
+          "value": "2026-05-05 16:03:26.426951"
         },
         "time_completed": {
           "__type": "datetime",
-          "value": "2026-05-04 13:43:58.979786"
+          "value": "2026-05-05 16:03:26.426951"
         },
         "time_staged": null,
         "time_run_started": {
           "__type": "datetime",
-          "value": "2026-05-04 13:43:58.979786"
+          "value": "2026-05-05 16:03:26.426951"
         },
         "status_reason": null,
         "run_metadata": {},
@@ -290,13 +290,13 @@
           },
           "time_created": {
             "__type": "datetime",
-            "value": "2026-05-04 13:43:58.979786"
+            "value": "2026-05-05 16:03:26.426951"
           },
           "model_predictions": null,
           "best_arm_predictions": null,
           "generator_run_type": null,
-          "fit_time": 0.031000000000858563,
-          "gen_time": 0.0319999999992433,
+          "fit_time": 0.031000000002677552,
+          "gen_time": 0.01600000000325963,
           "generator_key": "Sobol",
           "generator_kwargs": {
             "deduplicate": true,
@@ -368,16 +368,16 @@
         },
         "time_created": {
           "__type": "datetime",
-          "value": "2026-05-04 13:43:58.979786"
+          "value": "2026-05-05 16:03:26.426951"
         },
         "time_completed": {
           "__type": "datetime",
-          "value": "2026-05-04 13:46:22.464262"
+          "value": "2026-05-05 16:04:59.696600"
         },
         "time_staged": null,
         "time_run_started": {
           "__type": "datetime",
-          "value": "2026-05-04 13:43:58.979786"
+          "value": "2026-05-05 16:03:26.426951"
         },
         "status_reason": null,
         "run_metadata": {},
@@ -401,7 +401,7 @@
           "search_space": null,
           "time_created": {
             "__type": "datetime",
-            "value": "2026-05-04 13:43:58.979786"
+            "value": "2026-05-05 16:03:26.426951"
           },
           "model_predictions": null,
           "best_arm_predictions": null,
@@ -432,16 +432,16 @@
         },
         "time_created": {
           "__type": "datetime",
-          "value": "2026-05-04 13:46:36.348945"
+          "value": "2026-05-05 16:05:14.942545"
         },
         "time_completed": {
           "__type": "datetime",
-          "value": "2026-05-04 13:46:36.348945"
+          "value": "2026-05-05 16:05:14.942545"
         },
         "time_staged": null,
         "time_run_started": {
           "__type": "datetime",
-          "value": "2026-05-04 13:46:36.348945"
+          "value": "2026-05-05 16:05:14.942545"
         },
         "status_reason": null,
         "run_metadata": {},
@@ -515,12 +515,12 @@
           },
           "time_created": {
             "__type": "datetime",
-            "value": "2026-05-04 13:46:36.348945"
+            "value": "2026-05-05 16:05:14.942545"
           },
           "model_predictions": null,
           "best_arm_predictions": null,
           "generator_run_type": null,
-          "fit_time": 0.0,
+          "fit_time": 0.014999999999417923,
           "gen_time": 0.0,
           "generator_key": "Sobol",
           "generator_kwargs": {
@@ -593,13 +593,13 @@
         },
         "time_created": {
           "__type": "datetime",
-          "value": "2026-05-04 13:46:36.348945"
+          "value": "2026-05-05 16:05:14.942545"
         },
         "time_completed": null,
         "time_staged": null,
         "time_run_started": {
           "__type": "datetime",
-          "value": "2026-05-04 13:46:36.348945"
+          "value": "2026-05-05 16:05:14.942545"
         },
         "status_reason": null,
         "run_metadata": {},
@@ -623,7 +623,7 @@
           "search_space": null,
           "time_created": {
             "__type": "datetime",
-            "value": "2026-05-04 13:46:36.348945"
+            "value": "2026-05-05 16:05:14.942545"
           },
           "model_predictions": null,
           "best_arm_predictions": null,
@@ -654,7 +654,7 @@
             {
               "df": {
                 "__type": "DataFrame",
-                "value": "{\"trial_index\":{\"0\":1},\"arm_name\":{\"0\":\"1_0\"},\"metric_name\":{\"0\":\"performance\"},\"metric_signature\":{\"0\":\"performance\"},\"mean\":{\"0\":196.0},\"sem\":{\"0\":null},\"step\":{\"0\":null}}"
+                "value": "{\"trial_index\":{\"0\":1},\"arm_name\":{\"0\":\"1_0\"},\"metric_name\":{\"0\":\"performance\"},\"metric_signature\":{\"0\":\"performance\"},\"mean\":{\"0\":432.0},\"sem\":{\"0\":null},\"step\":{\"0\":null}}"
               },
               "__type": "Data"
             }
@@ -669,7 +669,7 @@
             {
               "df": {
                 "__type": "DataFrame",
-                "value": "{\"trial_index\":{\"0\":3},\"arm_name\":{\"0\":\"3_0\"},\"metric_name\":{\"0\":\"performance\"},\"metric_signature\":{\"0\":\"performance\"},\"mean\":{\"0\":-90.0},\"sem\":{\"0\":null},\"step\":{\"0\":null}}"
+                "value": "{\"trial_index\":{\"0\":3},\"arm_name\":{\"0\":\"3_0\"},\"metric_name\":{\"0\":\"performance\"},\"metric_signature\":{\"0\":\"performance\"},\"mean\":{\"0\":-584.0},\"sem\":{\"0\":null},\"step\":{\"0\":null}}"
               },
               "__type": "Data"
             }
@@ -712,7 +712,7 @@
         "search_space": null,
         "time_created": {
           "__type": "datetime",
-          "value": "2026-05-04 13:41:20.953763"
+          "value": "2026-05-05 15:59:43.360285"
         },
         "model_predictions": null,
         "best_arm_predictions": null,
@@ -800,13 +800,13 @@
         },
         "time_created": {
           "__type": "datetime",
-          "value": "2026-05-04 13:43:58.979786"
+          "value": "2026-05-05 16:03:26.426951"
         },
         "model_predictions": null,
         "best_arm_predictions": null,
         "generator_run_type": null,
-        "fit_time": 0.031000000000858563,
-        "gen_time": 0.0319999999992433,
+        "fit_time": 0.031000000002677552,
+        "gen_time": 0.01600000000325963,
         "generator_key": "Sobol",
         "generator_kwargs": {
           "deduplicate": true,
@@ -932,12 +932,12 @@
         },
         "time_created": {
           "__type": "datetime",
-          "value": "2026-05-04 13:46:36.348945"
+          "value": "2026-05-05 16:05:14.942545"
         },
         "model_predictions": null,
         "best_arm_predictions": null,
         "generator_run_type": null,
-        "fit_time": 0.0,
+        "fit_time": 0.014999999999417923,
         "gen_time": 0.0,
         "generator_key": "Sobol",
         "generator_kwargs": {
@@ -1059,7 +1059,7 @@
       "status_quo": null,
       "time_created": {
         "__type": "datetime",
-        "value": "2026-05-04 13:41:19.808025"
+        "value": "2026-05-05 15:59:42.197297"
       },
       "trials": {
         "0": {
@@ -1073,16 +1073,16 @@
           },
           "time_created": {
             "__type": "datetime",
-            "value": "2026-05-04 13:41:20.953763"
+            "value": "2026-05-05 15:59:43.360285"
           },
           "time_completed": {
             "__type": "datetime",
-            "value": "2026-05-04 13:41:20.953763"
+            "value": "2026-05-05 15:59:43.362335"
           },
           "time_staged": null,
           "time_run_started": {
             "__type": "datetime",
-            "value": "2026-05-04 13:41:20.953763"
+            "value": "2026-05-05 15:59:43.360285"
           },
           "status_reason": null,
           "run_metadata": {},
@@ -1106,7 +1106,7 @@
             "search_space": null,
             "time_created": {
               "__type": "datetime",
-              "value": "2026-05-04 13:41:20.953763"
+              "value": "2026-05-05 15:59:43.360285"
             },
             "model_predictions": null,
             "best_arm_predictions": null,
@@ -1140,16 +1140,16 @@
           },
           "time_created": {
             "__type": "datetime",
-            "value": "2026-05-04 13:41:20.953763"
+            "value": "2026-05-05 15:59:43.362335"
           },
           "time_completed": {
             "__type": "datetime",
-            "value": "2026-05-04 13:43:45.241260"
+            "value": "2026-05-05 16:02:06.764728"
           },
           "time_staged": null,
           "time_run_started": {
             "__type": "datetime",
-            "value": "2026-05-04 13:41:20.953763"
+            "value": "2026-05-05 15:59:43.362335"
           },
           "status_reason": null,
           "run_metadata": {},
@@ -1173,7 +1173,7 @@
             "search_space": null,
             "time_created": {
               "__type": "datetime",
-              "value": "2026-05-04 13:41:20.953763"
+              "value": "2026-05-05 15:59:43.362335"
             },
             "model_predictions": null,
             "best_arm_predictions": null,
@@ -1204,16 +1204,16 @@
           },
           "time_created": {
             "__type": "datetime",
-            "value": "2026-05-04 13:43:58.979786"
+            "value": "2026-05-05 16:03:26.426951"
           },
           "time_completed": {
             "__type": "datetime",
-            "value": "2026-05-04 13:43:58.979786"
+            "value": "2026-05-05 16:03:26.426951"
           },
           "time_staged": null,
           "time_run_started": {
             "__type": "datetime",
-            "value": "2026-05-04 13:43:58.979786"
+            "value": "2026-05-05 16:03:26.426951"
           },
           "status_reason": null,
           "run_metadata": {},
@@ -1287,13 +1287,13 @@
             },
             "time_created": {
               "__type": "datetime",
-              "value": "2026-05-04 13:43:58.979786"
+              "value": "2026-05-05 16:03:26.426951"
             },
             "model_predictions": null,
             "best_arm_predictions": null,
             "generator_run_type": null,
-            "fit_time": 0.031000000000858563,
-            "gen_time": 0.0319999999992433,
+            "fit_time": 0.031000000002677552,
+            "gen_time": 0.01600000000325963,
             "generator_key": "Sobol",
             "generator_kwargs": {
               "deduplicate": true,
@@ -1365,16 +1365,16 @@
           },
           "time_created": {
             "__type": "datetime",
-            "value": "2026-05-04 13:43:58.979786"
+            "value": "2026-05-05 16:03:26.426951"
           },
           "time_completed": {
             "__type": "datetime",
-            "value": "2026-05-04 13:46:22.464262"
+            "value": "2026-05-05 16:04:59.696600"
           },
           "time_staged": null,
           "time_run_started": {
             "__type": "datetime",
-            "value": "2026-05-04 13:43:58.979786"
+            "value": "2026-05-05 16:03:26.426951"
           },
           "status_reason": null,
           "run_metadata": {},
@@ -1398,7 +1398,7 @@
             "search_space": null,
             "time_created": {
               "__type": "datetime",
-              "value": "2026-05-04 13:43:58.979786"
+              "value": "2026-05-05 16:03:26.426951"
             },
             "model_predictions": null,
             "best_arm_predictions": null,
@@ -1429,16 +1429,16 @@
           },
           "time_created": {
             "__type": "datetime",
-            "value": "2026-05-04 13:46:36.348945"
+            "value": "2026-05-05 16:05:14.942545"
           },
           "time_completed": {
             "__type": "datetime",
-            "value": "2026-05-04 13:46:36.348945"
+            "value": "2026-05-05 16:05:14.942545"
           },
           "time_staged": null,
           "time_run_started": {
             "__type": "datetime",
-            "value": "2026-05-04 13:46:36.348945"
+            "value": "2026-05-05 16:05:14.942545"
           },
           "status_reason": null,
           "run_metadata": {},
@@ -1512,12 +1512,12 @@
             },
             "time_created": {
               "__type": "datetime",
-              "value": "2026-05-04 13:46:36.348945"
+              "value": "2026-05-05 16:05:14.942545"
             },
             "model_predictions": null,
             "best_arm_predictions": null,
             "generator_run_type": null,
-            "fit_time": 0.0,
+            "fit_time": 0.014999999999417923,
             "gen_time": 0.0,
             "generator_key": "Sobol",
             "generator_kwargs": {
@@ -1590,13 +1590,13 @@
           },
           "time_created": {
             "__type": "datetime",
-            "value": "2026-05-04 13:46:36.348945"
+            "value": "2026-05-05 16:05:14.942545"
           },
           "time_completed": null,
           "time_staged": null,
           "time_run_started": {
             "__type": "datetime",
-            "value": "2026-05-04 13:46:36.348945"
+            "value": "2026-05-05 16:05:14.942545"
           },
           "status_reason": null,
           "run_metadata": {},
@@ -1620,7 +1620,7 @@
             "search_space": null,
             "time_created": {
               "__type": "datetime",
-              "value": "2026-05-04 13:46:36.348945"
+              "value": "2026-05-05 16:05:14.942545"
             },
             "model_predictions": null,
             "best_arm_predictions": null,
@@ -1651,7 +1651,7 @@
               {
                 "df": {
                   "__type": "DataFrame",
-                  "value": "{\"trial_index\":{\"0\":1},\"arm_name\":{\"0\":\"1_0\"},\"metric_name\":{\"0\":\"performance\"},\"metric_signature\":{\"0\":\"performance\"},\"mean\":{\"0\":196.0},\"sem\":{\"0\":null},\"step\":{\"0\":null}}"
+                  "value": "{\"trial_index\":{\"0\":1},\"arm_name\":{\"0\":\"1_0\"},\"metric_name\":{\"0\":\"performance\"},\"metric_signature\":{\"0\":\"performance\"},\"mean\":{\"0\":432.0},\"sem\":{\"0\":null},\"step\":{\"0\":null}}"
                 },
                 "__type": "Data"
               }
@@ -1666,7 +1666,7 @@
               {
                 "df": {
                   "__type": "DataFrame",
-                  "value": "{\"trial_index\":{\"0\":3},\"arm_name\":{\"0\":\"3_0\"},\"metric_name\":{\"0\":\"performance\"},\"metric_signature\":{\"0\":\"performance\"},\"mean\":{\"0\":-90.0},\"sem\":{\"0\":null},\"step\":{\"0\":null}}"
+                  "value": "{\"trial_index\":{\"0\":3},\"arm_name\":{\"0\":\"3_0\"},\"metric_name\":{\"0\":\"performance\"},\"metric_signature\":{\"0\":\"performance\"},\"mean\":{\"0\":-584.0},\"sem\":{\"0\":null},\"step\":{\"0\":null}}"
                 },
                 "__type": "Data"
               }
@@ -2046,8 +2046,8 @@
           "a0sp_3_helping0_True_gamma0.95"
         ],
         "evaluated_policies": [
-          "a0sp_0_helping0_True_gamma0.9",
-          "a0sp_0_helping0_False_gamma0.9"
+          "a0sp_0_helping0_False_gamma0.9",
+          "a0sp_0_helping0_True_gamma0.9"
         ],
         "best_coords": null,
         "best_policy": null,
@@ -2240,8 +2240,8 @@
         ],
         "n_neighbors": 3,
         "evaluated_policies": [
-          "a0sp_0_helping0_True_gamma0.9",
-          "a0sp_0_helping0_False_gamma0.9"
+          "a0sp_0_helping0_False_gamma0.9",
+          "a0sp_0_helping0_True_gamma0.9"
         ],
         "best_coords": null,
         "best_policy": null,
@@ -2433,8 +2433,8 @@
           "a0sp_3_helping0_True_gamma0.95"
         ],
         "evaluated_policies": [
-          "a0sp_0_helping0_True_gamma0.9",
-          "a0sp_0_helping0_False_gamma0.9"
+          "a0sp_0_helping0_False_gamma0.9",
+          "a0sp_0_helping0_True_gamma0.9"
         ],
         "best_coords": null,
         "best_policy": null,
@@ -2533,8 +2533,8 @@
   },
   "tsne_optimizer_state": {
     "evaluated_policies": [
-      "a0sp_0_helping0_True_gamma0.9",
-      "a0sp_0_helping0_False_gamma0.9"
+      "a0sp_0_helping0_False_gamma0.9",
+      "a0sp_0_helping0_True_gamma0.9"
     ],
     "trial_to_policy": {
       "1": "a0sp_0_helping0_True_gamma0.9",
