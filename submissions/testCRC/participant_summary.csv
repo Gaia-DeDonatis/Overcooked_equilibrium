@@ -1,2 +1,0 @@
-prolific_id,age,gender,experience,assigned_map,consent_given,start_time_iso,n_episodes_saved,n_rounds_saved,replayed_best_policy_id
-testCRC,23,Male,little,"counter_5,8",True,2026-05-05T12:59:17.579Z,3,6,
