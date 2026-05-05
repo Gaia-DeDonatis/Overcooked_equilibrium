@@ -145,9 +145,18 @@ function focusGameSurface() {
 // --- 4. GAME INITIALIZATION (TIME-BASED) ---
 function getEpisodePhase(episodeIndex) {
   if (episodeIndex <= CONFIG.EPISODES_SEED) return 'seed';
-  if (episodeIndex <= CONFIG.PHASE_BO_END) return 'bo';
+
+  // BO window: includes 5 BO AI acquisition episodes + 2 solo/no-AI episodes
+  if (episodeIndex <= CONFIG.PHASE_BO_END) {
+    if (isSoloEpisode(episodeIndex)) return 'solo';
+    return 'bo';
+  }
+
+  // Separate replay-best episode
   if (episodeIndex <= CONFIG.PHASE_BO_REPLAY_END) return 'bo_replay_best';
+
   if (episodeIndex <= CONFIG.PHASE_STRESS_END) return 'stress';
+
   return 'replay_optimal';
 }
 
@@ -469,7 +478,7 @@ async function startRound({ newEpisode = false } = {}) {
       episode_phase: STATE.episodePhase,
       prolificId: STATE.prolificId,
       n_init: CONFIG.EPISODES_SEED,
-      n_bo: CONFIG.EPISODES_BO,
+      n_bo: CONFIG.EPISODES_BO_ACQUISITION,
       n_knn: CONFIG.EPISODES_STRESS,
       solo_episode: (typeof isSoloEpisode === 'function') ? isSoloEpisode(STATE.episodeIndex) : false,
       new_episode: !!newEpisode
@@ -624,8 +633,8 @@ async function actuallySkipCurrentPolicyEpisode() {
   await DataManager.saveProgressToServer('episode_skipped');
 
   const soloNow = (typeof isSoloEpisode === 'function') ? isSoloEpisode(STATE.episodeIndex) : false;
-  const finalReplayNow = STATE.episodePhase === 'replay_optimal';
-  const shouldTell = !soloNow && !finalReplayNow && getSelectionMode() === 'bo';
+  const replayPhaseNow = ['bo_replay_best', 'replay_optimal'].includes(STATE.episodePhase);
+  const shouldTell = !soloNow && !replayPhaseNow && getSelectionMode() === 'bo';
 
   if (shouldTell) {
     await api('/tell', {
@@ -729,8 +738,8 @@ async function finishTimeBasedRound() {
         // --- CASE B: EPISODE COMPLETE ---
         console.log(`Episode ${STATE.episodeIndex} Complete!`);
         const soloNow = (typeof isSoloEpisode === 'function') ? isSoloEpisode(STATE.episodeIndex) : false;
-        const finalReplayNow = STATE.episodePhase === 'replay_optimal';
-        const shouldTell = !soloNow && !finalReplayNow && getSelectionMode() === 'bo';
+        const replayPhaseNow = ['bo_replay_best', 'replay_optimal'].includes(STATE.episodePhase);
+        const shouldTell = !soloNow && !replayPhaseNow && getSelectionMode() === 'bo';
                 
         if (shouldTell) {
           await api('/tell', {

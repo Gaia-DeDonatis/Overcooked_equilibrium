@@ -1332,17 +1332,25 @@ def reset():
            
             forced_policy_name = None
 
-            if choose_new_policy and episode_phase == "replay_optimal":
+            replay_best_phases = {"bo_replay_best", "replay_optimal"}
+
+            if choose_new_policy and episode_phase in replay_best_phases:
                 forced_policy_name = getattr(sess, "bo_best_policy_name", None)
 
                 if not forced_policy_name:
                     if optimizer is None:
                         raise ValueError(
-                            "Cannot replay optimal policy: no saved best policy and optimizer is not available."
+                            f"Cannot replay best policy for phase={episode_phase}: "
+                            "no saved best policy and optimizer is not available."
                         )
 
                     forced_policy_name = _get_best_policy_name_from_optimizer(optimizer)
                     sess.bo_best_policy_name = forced_policy_name
+
+                logger.info(
+                    f"[POLICY - FORCE BEST] phase={episode_phase}, "
+                    f"policy={forced_policy_name}"
+                )
 
             # Persist metadata in the session.
             if episode_index_int is not None:
@@ -1361,11 +1369,11 @@ def reset():
             )
 
 
-            if choose_new_policy and episode_phase == "bo_replay_best":
-                sess.bo_best_policy_name = sess.current_model_id
-                logger.info(
-                    f"[POLICY - SAVE BEST] bo_best_policy_name={sess.bo_best_policy_name}"
-                )
+            #if choose_new_policy and episode_phase == "bo_replay_best":
+            #    sess.bo_best_policy_name = sess.current_model_id
+            #    logger.info(
+            #        f"[POLICY - SAVE BEST] bo_best_policy_name={sess.bo_best_policy_name}"
+            #    )
         
         except Exception as e:
             logger.exception(
@@ -1398,6 +1406,12 @@ def reset():
             selected_map=sess.current_map_name,
             grid_dim=sess.current_grid_dim,
             policy_id=sess.current_model_id,
+
+            optimal_policy_id=(
+                sess.bo_best_policy_name
+                if sess.episode_phase in {"bo_replay_best", "stress", "replay_optimal"}
+                else None
+            ),
             selection_mode=selection_mode,
         )
 
@@ -1745,8 +1759,12 @@ def tell():
     if sid:
          sess = SESSION_MGR.ensure(sid)
          with sess.lock:
-            if getattr(sess, "episode_phase", None) == "replay_optimal":
-                return jsonify(success=True, skipped=True, reason="final replay episode")
+            if getattr(sess, "episode_phase", None) in {"bo_replay_best", "replay_optimal"}:
+                return jsonify(
+                    success=True,
+                    skipped=True,
+                    reason=f"replay episode: {getattr(sess, 'episode_phase', None)}"
+                )
 
     # Preferred: use server-side AI reward (computed in /key_event) for BO.
     score_raw = data.get('score')
