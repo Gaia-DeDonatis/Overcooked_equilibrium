@@ -22,8 +22,8 @@ const CONFIG = {
   MAX_EPISODE_SKIPS: 2
 };
 
-//CONFIG.EXPERIMENT_MAPS = ["circle", "counter", "thinpath"];
-CONFIG.EXPERIMENT_MAPS = ["counter"];
+CONFIG.EXPERIMENT_MAPS = ["circle", "counter", "thinpath"];
+//CONFIG.EXPERIMENT_MAPS = ["counter"];
 CONFIG.SELECTION_MODE = "bo";
 
 // Total BO length shown to participants (AI BO episodes + solo "day off" episodes)
