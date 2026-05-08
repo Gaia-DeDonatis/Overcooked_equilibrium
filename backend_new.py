@@ -908,6 +908,119 @@ def _get_best_policy_name_from_optimizer(optimizer: TSNEBayesOptimizer) -> str:
     return str(best_policy)
 
 
+def _strip_policy_prefix(policy_name: str, policy_prefix: str | None = None) -> str:
+    """
+    Normalize policy names so comparisons work whether the name is stored as:
+    - a0sp_0_helping0_True_gamma0.8
+    - [coplay][flexible][thinpath]agent0_a0sp_0_helping0_True_gamma0.8
+    """
+    p = str(policy_name or "").strip()
+    if policy_prefix and p.startswith(policy_prefix):
+        return p[len(policy_prefix):]
+    if "agent0_" in p:
+        return p.split("agent0_", 1)[1]
+    return p
+
+
+def _pick_knn_policy_excluding(
+    embedding_csv: str,
+    best_policy_name: str,
+    exclude_policy_names: list[str] | None = None,
+    policy_prefix: str | None = None,
+    k_offset: int = 0,
+) -> str:
+    """
+    Pick a nearest-neighbor policy to best_policy_name from the TSNE embedding CSV,
+    excluding the best policy and any other excluded policies.
+
+    k_offset=0 returns the nearest valid neighbor.
+    k_offset=1 returns the second-nearest valid neighbor.
+    k_offset=2 returns the third-nearest valid neighbor.
+    """
+    df = pd.read_csv(embedding_csv)
+
+    name_candidates = ["policy", "policy_id", "name", "model_id", "checkpoint"]
+    name_col = next((c for c in name_candidates if c in df.columns), None)
+
+    if name_col is None:
+        non_numeric = [c for c in df.columns if not pd.api.types.is_numeric_dtype(df[c])]
+        if not non_numeric:
+            raise ValueError(
+                f"Could not find a policy-name column in {embedding_csv}. "
+                f"Columns={list(df.columns)}"
+            )
+        name_col = non_numeric[0]
+
+    xy_candidates = [
+        ("emb_x", "emb_y"),
+        ("x", "y"),
+        ("tsne_x", "tsne_y"),
+        ("tsne_0", "tsne_1"),
+        ("dim0", "dim1"),
+        ("0", "1"),
+    ]
+
+    xy_cols = None
+    for x_col, y_col in xy_candidates:
+        if x_col in df.columns and y_col in df.columns:
+            xy_cols = (x_col, y_col)
+            break
+
+    if xy_cols is None:
+        numeric_cols = [c for c in df.columns if pd.api.types.is_numeric_dtype(df[c])]
+        if len(numeric_cols) < 2:
+            raise ValueError(
+                f"Could not find two numeric embedding columns in {embedding_csv}. "
+                f"Columns={list(df.columns)}"
+            )
+        xy_cols = (numeric_cols[0], numeric_cols[1])
+
+    x_col, y_col = xy_cols
+
+    df["_short_policy_name"] = df[name_col].astype(str).apply(
+        lambda s: _strip_policy_prefix(s, policy_prefix)
+    )
+
+    best_short = _strip_policy_prefix(best_policy_name, policy_prefix)
+
+    exclude_short = {
+        _strip_policy_prefix(p, policy_prefix)
+        for p in (exclude_policy_names or [])
+        if p
+    }
+    exclude_short.add(best_short)
+
+    best_rows = df[df["_short_policy_name"] == best_short]
+    if best_rows.empty:
+        raise ValueError(
+            f"Best policy '{best_policy_name}' was not found in {embedding_csv}. "
+            f"Looking for normalized name '{best_short}'. "
+            f"Available sample={df['_short_policy_name'].head(10).tolist()}"
+        )
+
+    bx = float(best_rows.iloc[0][x_col])
+    by = float(best_rows.iloc[0][y_col])
+
+    candidates = df[~df["_short_policy_name"].isin(exclude_short)].copy()
+    if candidates.empty:
+        raise ValueError(
+            f"No KNN stress candidate left after exclusions. "
+            f"Best={best_short}, excluded={sorted(exclude_short)}"
+        )
+
+    candidates["_distance_to_best"] = (
+        (candidates[x_col].astype(float) - bx) ** 2
+        + (candidates[y_col].astype(float) - by) ** 2
+    ) ** 0.5
+
+    candidates = candidates.sort_values("_distance_to_best").reset_index(drop=True)
+
+    idx = min(max(int(k_offset), 0), len(candidates) - 1)
+    chosen = str(candidates.iloc[idx][name_col])
+
+    return _strip_policy_prefix(chosen, policy_prefix)
+
+
 
 _model_cache_by_path = {}
 
@@ -1352,6 +1465,52 @@ def reset():
                     f"policy={forced_policy_name}"
                 )
 
+            # Stress episodes should use KNN neighbors of the best policy,
+            # but should NOT replay the exact same best policy.
+            if choose_new_policy and episode_phase == "stress":
+                best = getattr(sess, "bo_best_policy_name", None)
+
+                if not best:
+                    if optimizer is None:
+                        raise ValueError(
+                            "Cannot choose stress KNN policy: no saved best policy "
+                            "and optimizer is not available."
+                        )
+                    best = _get_best_policy_name_from_optimizer(optimizer)
+                    sess.bo_best_policy_name = best
+
+                policy_prefix = resolved_map_cfg.get("policy_prefix")
+                embedding_csv = resolved_map_cfg["embedding_csv"]
+
+                exclude_policy_names = [best]
+                if policy_prefix and not str(best).startswith(policy_prefix):
+                    exclude_policy_names.append(f"{policy_prefix}{best}")
+
+                # Avoid all previously used policies in this participant/map.
+                exclude_policy_names.extend(_get_used_policy_names(sess, resolved_map_name))
+
+                # Episode 14 -> nearest valid neighbor,
+                # episode 15 -> second-nearest valid neighbor,
+                # episode 16 -> third-nearest valid neighbor.
+                try:
+                    stress_episode_number = max(0, int(episode_index_int or 14) - 14)
+                except Exception:
+                    stress_episode_number = 0
+
+                forced_policy_name = _pick_knn_policy_excluding(
+                    embedding_csv=embedding_csv,
+                    best_policy_name=best,
+                    exclude_policy_names=exclude_policy_names,
+                    policy_prefix=policy_prefix,
+                    k_offset=stress_episode_number,
+                )
+
+                logger.info(
+                    f"[POLICY - STRESS KNN] episode={episode_index_int}, "
+                    f"best={best}, selected_neighbor={forced_policy_name}, "
+                    f"k_offset={stress_episode_number}"
+                )
+
             # Persist metadata in the session.
             if episode_index_int is not None:
                 sess.episode_index = episode_index_int
@@ -1748,7 +1907,7 @@ def tell():
     if sid:
          sess = SESSION_MGR.ensure(sid)
          with sess.lock:
-            if getattr(sess, "episode_phase", None) in {"bo_replay_best", "replay_optimal"}:
+            if getattr(sess, "episode_phase", None) in {"bo_replay_best", "stress", "replay_optimal"}:
                 return jsonify(
                     success=True,
                     skipped=True,
@@ -2110,6 +2269,8 @@ def write_round_summary_csv(log_payload, out_csv_path):
         "ai_reward_score",
         "mental_demand",
         "performance_score",
+        "skipped_episode",
+        "skip_number",
         "end_time_iso",
     ]
 
@@ -2139,6 +2300,8 @@ def write_round_summary_csv(log_payload, out_csv_path):
                 "ai_reward_score": summary.get("ai_reward_score"),
                 "mental_demand": feedback.get("mental_demand"),
                 "performance_score": feedback.get("performance"),
+                "skipped_episode": r.get("skipped_episode", False),
+                "skip_number": r.get("skip_number"),
                 "end_time_iso": r.get("endTimeISO"),
             })
 
@@ -2288,8 +2451,45 @@ def write_participant_summary_csv(log_payload, out_csv_path):
         })
 
 
+def _get_skipped_episode_indices(log_payload):
+    """Return sorted unique episode indices marked as skipped in the submitted log."""
+    skipped = set()
+
+    for ep in (log_payload.get("episodes", []) or []):
+        try:
+            if ep.get("skipped") is True:
+                skipped.add(int(ep.get("episode_index")))
+        except Exception:
+            pass
+
+    for r in (log_payload.get("rounds", []) or []):
+        try:
+            if r.get("skipped_episode") is True:
+                skipped.add(int(r.get("episode_index")))
+        except Exception:
+            pass
+
+    return sorted(skipped)
+
+
+def _validate_skip_limit(log_payload, max_skips=2):
+    skipped = _get_skipped_episode_indices(log_payload)
+    if len(skipped) > int(max_skips):
+        raise ValueError(
+            f"Too many skipped episodes: {len(skipped)}. "
+            f"Maximum allowed is {max_skips}. Skipped episodes={skipped}"
+        )
+
+    meta = log_payload.setdefault("meta", {})
+    meta["skip_policy"] = meta.get("skip_policy") or {}
+    meta["skip_policy"]["max_episode_skips"] = int(max_skips)
+    meta["skip_policy"]["skips_used"] = len(skipped)
+    meta["skip_policy"]["skipped_episodes"] = skipped
+
+
 def save_participant_snapshot(log_payload):
     """Save participant data in the final agreed format."""
+    _validate_skip_limit(log_payload, max_skips=2)
     prolific = str(log_payload.get('prolificId', 'unknown')).strip().replace('/', '_')
 
     participant_dir = os.path.join(SUBMISSIONS_ROOT, prolific)

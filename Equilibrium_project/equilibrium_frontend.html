@@ -817,6 +817,7 @@
             <strong style="color:#7c3aed;">Your job during the game</strong><br>
             Please try to play seriously in every episode and do your best to complete the task.
             If an AI is clearly NOT working for you, from the second round onward you may skip the rest of that episode and continue to the short questions.
+            You can use this skip option at most <strong>2 times in the entire experiment</strong>.
             Please still give honest feedback after each episode.
           </div>
         </div>
@@ -861,7 +862,7 @@
           <div id="quiz-q2c">
             <label class="role-item">
               <input type="radio" name="q2c" value="correct">
-              <span>Keep playing seriously, and in case skip the rest of the episode.</span>
+              <span>Keep playing seriously. If the AI is clearly not working, I may skip from the second round onward, but only up to 2 times in total.</span>
             </label>
             <label class="role-item">
               <input type="radio" name="q2c" value="wrong">
@@ -1006,6 +1007,7 @@
       <div id="skipPolicyWrap" class="center hidden" style="margin: 10px 0 14px 0;">
         <button id="skipPolicyBtn" class="skip-policy-btn" type="button">
           <span>Skip to the questions if this AI is not working well</span>
+          <small id="skipRemainingText" style="display:block; font-weight:600; color:#64748b; margin-left:8px;">Skips remaining: 2 / 2</small>
         </button>
 
         <div id="skipConfirmBox" class="skip-confirm-box hidden">
@@ -1018,8 +1020,8 @@
           </div>
         </div>
 
-        <p class="skip-policy-note">
-          You may skip the rest of this episode if this AI teammate is clearly not working and continue with the short questions.
+        <p id="skipPolicyNote" class="skip-policy-note">
+          You may skip at most 2 episodes in total. Use this only if this AI teammate is clearly not working.
         </p>
       </div>
 

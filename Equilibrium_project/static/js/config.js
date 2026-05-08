@@ -17,10 +17,13 @@ const CONFIG = {
   EPISODES_BO_REPLAY_BEST: 1,
   EPISODES_STRESS: 3,    // put 3 kNN
   EPISODES_REPLAY_OPTIMAL: 1,
-  EPISODE_BREAK_SEC: 10  // 10
+  EPISODE_BREAK_SEC: 10,  // 10
+
+  MAX_EPISODE_SKIPS: 2
 };
 
-CONFIG.EXPERIMENT_MAPS = ["circle", "counter", "thinpath"];
+//CONFIG.EXPERIMENT_MAPS = ["circle", "counter", "thinpath"];
+CONFIG.EXPERIMENT_MAPS = ["counter"];
 CONFIG.SELECTION_MODE = "bo";
 
 // Total BO length shown to participants (AI BO episodes + solo "day off" episodes)
@@ -115,6 +118,8 @@ const STATE = {
 
   //episode skiper
   skipEpisodeRequested: false,
+  episodeSkipsUsed: 0,
+  skippedEpisodeIndices: [],
 
   // Condition assignment (BO only)
   assignment: {

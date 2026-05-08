@@ -18,6 +18,12 @@ const DataManager = {
       consentGiven: false,
       startTimeISO: null,
       tick_ms: null,
+
+      skip_policy: {
+        max_episode_skips: (typeof CONFIG !== 'undefined' ? CONFIG.MAX_EPISODE_SKIPS : 2),
+        skips_used: 0,
+        skipped_episodes: []
+      },
     },
     episodes: [],
     rounds: []
@@ -82,12 +88,38 @@ const DataManager = {
         performance: null,
         submittedAtISO: null
       },
+      skipped: false,
+      skip_number: null,
+      skippedAtISO: null,
       round_index_globals: [],
       rounds: []
     };
 
     this.LOGS.episodes.push(ep);
     return ep;
+  },
+
+  markEpisodeSkipped(episode_index, skip_number = null) {
+    const ep = this._ensureEpisode(episode_index, STATE?.episodePhase ?? null);
+    if (!ep) return;
+
+    ep.skipped = true;
+    ep.skip_number = skip_number;
+    ep.skippedAtISO = new Date().toISOString();
+
+    this.LOGS.meta.skip_policy = this.LOGS.meta.skip_policy || {
+      max_episode_skips: (typeof CONFIG !== 'undefined' ? CONFIG.MAX_EPISODE_SKIPS : 2),
+      skips_used: 0,
+      skipped_episodes: []
+    };
+
+    const skipped = this.LOGS.meta.skip_policy.skipped_episodes || [];
+    if (!skipped.includes(episode_index)) skipped.push(episode_index);
+
+    this.LOGS.meta.skip_policy.skipped_episodes = skipped;
+    this.LOGS.meta.skip_policy.skips_used = skipped.length;
+    this.LOGS.meta.skip_policy.max_episode_skips =
+      (typeof CONFIG !== 'undefined' ? CONFIG.MAX_EPISODE_SKIPS : 2);
   },
 
   getEpisodeTotals(episode_index) {
@@ -215,6 +247,10 @@ const DataManager = {
     if (extra.dishes_served != null) r.summary.dishes_served = extra.dishes_served;
     if (extra.human_steps != null) r.summary.human_steps = extra.human_steps;
     if (extra.ai_steps != null) r.summary.ai_steps = extra.ai_steps;
+
+    if (extra.skipped_episode != null) r.skipped_episode = Boolean(extra.skipped_episode);
+    if (extra.skip_number != null) r.skip_number = extra.skip_number;
+    if (extra.skip_reason != null) r.skip_reason = extra.skip_reason;
   },
 
   _normalizeHumanAction(key) {
@@ -361,6 +397,22 @@ const DataManager = {
   buildPayload() {
     const payload = JSON.parse(JSON.stringify(this.LOGS));
 
+    payload.meta = payload.meta || {};
+    payload.meta.skip_policy = payload.meta.skip_policy || {
+      max_episode_skips: (typeof CONFIG !== 'undefined' ? CONFIG.MAX_EPISODE_SKIPS : 2),
+      skips_used: 0,
+      skipped_episodes: []
+    };
+
+    payload.meta.skip_policy.max_episode_skips =
+      (typeof CONFIG !== 'undefined' ? CONFIG.MAX_EPISODE_SKIPS : 2);
+
+    payload.meta.skip_policy.skipped_episodes = (payload.episodes || [])
+      .filter(ep => ep && ep.skipped === true)
+      .map(ep => ep.episode_index);
+
+    payload.meta.skip_policy.skips_used = payload.meta.skip_policy.skipped_episodes.length;
+
     for (const r of payload.rounds) delete r._roundStartWallMs;
 
     for (const ep of payload.episodes) {
@@ -396,6 +448,10 @@ const DataManager = {
       experimentPhase: STATE.experimentPhase ?? null,
       layout: STATE.assignment?.layout ?? null,
       condition: STATE.assignment?.condition ?? null,
+      episodeSkipsUsed: STATE.episodeSkipsUsed ?? 0,
+      skippedEpisodeIndices: Array.isArray(STATE.skippedEpisodeIndices)
+        ? STATE.skippedEpisodeIndices.slice()
+        : [],
       timeLeft: (typeof timeLeft === 'number') ? timeLeft : null,
       isPlaying: !!STATE.isPlaying,
       gameOver: !!STATE.gameOver,

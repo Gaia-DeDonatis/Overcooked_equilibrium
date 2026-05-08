@@ -328,6 +328,14 @@ function applyResumeMeta(resume) {
 
   if (resume.layout != null) STATE.assignment.layout = resume.layout;
   if (resume.condition != null) STATE.assignment.condition = resume.condition;
+
+  if (resume.episodeSkipsUsed != null) {
+    STATE.episodeSkipsUsed = parseInt(resume.episodeSkipsUsed, 10) || 0;
+  }
+
+  if (Array.isArray(resume.skippedEpisodeIndices)) {
+    STATE.skippedEpisodeIndices = resume.skippedEpisodeIndices.slice();
+  }
 }
 
 async function resumeCurrentRoundFromServer(backup) {
@@ -623,14 +631,31 @@ function updateSkipPolicyUI() {
   const confirmBox = document.getElementById('skipConfirmBox');
   if (!wrap || !btn) return;
 
+  const maxSkips = CONFIG.MAX_EPISODE_SKIPS ?? 2;
+  const skipsUsed = STATE.episodeSkipsUsed ?? 0;
+  const skipsRemaining = Math.max(0, maxSkips - skipsUsed);
+
   const canShow =
     STATE.phase === 1 &&
     STATE.isPlaying &&
     !STATE.gameOver &&
-    STATE.roundInEpisode >= 2;
+    STATE.roundInEpisode >= 2 &&
+    skipsRemaining > 0;
 
   wrap.classList.toggle('hidden', !canShow);
   btn.disabled = !canShow;
+
+  const remainingEl = document.getElementById('skipRemainingText');
+  if (remainingEl) {
+    remainingEl.innerText = `Skips remaining: ${skipsRemaining} / ${maxSkips}`;
+  }
+
+  const noteEl = document.getElementById('skipPolicyNote');
+  if (noteEl) {
+    noteEl.innerText = skipsRemaining > 0
+      ? `You may skip at most ${maxSkips} episodes in total. Use this only if the AI teammate is clearly not working.`
+      : `You have used all ${maxSkips} available skips. Please continue playing each remaining episode.`;
+  }
 
   if (!canShow && confirmBox) {
     confirmBox.classList.add('hidden');
@@ -640,7 +665,26 @@ function updateSkipPolicyUI() {
 async function actuallySkipCurrentPolicyEpisode() {
   if (!STATE.isPlaying || STATE.gameOver) return;
 
+  const maxSkips = CONFIG.MAX_EPISODE_SKIPS ?? 2;
+  const skipsUsed = STATE.episodeSkipsUsed ?? 0;
+
+  if (skipsUsed >= maxSkips) {
+    alert(`You have already used all ${maxSkips} available episode skips. Please continue playing.`);
+    updateSkipPolicyUI();
+    return;
+  }
+
   STATE.skipEpisodeRequested = true;
+  STATE.episodeSkipsUsed = skipsUsed + 1;
+
+  if (!Array.isArray(STATE.skippedEpisodeIndices)) {
+    STATE.skippedEpisodeIndices = [];
+  }
+
+  if (!STATE.skippedEpisodeIndices.includes(STATE.episodeIndex)) {
+    STATE.skippedEpisodeIndices.push(STATE.episodeIndex);
+  }
+
   STATE.isPlaying = false;
   STATE.gameOver = true;
 
@@ -653,11 +697,17 @@ async function actuallySkipCurrentPolicyEpisode() {
   stopAutosave();
   bufferedHumanKey = 'Stay';
 
-  DataManager.endRound();
+  DataManager.markEpisodeSkipped(STATE.episodeIndex, STATE.episodeSkipsUsed);
+  DataManager.endRound({
+    skipped_episode: true,
+    skip_number: STATE.episodeSkipsUsed,
+    skip_reason: 'participant_requested_skip'
+  });
+
   await DataManager.saveProgressToServer('episode_skipped');
 
   const soloNow = (typeof isSoloEpisode === 'function') ? isSoloEpisode(STATE.episodeIndex) : false;
-  const replayPhaseNow = ['bo_replay_best', 'replay_optimal'].includes(STATE.episodePhase);
+  const replayPhaseNow = ['bo_replay_best', 'stress', 'replay_optimal'].includes(STATE.episodePhase);
   const shouldTell = !soloNow && !replayPhaseNow && getSelectionMode() === 'bo';
 
   if (shouldTell) {
@@ -688,6 +738,16 @@ function setupSkipPolicyUI() {
   };
 
   yesBtn.onclick = () => {
+    const maxSkips = CONFIG.MAX_EPISODE_SKIPS ?? 2;
+    const skipsUsed = STATE.episodeSkipsUsed ?? 0;
+
+    if (skipsUsed >= maxSkips) {
+      confirmBox.classList.add('hidden');
+      alert(`You have already used all ${maxSkips} available episode skips. Please continue playing.`);
+      updateSkipPolicyUI();
+      return;
+    }
+
     confirmBox.classList.add('hidden');
 
     actuallySkipCurrentPolicyEpisode().catch(err => {
@@ -762,7 +822,7 @@ async function finishTimeBasedRound() {
         // --- CASE B: EPISODE COMPLETE ---
         console.log(`Episode ${STATE.episodeIndex} Complete!`);
         const soloNow = (typeof isSoloEpisode === 'function') ? isSoloEpisode(STATE.episodeIndex) : false;
-        const replayPhaseNow = ['bo_replay_best', 'replay_optimal'].includes(STATE.episodePhase);
+        const replayPhaseNow = ['bo_replay_best', 'stress', 'replay_optimal'].includes(STATE.episodePhase);
         const shouldTell = !soloNow && !replayPhaseNow && getSelectionMode() === 'bo';
                 
         if (shouldTell) {

@@ -1,0 +1,2 @@
+prolific_id,age,gender,experience,assigned_map,consent_given,start_time_iso,n_episodes_saved,n_rounds_saved,replayed_best_policy_id
+thinpath_test_06_05,29,Male,none,"thinpath_5,7",True,2026-05-06T12:02:11.388Z,17,51,a0sp_1_helping0_False_gamma0.8
