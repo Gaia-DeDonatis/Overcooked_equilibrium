@@ -8,11 +8,18 @@ const DataManager = {
   },
 
   LOGS: {
-    prolificId: 'unknown',
+    prolificId: 'unknown', // internal name kept for backend compatibility
+    participantId: 'unknown',
     meta: {
-      prolificId: 'unknown',
+      prolificId: 'unknown', // internal name kept for backend compatibility
+      participantId: 'unknown',
+      personalId: 'unknown',
       age: null,
       gender: null,
+      education_level: null,
+      video_game_experience: null,
+      ai_experience: null,
+      overcooked_experience: null,
       experience: null,
       assignment: { condition: null, map: null },
       consentGiven: false,
@@ -30,12 +37,19 @@ const DataManager = {
   },
 
   initUser(prolificId, age, gender, assigned = {}, extraMeta = {}) {
-    const pid = prolificId || 'unknown';
-    this.LOGS.prolificId = pid;
-    this.LOGS.meta.prolificId = pid;
+    const pid = extraMeta.participant_id || prolificId || 'unknown';
+    this.LOGS.prolificId = pid; // internal name kept for backend compatibility
+    this.LOGS.participantId = pid;
+    this.LOGS.meta.prolificId = pid; // internal name kept for backend compatibility
+    this.LOGS.meta.participantId = pid;
+    this.LOGS.meta.personalId = pid;
     this.LOGS.meta.age = (age != null) ? age : null;
     this.LOGS.meta.gender = (gender != null) ? gender : null;
-    this.LOGS.meta.experience = extraMeta.experience ?? null;
+    this.LOGS.meta.education_level = extraMeta.education_level ?? null;
+    this.LOGS.meta.video_game_experience = extraMeta.video_game_experience ?? null;
+    this.LOGS.meta.ai_experience = extraMeta.ai_experience ?? null;
+    this.LOGS.meta.overcooked_experience = extraMeta.overcooked_experience ?? extraMeta.experience ?? null;
+    this.LOGS.meta.experience = this.LOGS.meta.overcooked_experience; // backwards-compatible alias
     this.LOGS.meta.startTimeISO = new Date().toISOString();
 
     if (typeof assigned === 'string') {
@@ -54,7 +68,10 @@ const DataManager = {
     if (extraMeta.client_config_snapshot != null && this.LOGS.meta.client_config_snapshot == null) {
       this.LOGS.meta.client_config_snapshot = extraMeta.client_config_snapshot;
     }
-    try { localStorage.setItem('last_prolific_id', pid); } catch (err) {}
+    try {
+      localStorage.setItem('last_participant_id', pid);
+      localStorage.setItem('last_prolific_id', pid); // backwards-compatible key
+    } catch (err) {}
   },
 
   setConsent(consentGiven = true) {

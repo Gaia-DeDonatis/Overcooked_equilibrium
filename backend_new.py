@@ -2422,10 +2422,13 @@ def write_participant_summary_csv(log_payload, out_csv_path):
                 break
 
     fieldnames = [
-        "prolific_id",
+        "participant_id",
         "age",
         "gender",
-        "experience",
+        "education_level",
+        "video_game_experience",
+        "ai_experience",
+        "overcooked_experience",
         "assigned_map",
         "consent_given",
         "start_time_iso",
@@ -2438,10 +2441,13 @@ def write_participant_summary_csv(log_payload, out_csv_path):
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerow({
-            "prolific_id": log_payload.get("prolificId"),
+            "participant_id": log_payload.get("participantId") or meta.get("participantId") or meta.get("personalId") or log_payload.get("prolificId"),
             "age": meta.get("age"),
             "gender": meta.get("gender"),
-            "experience": meta.get("experience"),
+            "education_level": meta.get("education_level"),
+            "video_game_experience": meta.get("video_game_experience"),
+            "ai_experience": meta.get("ai_experience"),
+            "overcooked_experience": meta.get("overcooked_experience") or meta.get("experience"),
             "assigned_map": assignment.get("map"),
             "consent_given": meta.get("consentGiven"),
             "start_time_iso": meta.get("startTimeISO"),
@@ -2449,7 +2455,6 @@ def write_participant_summary_csv(log_payload, out_csv_path):
             "n_rounds_saved": len(rounds),
             "replayed_best_policy_id": replayed_best_policy_id,
         })
-
 
 def _get_skipped_episode_indices(log_payload):
     """Return sorted unique episode indices marked as skipped in the submitted log."""

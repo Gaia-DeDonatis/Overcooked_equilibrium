@@ -163,6 +163,36 @@
     .question-scale label{font-weight:500}
     .center{text-align:center}
     .hidden{display:none!important}
+
+
+    /* Spacious first-page form */
+    #page-intro{
+      width:min(1180px, calc(100vw - 48px));
+      max-width:none;
+      margin-left:auto;
+      margin-right:auto;
+      padding:38px 44px;
+    }
+    #page-intro h2{font-size:28px; margin-bottom:14px;}
+    .intro-text{font-size:16px; line-height:1.55; max-width:940px;}
+    .intro-grid{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(320px, 1fr));
+      gap:30px 40px;
+      margin-top:32px;
+    }
+    .intro-field label{font-size:16px; margin-bottom:10px;}
+    .intro-field.full-width{grid-column:1 / -1;}
+    .intro-field .input,
+    .intro-field select{
+      min-height:46px;
+      font-size:15px;
+    }
+    .intro-actions{margin-top:34px;}
+    @media (max-width: 820px){
+      #page-intro{width:calc(100vw - 32px); padding:26px;}
+      .intro-grid{grid-template-columns:1fr; gap:24px;}
+    }
     .hr{height:1px; background:#e5e7eb; margin:14px 0}
 
     /* Scenario + Task Description styles */
@@ -510,95 +540,208 @@
   <div class="container">
     <h1>Collaborative Game Study</h1>
 
-    <!-- Page 1: Prolific + Demographics -->
+    <!-- Page 1: Basic Information + Demographics -->
     <section id="page-intro" class="card">
       <h2>Basic Information</h2>
-      <p class="muted" style="margin-bottom: 24px;">Please fill in the following, then continue.</p>
-      <div class="row">
-        <div class="col">
+      <p class="muted intro-text">
+        Please enter the participant ID provided by the researcher and answer the background questions below.
+        Do not enter your name or email address.
+      </p>
+
+      <div class="intro-grid">
+        <div class="intro-field">
           <label for="prolificId">Personal ID</label>
-          <input id="prolificId" class="input" placeholder="Waiting for Prolific URL..." />
-          <div id="pid-hint" style="font-size:12px; color:#16a34a; margin-top:4px; display:none;">
-            ✓ Auto-detected from Prolific
-          </div>
+          <input id="prolificId" class="input" placeholder="Enter the ID provided by the researcher" autocomplete="off" />
         </div>
-        <div class="col">
+
+        <div class="intro-field">
           <label for="age">Age</label>
-          <input id="age" type="number" min="18" max="60" class="input" placeholder="e.g., 28" />
+          <input id="age" type="number" min="18" class="input" placeholder="e.g., 28" />
         </div>
-        <div class="col">
+
+        <div class="intro-field">
           <label for="gender">Gender</label>
           <select id="gender" class="input">
             <option value="">Please select</option>
-            <option>Female</option>
-            <option>Male</option>
-            <option>Non-binary</option>
-            <option>Prefer not to say</option>
-            <option>Other</option>
+            <option value="female">Female</option>
+            <option value="male">Male</option>
+            <option value="non_binary">Non-binary</option>
+            <option value="prefer_not_to_say">Prefer not to say</option>
+            <option value="other">Other</option>
           </select>
         </div>
-      </div>
-      <div style="height: 1px; background: #e5e7eb; margin: 30px 0;"></div>
-      <div class="col" style="margin-bottom: 30px;">
-        <label for="experience">Have you ever played <i>Overcooked!</i> before?</label>
-          <select id="experience" class="input">
+
+        <div class="intro-field">
+          <label for="educationLevel">Highest completed education level</label>
+          <select id="educationLevel" class="input">
+            <option value="">Please select</option>
+            <option value="secondary">Secondary school / high school</option>
+            <option value="vocational">Vocational education</option>
+            <option value="bachelor">Bachelor's degree / undergraduate degree</option>
+            <option value="master">Master's degree / graduate degree</option>
+            <option value="doctoral">Doctoral degree / PhD</option>
+            <option value="other">Other</option>
+            <option value="prefer_not_to_say">Prefer not to say</option>
+          </select>
+        </div>
+
+        <div class="intro-field">
+          <label for="videoGameExperience">Video game experience</label>
+          <select id="videoGameExperience" class="input">
+            <option value="">Please select</option>
+            <option value="none">No gaming experience</option>
+            <option value="occasional">Occasional player</option>
+            <option value="regular">Regular player</option>
+            <option value="frequent">Frequent player</option>
+            <option value="experienced">Highly experienced player</option>
+            <option value="prefer_not_to_say">Prefer not to say</option>
+          </select>
+        </div>
+
+        <div class="intro-field">
+          <label for="aiExperience">AI experience</label>
+          <select id="aiExperience" class="input">
+            <option value="">Please select</option>
+            <option value="none">No prior AI use</option>
+            <option value="basic_user">Basic use for everyday tasks</option>
+            <option value="regular_user">Regular use for study or work tasks</option>
+            <option value="academic_experience">Academic experience studying AI or related topics</option>
+            <option value="professional_experience">Professional or research experience with AI</option>
+            <option value="prefer_not_to_say">Prefer not to say</option>
+          </select>
+        </div>
+
+        <div class="intro-field full-width">
+          <label for="overcookedExperience">Have you ever played <i>Overcooked!</i> before?</label>
+          <select id="overcookedExperience" class="input">
             <option value="">Please select</option>
             <option value="none">No, never</option>
             <option value="little">Yes, I've played a little</option>
             <option value="regular">Yes, I'm a regular player</option>
           </select>
+        </div>
       </div>
-      <div class="margin-right">
-        <button id="to-consent" class="btn" style="width: 200px" disabled>Next</button>
-      </div>  
+
+      <div class="intro-actions">
+        <button id="to-consent" class="btn" style="width: 220px" disabled>Next</button>
+      </div>
 
       <script>
         (function() {
-          //URL params
           function getUrlParam(name) {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get(name);
           }
 
-          //PROLIFIC_PID
-          const pid = getUrlParam('PROLIFIC_PID');
+          const pid = getUrlParam('participant_id') || getUrlParam('pid');
           const input = document.getElementById('prolificId');
-          const hint = document.getElementById('pid-hint');
 
-          if (pid) {
-            // Found it - Auto-fill
-            input.value = pid; 
+          if (pid && input) {
+            input.value = pid;
             input.style.backgroundColor = "#f0fdf4";
             input.style.borderColor = "#16a34a";
-            hint.style.display = "block";
             input.dispatchEvent(new Event('input', { bubbles: true }));
-          } else {
-            // Not found - manually
-            input.placeholder = "e.g., 5f9c1d2e...";
           }
         })();
       </script>
     </section>
 
     <!-- Page 2: Consent -->
-    <section id="page-consent" class="card hidden">
-      <h2>Consent Form</h2>
-      <div style="max-height:240px; overflow:auto; border:1px solid #e5e7eb; border-radius:12px; padding:14px; margin:12px 0">
-        <p>This study investigates how humans collaborate with an AI agent in the collaborative game Overcooked.</p>
-        <p>The study is organized by researchers from Aalto University in Finland.</p>
-        <p>This study aims to understand behavior and experience in human–AI collaboration. Participation is voluntary and you may withdraw at any time. Data will be stored anonymously and used for research only. There are no known risks; if you feel uncomfortable, you may stop immediately.</p>
-        <p>Compensation is based on participation and compliance with the study instructions, not on game score. Participants who fail the instruction/comprehension check will receive the minimum compensation and will not continue to the main experiment. Participants who complete the study and follow the instructions appropriately throughout the session will receive the full compensation.</p>
-        <p>By checking the box and continuing, you indicate that you have read and agree to participate.</p>
+    <section id="page-consent" class="card hidden consent-card">
+      <div class="consent-header">
+        <div>
+          <p class="consent-kicker">Aalto University</p>
+          <h2>Consent to Participate in Research</h2>
+          <p class="muted consent-date">Digital consent form</p>
+        </div>
       </div>
-      <div class="inline">
+
+      <div class="consent-document" role="region" aria-label="Consent form text">
+        <section class="consent-section">
+          <p><strong>Human–AI Collaboration in a Collaborative Game Environment</strong></p>
+        </section>
+
+        <section class="consent-section">
+          <h3>Purpose of the study</h3>
+          <p>
+            The purpose of this study is to investigate how people collaborate with an AI teammate in the game-like
+            Overcooked environment. The study examines how human–AI coordination develops over repeated interaction
+            and how participants experience the collaboration.
+          </p>
+        </section>
+
+        <section class="consent-section">
+          <h3>What participation involves</h3>
+          <p>
+            Participation takes place in a meeting room and lasts approximately 40 minutes. You will first provide
+            background information, read the instructions, complete a practice round, and answer a short comprehension
+            check. If you pass the comprehension check, you will continue to the main task, where you will play several
+            short rounds of the Overcooked task with an AI teammate and, in some rounds, without the AI teammate.
+            After each episode, you will answer two short questions about your experience.
+          </p>
+        </section>
+
+        <section class="consent-section">
+          <h3>Voluntary participation and withdrawal</h3>
+          <p>
+            Participation is voluntary. You may withdraw from the study at any time without giving a reason and without
+            negative consequences. If you withdraw, no new data will be collected from you. Data collected up to the
+            point of withdrawal may still be used in the research unless you request otherwise, where this is possible.
+          </p>
+        </section>
+
+        <section class="consent-section">
+          <h3>Data collected during the study</h3>
+          <p>
+            The study collects your participant ID, age, gender, education level, video game experience, AI experience,
+            previous Overcooked experience, consent status, task performance, actions during gameplay, selected AI
+            policies, timing information, and post-episode ratings. Your name or email address should not be entered
+            into the experiment interface.
+          </p>
+        </section>
+
+        <section class="consent-section">
+          <h3>Confidentiality and data use</h3>
+          <p>
+            Your data will be used for research purposes only. The experimental data will be stored using your participant
+            ID rather than your name. Information needed for compensation will be handled separately from the analysis
+            data where possible. Results will be reported at group level, and individual participants will not be
+            identified in publications, presentations, or thesis work.
+          </p>
+        </section>
+
+        <section class="consent-section">
+          <h3>Compensation</h3>
+          <p>
+            Participants will receive a voucher as compensation according to Aalto University compensation criteria.
+            Compensation is based on participation and following the study instructions, not on game score. Participants
+            who do not pass the instruction and comprehension check will not continue to the main experiment.
+          </p>
+        </section>
+
+        <section class="consent-section">
+          <h3>Questions</h3>
+          <p>
+            If anything is unclear, you may ask the researcher questions before deciding whether to participate or before
+            continuing with the task.
+          </p>
+        </section>
+      </div>
+
+      <div class="consent-agreement-box">
         <input type="checkbox" id="consentCheck">
-        <label for="consentCheck" style="margin:0">I have read and agree</label>
+        <label for="consentCheck">
+          I confirm that I have read and understood the information above. I understand that participation is voluntary,
+          that I may withdraw at any time, and that I give my consent to participate in this research study.
+        </label>
       </div>
+
       <div class="margin-right" style="margin-top: 30px;">
-        <button id="to-instruction" class="btn" style="width: 200px" disabled>Next</button>
+        <button id="to-instruction" class="btn" style="width: 220px" disabled>
+          I agree and continue
+        </button>
       </div>
     </section>
-
 
 
     <!-- Page 3a: Instruction – How to play + Practice -->
@@ -1130,74 +1273,23 @@
     </section>
 
     <!-- End page-->
-    <section id="page-end" class="card hidden center" style="padding: 60px 20px;">
-      <div style="font-size:64px; margin-bottom: 20px;">🎉</div>
-      <h2 style="color:#16a34a; font-size: 32px; margin-top:0;">Experiment Complete!</h2>
-      <p style="font-size: 18px; color: #4b5563; max-width: 500px; margin: 0 auto 30px auto;">
-          Thank you for your participation. Your data has been successfully recorded for our study.
+    <section id="page-end" class="card hidden center" style="padding: 70px 24px;">
+      <div style="font-size:64px; margin-bottom: 20px;">😄</div>
+      <h2 style="color:#16a34a; font-size: 32px; margin-top:0;">Thank you for participating</h2>
+      <p style="font-size: 18px; color: #4b5563; max-width: 560px; margin: 0 auto 24px auto; line-height:1.6;">
+        Your responses and game data have been saved. Please let the researcher know that you have finished the study.
       </p>
-
-      <div style="margin-top:20px; padding:25px; background:#f0fdf4; border:2px solid #22c55e; border-radius:12px; max-width: 520px; margin-left: auto; margin-right: auto;">
-        <p style="margin:0; color:#15803d; font-weight:600; font-size:16px;">
-          You have completed the study.
-        </p>
-        <p style="margin:10px 0 0 0; color:#166534; font-size:15px; line-height:1.6;">
-          You may now close this window and leave quietly.
-          If you have any questions, please ask the researcher.
-        </p>
-      </div>
-      
-      
-      <div id="completionCodeWrap" class="hidden" style="margin-top:20px; padding:25px; background:#f0fdf4; border:2px solid #22c55e; border-radius:12px; max-width: 400px; margin-left: auto; margin-right: auto;">
-        <p style="margin:0; color:#15803d; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-size: 14px;">
-          Your Completion Code:
-        </p>
-
-        <p id="completionCode"
-          style="font-family: monospace; font-weight:700; font-size:32px; margin:10px 0; color: #14532d;"></p>
-
-        <a id="prolificReturnLink" href="#" target="_blank"
-          style="display:inline-block; margin-top:10px; padding:10px 14px; border-radius:8px; background:#111827; color:#fff; text-decoration:none;">
-          Return to Prolific
-        </a>
-
-        <p style="font-size: 13px; color: #16a34a; margin-top: 12px;">
-          If the button doesn’t open, copy and paste this code on Prolific: <b id="completionCodeInline"></b>
-        </p>
-      </div>
-
-      <div style="margin-top: 40px;">
-          <p class="muted" style="font-style: italic;">You may now close this window.</p>
-      </div> 
     </section>
-
+    
     <section id="page-quiz-fail" class="card hidden center" style="padding: 60px 20px;">
-      <div style="font-size:64px; margin-bottom: 20px;">😔</div>
+      <div style="font-size:64px; margin-bottom: 20px;">😊</div>
       <h2 style="color:#dc2626; font-size: 32px; margin-top:0;">Instruction Check Not Passed</h2>
-      <p style="font-size: 18px; color: #4b5563; max-width: 560px; margin: 0 auto 20px auto;">
-        Thank you for your time, but unfortunately you did not pass the comprehension check, so the experiment will not continue.
+      <p style="font-size: 18px; color: #4b5563; max-width: 560px; margin: 0 auto 20px auto; line-height:1.6;">
+        Thank you for your time. Unfortunately, based on the instruction and attention check, you do not meet the qualification criteria to continue to the main experiment.
+        Please contact the researcher for the next step.
       </p>
-
-      <div id="failCodeWrap" style="margin-top:20px; padding:25px; background:#fff7ed; border:2px solid #fdba74; border-radius:12px; max-width: 460px; margin-left: auto; margin-right: auto;">
-        <p style="margin:0; color:#9a3412; font-weight:600; text-transform:uppercase; letter-spacing:1px; font-size:14px;">
-          Prolific completion
-        </p>
-
-        <p id="failCompletionCode"
-          style="font-family: monospace; font-weight:700; font-size:32px; margin:10px 0; color:#9a3412;">
-        </p>
-
-        <a id="failProlificReturnLink" href="#" target="_blank"
-          style="display:inline-block; margin-top:10px; padding:10px 14px; border-radius:8px; background:#111827; color:#fff; text-decoration:none;">
-          Return to Prolific
-        </a>
-
-        <p style="font-size:13px; color:#9a3412; margin-top:12px;">
-          If the button does not open, copy and paste this code on Prolific:
-          <b id="failCompletionCodeInline"></b>
-        </p>
-      </div>
     </section>
+
 
   </div>
 

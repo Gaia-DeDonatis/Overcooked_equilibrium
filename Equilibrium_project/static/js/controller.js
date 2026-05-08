@@ -108,25 +108,11 @@ function showPage(pageId) {
 }
 
 function setupSuccessCompletionUI() {
-  const wrapEl = document.getElementById('completionCodeWrap');
-  const codeEl = document.getElementById('completionCode');
-  const codeInlineEl = document.getElementById('completionCodeInline');
-  const linkEl = document.getElementById('prolificReturnLink');
-
-  if (wrapEl) wrapEl.classList.remove('hidden');
-  if (codeEl) codeEl.innerText = PROLIFIC_SUCCESS_CODE;
-  if (codeInlineEl) codeInlineEl.innerText = PROLIFIC_SUCCESS_CODE;
-  if (linkEl) linkEl.href = PROLIFIC_SUCCESS_URL;
+  // In-lab version: no completion code is displayed.
 }
 
 function setupFailCompletionUI() {
-  const codeEl = document.getElementById('failCompletionCode');
-  const codeInlineEl = document.getElementById('failCompletionCodeInline');
-  const linkEl = document.getElementById('failProlificReturnLink');
-
-  if (codeEl) codeEl.innerText = PROLIFIC_FAIL_CODE;
-  if (codeInlineEl) codeInlineEl.innerText = PROLIFIC_FAIL_CODE;
-  if (linkEl) linkEl.href = PROLIFIC_FAIL_URL;
+  // In-lab version: no completion code is displayed.
 }
 
 function focusGameSurface() {
@@ -1140,37 +1126,69 @@ window.addEventListener('keydown', async (e) => {
 });
 
 // --- 6. INTRO PAGE VALIDATION ---
-const inputID = document.getElementById('prolificId');
+const inputID = document.getElementById('prolificId'); // internal name kept for backend compatibility; shown to participants as Personal ID
 const inputAge = document.getElementById('age');
 const inputGender = document.getElementById('gender');
-const inputExp = document.getElementById('experience');
+const inputEducation = document.getElementById('educationLevel');
+const inputVideoGameExperience = document.getElementById('videoGameExperience');
+const inputAIExperience = document.getElementById('aiExperience');
+const inputOvercookedExperience = document.getElementById('overcookedExperience');
 const btnConsent = document.getElementById('to-consent');
 
 function validateIntro() {
-    if(!inputID || !inputAge || !inputGender || !inputExp) return;
+    if(!inputID || !inputAge || !inputGender || !inputEducation || !inputVideoGameExperience || !inputAIExperience || !inputOvercookedExperience || !btnConsent) return;
+
+    const age = parseInt(inputAge.value, 10);
+
     btnConsent.disabled = !(
-        inputID.value.trim().length > 0 && 
-        parseInt(inputAge.value) >= 18 && 
+        inputID.value.trim().length > 0 &&
+        Number.isFinite(age) && age >= 18 &&
         inputGender.value !== "" &&
-        inputExp.value !== ""
+        inputEducation.value !== "" &&
+        inputVideoGameExperience.value !== "" &&
+        inputAIExperience.value !== "" &&
+        inputOvercookedExperience.value !== ""
     );
 }
 
 if(inputID) {
-    [inputID, inputAge, inputGender, inputExp].forEach(el => el.addEventListener('input', validateIntro));
-    inputGender.addEventListener('change', validateIntro);
+    [
+        inputID,
+        inputAge,
+        inputGender,
+        inputEducation,
+        inputVideoGameExperience,
+        inputAIExperience,
+        inputOvercookedExperience
+    ].forEach(el => {
+        if (!el) return;
+        el.addEventListener('input', validateIntro);
+        el.addEventListener('change', validateIntro);
+    });
+
+    validateIntro();
     
     btnConsent.onclick = () => {
-        STATE.prolificId = inputID.value.trim();
-        const age = parseInt(inputAge.value);
+        const participantId = inputID.value.trim();
+        STATE.prolificId = participantId;
+
+        const age = parseInt(inputAge.value, 10);
         const gender = inputGender.value;
-        const experience = inputExp.value;
+        const educationLevel = inputEducation.value;
+        const videoGameExperience = inputVideoGameExperience.value;
+        const aiExperience = inputAIExperience.value;
+        const overcookedExperience = inputOvercookedExperience.value;
         
         assignConditions(); 
         STATE.assignment.condition = getSelectionMode();
 
         DataManager.initUser(STATE.prolificId, age, gender, STATE.assignment, {
-            experience: experience,
+            participant_id: participantId,
+            education_level: educationLevel,
+            video_game_experience: videoGameExperience,
+            ai_experience: aiExperience,
+            overcooked_experience: overcookedExperience,
+            experience: overcookedExperience,
         });
 
         showPage('page-consent');
@@ -1358,7 +1376,6 @@ async function submitData() {
 
         if (response.success) {
             showPage('page-end');
-            setupSuccessCompletionUI();
         } else {
             alert("Submission failed. Please contact the researcher.");
             showPage('page-episode-break');
