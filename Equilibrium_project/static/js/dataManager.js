@@ -8,10 +8,10 @@ const DataManager = {
   },
 
   LOGS: {
-    prolificId: 'unknown', // internal name kept for backend compatibility
+    prolificId: 'unknown', 
     participantId: 'unknown',
     meta: {
-      prolificId: 'unknown', // internal name kept for backend compatibility
+      prolificId: 'unknown',
       participantId: 'unknown',
       personalId: 'unknown',
       age: null,
