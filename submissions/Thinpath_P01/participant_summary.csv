@@ -1,0 +1,2 @@
+participant_id,age,gender,education_level,video_game_experience,ai_experience,overcooked_experience,assigned_map,consent_given,start_time_iso,n_episodes_saved,n_rounds_saved,replayed_best_policy_id
+Thinpath_P01,24,male,bachelor,experienced,academic_experience,none,"thinpath_5,7",True,2026-05-12T07:18:47.693Z,17,51,a0sp_0_helping0_True_gamma0.8
