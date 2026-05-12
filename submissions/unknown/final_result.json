@@ -1,0 +1,48 @@
+{
+  "prolificId": "unknown",
+  "participantId": "unknown",
+  "meta": {
+    "prolificId": "unknown",
+    "participantId": "unknown",
+    "personalId": "unknown",
+    "age": null,
+    "gender": null,
+    "education_level": null,
+    "video_game_experience": null,
+    "ai_experience": null,
+    "overcooked_experience": null,
+    "experience": null,
+    "assignment": {
+      "condition": null,
+      "map": null
+    },
+    "consentGiven": false,
+    "startTimeISO": null,
+    "tick_ms": null,
+    "skip_policy": {
+      "max_episode_skips": 2,
+      "skips_used": 0,
+      "skipped_episodes": []
+    },
+    "resume_meta": {
+      "sessionId": null,
+      "prolificId": "Thinpath_P01",
+      "phase": 0,
+      "configId": null,
+      "episodeIndex": 1,
+      "roundInEpisode": 1,
+      "episodePhase": "seed",
+      "experimentPhase": null,
+      "layout": null,
+      "condition": "bo",
+      "episodeSkipsUsed": 0,
+      "skippedEpisodeIndices": [],
+      "timeLeft": 0,
+      "isPlaying": false,
+      "gameOver": false,
+      "canResume": false
+    }
+  },
+  "episodes": [],
+  "rounds": []
+}

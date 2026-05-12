@@ -1,0 +1,1 @@
+episode_index,round_in_episode,policy_id,human_stability_prev_ai_round,ai_stability_prev_ai_round,joint_stability_prev_ai_round,mental_demand,performance_score,dishes_served,team_reward_score,human_steps,ai_steps,episode_coadaptation_score
