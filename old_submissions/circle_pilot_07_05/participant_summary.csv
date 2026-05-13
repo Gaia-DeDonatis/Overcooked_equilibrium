@@ -1,0 +1,2 @@
+prolific_id,age,gender,experience,assigned_map,consent_given,start_time_iso,n_episodes_saved,n_rounds_saved,replayed_best_policy_id
+circle_pilot_07_05,29,Male,little,"circle_5,5",True,2026-05-07T12:37:36.852Z,17,51,a0sp_1_helping0_False_gamma0.9

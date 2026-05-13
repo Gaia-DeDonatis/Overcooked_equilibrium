@@ -1,2 +1,0 @@
-prolific_id,age,gender,experience,assigned_map,consent_given,start_time_iso,n_episodes_saved,n_rounds_saved,replayed_best_policy_id
-29042026_pilot,26,Female,little,"counter_5,8",True,2026-04-29T06:40:35.215Z,17,49,[coplay][flexible][counter]agent0_a0sp_3_helping0_True_gamma0.95

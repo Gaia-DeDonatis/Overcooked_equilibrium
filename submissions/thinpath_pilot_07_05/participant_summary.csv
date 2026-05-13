@@ -1,2 +1,0 @@
-prolific_id,age,gender,experience,assigned_map,consent_given,start_time_iso,n_episodes_saved,n_rounds_saved,replayed_best_policy_id
-thinpath_pilot_07_05,23,Female,none,"thinpath_5,7",True,2026-05-07T10:48:00.513Z,17,50,a0sp_0_helping0_True_gamma0.8
