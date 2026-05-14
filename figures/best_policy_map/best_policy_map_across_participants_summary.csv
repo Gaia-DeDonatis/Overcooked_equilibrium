@@ -1,0 +1,7 @@
+participant_id,participant_short,best_episode_index,best_policy_x,best_policy_y,episode_phase
+Thinpath_P01,P01,13,13.387434,25.06189,bo_replay_best
+Thinpath_P02,P02,13,13.387434,25.06189,bo_replay_best
+Thinpath_P03,P03,13,55.081795,8.812907,bo_replay_best
+Thinpath_P04,P04,13,0.52687544,49.09936,bo_replay_best
+Thinpath_P05,P05,13,52.37194,-64.3468,bo_replay_best
+Thinpath_P06,P06,13,52.37194,-64.3468,bo_replay_best

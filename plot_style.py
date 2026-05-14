@@ -41,7 +41,7 @@ import matplotlib.pyplot as plt
 # CORE STYLE SETTINGS
 # ============================================================
 
-BASE_FONT_SIZE = 12
+BASE_FONT_SIZE = 8
 FONT_FAMILY = "Roboto"
 
 # Standard figure sizes in inches.
@@ -68,6 +68,8 @@ SKIPPED_MARKER_SIZE = 130
 ALPHA_LINE = 0.92
 ALPHA_FILL = 0.18
 ALPHA_GRID = 0.30
+
+FIGSIZE_RADAR_WIDE = (12.5, 6.2)
 
 LINE_MARKER_KWS = {
     "marker": "o",

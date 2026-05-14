@@ -1,0 +1,97 @@
+participant_id,episode_phase,condition,task_group,task_label,human_count,ai_count,total_count,human_share,ai_share
+Thinpath_P01,bo_replay_best,Best-policy,assemble,Assemble salad,0.0,30.0,30.0,0.0,1.0
+Thinpath_P01,bo_replay_best,Best-policy,chop,Chop,0.0,30.0,30.0,0.0,1.0
+Thinpath_P01,bo_replay_best,Best-policy,deliver,Deliver,0.0,29.0,29.0,0.0,1.0
+Thinpath_P01,bo_replay_best,Best-policy,pickup_from_knife,Pick up from knife,0.0,30.0,30.0,0.0,1.0
+Thinpath_P01,bo_replay_best,Best-policy,pickup_lettuce,Pick up lettuce,41.0,35.0,76.0,0.5394736842105263,0.4605263157894737
+Thinpath_P01,bo_replay_best,Best-policy,pickup_plate,Pick up plate,39.0,31.0,70.0,0.5571428571428572,0.44285714285714284
+Thinpath_P01,bo_replay_best,Best-policy,place_counter,Place on counter,79.0,3.0,82.0,0.9634146341463414,0.036585365853658534
+Thinpath_P01,bo_replay_best,Best-policy,place_knife,Place on knife,0.0,30.0,30.0,0.0,1.0
+Thinpath_P01,replay_optimal,Replay changed behavior,assemble,Assemble salad,0.0,22.0,22.0,0.0,1.0
+Thinpath_P01,replay_optimal,Replay changed behavior,chop,Chop,7.0,15.0,22.0,0.3181818181818182,0.6818181818181818
+Thinpath_P01,replay_optimal,Replay changed behavior,deliver,Deliver,1.0,19.0,20.0,0.05,0.95
+Thinpath_P01,replay_optimal,Replay changed behavior,pickup_from_knife,Pick up from knife,7.0,15.0,22.0,0.3181818181818182,0.6818181818181818
+Thinpath_P01,replay_optimal,Replay changed behavior,pickup_lettuce,Pick up lettuce,34.0,39.0,73.0,0.4657534246575342,0.5342465753424658
+Thinpath_P01,replay_optimal,Replay changed behavior,pickup_plate,Pick up plate,25.0,21.0,46.0,0.5434782608695652,0.45652173913043476
+Thinpath_P01,replay_optimal,Replay changed behavior,place_counter,Place on counter,56.0,16.0,72.0,0.7777777777777778,0.2222222222222222
+Thinpath_P01,replay_optimal,Replay changed behavior,place_knife,Place on knife,7.0,16.0,23.0,0.30434782608695654,0.6956521739130435
+Thinpath_P02,bo_replay_best,Best-policy,assemble,Assemble salad,0.0,12.0,12.0,0.0,1.0
+Thinpath_P02,bo_replay_best,Best-policy,chop,Chop,6.0,8.0,14.0,0.42857142857142855,0.5714285714285714
+Thinpath_P02,bo_replay_best,Best-policy,deliver,Deliver,3.0,8.0,11.0,0.2727272727272727,0.7272727272727273
+Thinpath_P02,bo_replay_best,Best-policy,pickup_from_knife,Pick up from knife,6.0,8.0,14.0,0.42857142857142855,0.5714285714285714
+Thinpath_P02,bo_replay_best,Best-policy,pickup_lettuce,Pick up lettuce,16.0,23.0,39.0,0.41025641025641024,0.5897435897435898
+Thinpath_P02,bo_replay_best,Best-policy,pickup_plate,Pick up plate,4.0,12.0,16.0,0.25,0.75
+Thinpath_P02,bo_replay_best,Best-policy,place_counter,Place on counter,16.0,13.0,29.0,0.5517241379310345,0.4482758620689655
+Thinpath_P02,bo_replay_best,Best-policy,place_knife,Place on knife,6.0,8.0,14.0,0.42857142857142855,0.5714285714285714
+Thinpath_P02,replay_optimal,Replay changed behavior,assemble,Assemble salad,0.0,10.0,10.0,0.0,1.0
+Thinpath_P02,replay_optimal,Replay changed behavior,chop,Chop,0.0,11.0,11.0,0.0,1.0
+Thinpath_P02,replay_optimal,Replay changed behavior,deliver,Deliver,8.0,1.0,9.0,0.8888888888888888,0.1111111111111111
+Thinpath_P02,replay_optimal,Replay changed behavior,pickup_from_knife,Pick up from knife,0.0,11.0,11.0,0.0,1.0
+Thinpath_P02,replay_optimal,Replay changed behavior,pickup_lettuce,Pick up lettuce,12.0,27.0,39.0,0.3076923076923077,0.6923076923076923
+Thinpath_P02,replay_optimal,Replay changed behavior,pickup_plate,Pick up plate,20.0,1.0,21.0,0.9523809523809523,0.047619047619047616
+Thinpath_P02,replay_optimal,Replay changed behavior,place_counter,Place on counter,24.0,10.0,34.0,0.7058823529411765,0.29411764705882354
+Thinpath_P02,replay_optimal,Replay changed behavior,place_knife,Place on knife,0.0,11.0,11.0,0.0,1.0
+Thinpath_P03,bo_replay_best,Best-policy,assemble,Assemble salad,2.0,7.0,9.0,0.2222222222222222,0.7777777777777778
+Thinpath_P03,bo_replay_best,Best-policy,chop,Chop,1.0,9.0,10.0,0.1,0.9
+Thinpath_P03,bo_replay_best,Best-policy,deliver,Deliver,8.0,0.0,8.0,1.0,0.0
+Thinpath_P03,bo_replay_best,Best-policy,pickup_from_knife,Pick up from knife,1.0,9.0,10.0,0.1,0.9
+Thinpath_P03,bo_replay_best,Best-policy,pickup_lettuce,Pick up lettuce,8.0,9.0,17.0,0.47058823529411764,0.5294117647058824
+Thinpath_P03,bo_replay_best,Best-policy,pickup_plate,Pick up plate,14.0,0.0,14.0,1.0,0.0
+Thinpath_P03,bo_replay_best,Best-policy,place_counter,Place on counter,12.0,1.0,13.0,0.9230769230769231,0.07692307692307693
+Thinpath_P03,bo_replay_best,Best-policy,place_knife,Place on knife,1.0,9.0,10.0,0.1,0.9
+Thinpath_P03,replay_optimal,Replay changed behavior,assemble,Assemble salad,0.0,14.0,14.0,0.0,1.0
+Thinpath_P03,replay_optimal,Replay changed behavior,chop,Chop,0.0,15.0,15.0,0.0,1.0
+Thinpath_P03,replay_optimal,Replay changed behavior,deliver,Deliver,14.0,0.0,14.0,1.0,0.0
+Thinpath_P03,replay_optimal,Replay changed behavior,pickup_from_knife,Pick up from knife,0.0,15.0,15.0,0.0,1.0
+Thinpath_P03,replay_optimal,Replay changed behavior,pickup_lettuce,Pick up lettuce,9.0,16.0,25.0,0.36,0.64
+Thinpath_P03,replay_optimal,Replay changed behavior,pickup_plate,Pick up plate,30.0,0.0,30.0,1.0,0.0
+Thinpath_P03,replay_optimal,Replay changed behavior,place_counter,Place on counter,25.0,0.0,25.0,1.0,0.0
+Thinpath_P03,replay_optimal,Replay changed behavior,place_knife,Place on knife,0.0,15.0,15.0,0.0,1.0
+Thinpath_P04,bo_replay_best,Best-policy,assemble,Assemble salad,0.0,42.0,42.0,0.0,1.0
+Thinpath_P04,bo_replay_best,Best-policy,chop,Chop,0.0,43.0,43.0,0.0,1.0
+Thinpath_P04,bo_replay_best,Best-policy,deliver,Deliver,0.0,42.0,42.0,0.0,1.0
+Thinpath_P04,bo_replay_best,Best-policy,pickup_from_knife,Pick up from knife,0.0,43.0,43.0,0.0,1.0
+Thinpath_P04,bo_replay_best,Best-policy,pickup_lettuce,Pick up lettuce,47.0,44.0,91.0,0.5164835164835165,0.4835164835164835
+Thinpath_P04,bo_replay_best,Best-policy,pickup_plate,Pick up plate,43.0,42.0,85.0,0.5058823529411764,0.49411764705882355
+Thinpath_P04,bo_replay_best,Best-policy,place_counter,Place on counter,90.0,0.0,90.0,1.0,0.0
+Thinpath_P04,bo_replay_best,Best-policy,place_knife,Place on knife,0.0,43.0,43.0,0.0,1.0
+Thinpath_P04,replay_optimal,Replay changed behavior,assemble,Assemble salad,2.0,14.0,16.0,0.125,0.875
+Thinpath_P04,replay_optimal,Replay changed behavior,chop,Chop,3.0,13.0,16.0,0.1875,0.8125
+Thinpath_P04,replay_optimal,Replay changed behavior,deliver,Deliver,2.0,14.0,16.0,0.125,0.875
+Thinpath_P04,replay_optimal,Replay changed behavior,pickup_from_knife,Pick up from knife,4.0,13.0,17.0,0.23529411764705882,0.7647058823529411
+Thinpath_P04,replay_optimal,Replay changed behavior,pickup_lettuce,Pick up lettuce,25.0,15.0,40.0,0.625,0.375
+Thinpath_P04,replay_optimal,Replay changed behavior,pickup_plate,Pick up plate,25.0,15.0,40.0,0.625,0.375
+Thinpath_P04,replay_optimal,Replay changed behavior,place_counter,Place on counter,44.0,1.0,45.0,0.9777777777777777,0.022222222222222223
+Thinpath_P04,replay_optimal,Replay changed behavior,place_knife,Place on knife,4.0,13.0,17.0,0.23529411764705882,0.7647058823529411
+Thinpath_P05,bo_replay_best,Best-policy,assemble,Assemble salad,10.0,11.0,21.0,0.47619047619047616,0.5238095238095238
+Thinpath_P05,bo_replay_best,Best-policy,chop,Chop,11.0,12.0,23.0,0.4782608695652174,0.5217391304347826
+Thinpath_P05,bo_replay_best,Best-policy,deliver,Deliver,0.0,20.0,20.0,0.0,1.0
+Thinpath_P05,bo_replay_best,Best-policy,pickup_from_knife,Pick up from knife,11.0,12.0,23.0,0.4782608695652174,0.5217391304347826
+Thinpath_P05,bo_replay_best,Best-policy,pickup_lettuce,Pick up lettuce,30.0,12.0,42.0,0.7142857142857143,0.2857142857142857
+Thinpath_P05,bo_replay_best,Best-policy,pickup_plate,Pick up plate,10.0,20.0,30.0,0.3333333333333333,0.6666666666666666
+Thinpath_P05,bo_replay_best,Best-policy,place_counter,Place on counter,28.0,0.0,28.0,1.0,0.0
+Thinpath_P05,bo_replay_best,Best-policy,place_knife,Place on knife,11.0,12.0,23.0,0.4782608695652174,0.5217391304347826
+Thinpath_P05,replay_optimal,Replay changed behavior,assemble,Assemble salad,11.0,12.0,23.0,0.4782608695652174,0.5217391304347826
+Thinpath_P05,replay_optimal,Replay changed behavior,chop,Chop,12.0,12.0,24.0,0.5,0.5
+Thinpath_P05,replay_optimal,Replay changed behavior,deliver,Deliver,0.0,19.0,19.0,0.0,1.0
+Thinpath_P05,replay_optimal,Replay changed behavior,pickup_from_knife,Pick up from knife,13.0,12.0,25.0,0.52,0.48
+Thinpath_P05,replay_optimal,Replay changed behavior,pickup_lettuce,Pick up lettuce,25.0,12.0,37.0,0.6756756756756757,0.32432432432432434
+Thinpath_P05,replay_optimal,Replay changed behavior,pickup_plate,Pick up plate,12.0,20.0,32.0,0.375,0.625
+Thinpath_P05,replay_optimal,Replay changed behavior,place_counter,Place on counter,23.0,0.0,23.0,1.0,0.0
+Thinpath_P05,replay_optimal,Replay changed behavior,place_knife,Place on knife,13.0,12.0,25.0,0.52,0.48
+Thinpath_P06,bo_replay_best,Best-policy,assemble,Assemble salad,1.0,1.0,2.0,0.5,0.5
+Thinpath_P06,bo_replay_best,Best-policy,chop,Chop,2.0,1.0,3.0,0.6666666666666666,0.3333333333333333
+Thinpath_P06,bo_replay_best,Best-policy,deliver,Deliver,0.0,2.0,2.0,0.0,1.0
+Thinpath_P06,bo_replay_best,Best-policy,pickup_from_knife,Pick up from knife,2.0,1.0,3.0,0.6666666666666666,0.3333333333333333
+Thinpath_P06,bo_replay_best,Best-policy,pickup_lettuce,Pick up lettuce,6.0,2.0,8.0,0.75,0.25
+Thinpath_P06,bo_replay_best,Best-policy,pickup_plate,Pick up plate,1.0,2.0,3.0,0.3333333333333333,0.6666666666666666
+Thinpath_P06,bo_replay_best,Best-policy,place_counter,Place on counter,6.0,0.0,6.0,1.0,0.0
+Thinpath_P06,bo_replay_best,Best-policy,place_knife,Place on knife,2.0,1.0,3.0,0.6666666666666666,0.3333333333333333
+Thinpath_P06,replay_optimal,Replay changed behavior,assemble,Assemble salad,6.0,7.0,13.0,0.46153846153846156,0.5384615384615384
+Thinpath_P06,replay_optimal,Replay changed behavior,chop,Chop,7.0,7.0,14.0,0.5,0.5
+Thinpath_P06,replay_optimal,Replay changed behavior,deliver,Deliver,10.0,3.0,13.0,0.7692307692307693,0.23076923076923078
+Thinpath_P06,replay_optimal,Replay changed behavior,pickup_from_knife,Pick up from knife,8.0,7.0,15.0,0.5333333333333333,0.4666666666666667
+Thinpath_P06,replay_optimal,Replay changed behavior,pickup_lettuce,Pick up lettuce,21.0,12.0,33.0,0.6363636363636364,0.36363636363636365
+Thinpath_P06,replay_optimal,Replay changed behavior,pickup_plate,Pick up plate,22.0,5.0,27.0,0.8148148148148148,0.18518518518518517
+Thinpath_P06,replay_optimal,Replay changed behavior,place_counter,Place on counter,30.0,1.0,31.0,0.967741935483871,0.03225806451612903
+Thinpath_P06,replay_optimal,Replay changed behavior,place_knife,Place on knife,8.0,7.0,15.0,0.5333333333333333,0.4666666666666667
