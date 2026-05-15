@@ -6,7 +6,7 @@ const SERVER_URL = window.location.origin;
 // Experiment Configuration
 const CONFIG = {
   PRACTICE_SCORE: 200,
-  ROUND_DURATION_SEC: 45, // put 45
+  ROUND_DURATION_SEC: 5, // put 45
 
     // Episode structure
   ROUNDS_PER_EPISODE: 3, // 3

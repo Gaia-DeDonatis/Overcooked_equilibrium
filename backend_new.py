@@ -1920,6 +1920,8 @@ def tell():
     if score_raw is not None:
         try:
             score = float(score_raw)
+            logger.info(f"[opt] using raw score")
+
         except Exception:
             return jsonify(success=False, error="score must be numeric"), 400
     else:
@@ -1928,6 +1930,8 @@ def tell():
         sess = SESSION_MGR.ensure(sid)
         with sess.lock:
             score = float(getattr(sess, 'ai_reward_total', 0.0))
+            logger.info(f"[opt] using sess.ai_reward_total score")
+
 
     map_name = data.get('map_type')
     if not map_name and sid:

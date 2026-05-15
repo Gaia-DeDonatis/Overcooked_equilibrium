@@ -1,38 +1,40 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Graph 4: Policy-pool heatmap with episode labels, Best-policy E13, and worst episode.
+Graph 3: Best-policy vs closest played policies.
 
-For each participant, this script creates a map of the policy pool:
+For each participant, this script compares:
 
-    - full policy pool in the background, shown in light grey
-    - smooth/interpolated heatmap showing where the selected metric is high/low
-    - played policies shown as dots
-    - every played policy dot labelled with the episode number, e.g. E1, E2, E13
-    - episode 13 highlighted as a black dot
-    - worst episode highlighted as a red dot
+    left column  -> Best-policy
+    right column -> closest policies in policy space that the participant actually played
 
-Important:
-    The black dot is episode 13 by default.
+Visual design:
+    - one color per participant
+    - one starting dot at Best-policy
+    - three ending dots at closest policies C1, C2, C3
+    - all C1/C2/C3 points are on the same right-side column
+    - participant colors are shown in the legend
+    - episode numbers are written near the closest-policy endpoints
 
-    The heatmap is based on the observed participant episodes. It cannot know
-    the true performance of unplayed policies; it interpolates from the played
-    policy outcomes in the embedding space.
+It also creates a cleaner version with only:
 
-Examples
---------
-python analyze_policy_pool_best_worst_heatmap.py \
+    Best-policy -> C1
+
+Outputs
+-------
+    best_vs_closest_policies_dishes_per_round.png
+    best_vs_closest_policies_human_steps_per_dish.png
+    best_vs_closest_policy_dishes_per_round.png
+    best_vs_closest_policy_human_steps_per_dish.png
+    episode_policy_metrics_summary.csv
+    best_vs_closest_policies_summary.csv
+
+Example
+-------
+python analyze_best_vs_closest_policies.py \
     --data-root submissions \
     --embedding-csv tsnt_thinpath.csv \
-    --output-dir figures/policy_pool_heatmap_dishes \
-    --metric mean_dishes_per_round \
-    --formats png pdf
-
-python analyze_policy_pool_best_worst_heatmap.py \
-    --data-root submissions \
-    --embedding-csv tsnt_thinpath.csv \
-    --output-dir figures/policy_pool_heatmap_human_steps \
-    --metric human_steps_per_dish \
+    --output-dir figures/best_vs_closest_policies \
     --formats png pdf
 """
 
@@ -45,13 +47,18 @@ from typing import Iterable
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 from matplotlib.lines import Line2D
 
 from plot_style import (
     apply_plot_style,
+    clean_axis,
     save_figure,
+    get_participant_color,
     metric_label,
+    COLORS,
+    FIGSIZE_WIDE,
+    ALPHA_LINE,
+    LINE_MARKER_KWS,
 )
 
 
@@ -59,81 +66,24 @@ from plot_style import (
 # CONFIG
 # ============================================================
 
+BEST_PHASE = "bo_replay_best"
+
 DEFAULT_POLICY_PREFIX = "[coplay][flexible][thinpath]agent0_"
 
-LOWER_IS_BETTER_METRICS = {
-    "human_steps_per_dish",
-    "mental_demand",
-}
+PLOT_SPECS = [
+    ("best_vs_closest_policies_dishes_per_round", "mean_dishes_per_round"),
+    ("best_vs_closest_policies_human_steps_per_dish", "human_steps_per_dish"),
+]
 
-# Episode 13 is the Best-policy replay episode in our current design.
-DEFAULT_BEST_EPISODE_INDEX = 13
-
-# Cubehelix palette.
-CUBEHELIX_START = 2.4
-CUBEHELIX_ROT = -0.25
-CUBEHELIX_DARK = 0.18
-CUBEHELIX_LIGHT = 0.96
-
-HEATMAP_LEVELS = 18
-
-# Smaller, cleaner font sizes.
-TITLE_FONT_SIZE = 10
-AXIS_LABEL_FONT_SIZE = 9
-TICK_FONT_SIZE = 8
-LEGEND_FONT_SIZE = 8
-EPISODE_LABEL_FONT_SIZE = 7.5
-COLORBAR_FONT_SIZE = 8.5
+SINGLE_CLOSEST_SPECS = [
+    ("best_vs_closest_policy_dishes_per_round", "mean_dishes_per_round"),
+    ("best_vs_closest_policy_human_steps_per_dish", "human_steps_per_dish"),
+]
 
 
 # ============================================================
-# STYLE
+# BASIC LOADING UTILITIES
 # ============================================================
-
-def apply_heatmap_text_style() -> None:
-    """Use smaller text for this heatmap figure."""
-    plt.rcParams.update(
-        {
-            "font.size": 8,
-            "axes.titlesize": TITLE_FONT_SIZE,
-            "axes.labelsize": AXIS_LABEL_FONT_SIZE,
-            "xtick.labelsize": TICK_FONT_SIZE,
-            "ytick.labelsize": TICK_FONT_SIZE,
-            "legend.fontsize": LEGEND_FONT_SIZE,
-            "legend.title_fontsize": LEGEND_FONT_SIZE,
-            "figure.titlesize": TITLE_FONT_SIZE,
-        }
-    )
-
-
-def build_cubehelix_cmap():
-    return sns.cubehelix_palette(
-        start=CUBEHELIX_START,
-        rot=CUBEHELIX_ROT,
-        dark=CUBEHELIX_DARK,
-        light=CUBEHELIX_LIGHT,
-        as_cmap=True,
-    )
-
-
-# ============================================================
-# GENERAL HELPERS
-# ============================================================
-
-def safe_numeric(series: pd.Series) -> pd.Series:
-    return pd.to_numeric(series, errors="coerce")
-
-
-def participant_id_from_file(csv_path: Path, df: pd.DataFrame) -> str:
-    folder_name = csv_path.parent.name
-    if folder_name:
-        return folder_name
-
-    if "prolific_id" in df.columns and df["prolific_id"].notna().any():
-        return str(df["prolific_id"].dropna().iloc[0])
-
-    return "unknown_participant"
-
 
 def find_round_summary_files(data_root: Path) -> list[Path]:
     """Find round_summary.csv files under a submissions-like root."""
@@ -146,15 +96,97 @@ def find_round_summary_files(data_root: Path) -> list[Path]:
         return [data_root / "round_summary.csv"]
 
     files = sorted(data_root.glob("*/round_summary.csv"))
+
     if not files:
         files = sorted(data_root.rglob("round_summary.csv"))
 
     return files
 
 
-def strip_policy_prefix(policy_name: str, policy_prefix: str | None = None) -> str:
+def participant_id_from_file(csv_path: Path, df: pd.DataFrame) -> str:
+    """Prefer folder name because it is usually cleaner than prolific_id."""
+    folder_name = csv_path.parent.name
+
+    if folder_name:
+        return folder_name
+
+    if "prolific_id" in df.columns and df["prolific_id"].notna().any():
+        return str(df["prolific_id"].dropna().iloc[0])
+
+    return "unknown_participant"
+
+
+def safe_numeric(series: pd.Series) -> pd.Series:
+    return pd.to_numeric(series, errors="coerce")
+
+
+def load_round_summaries(
+    data_root: Path,
+    include_skipped: bool = False,
+) -> pd.DataFrame:
+    """Load and concatenate all participant round_summary.csv files."""
+    files = find_round_summary_files(data_root)
+
+    if not files:
+        raise FileNotFoundError(f"No round_summary.csv files found under: {data_root}")
+
+    frames = []
+
+    required_cols = {
+        "episode_index",
+        "episode_phase",
+        "policy_id",
+        "dishes_served",
+        "human_steps",
+    }
+
+    for csv_path in files:
+        df = pd.read_csv(csv_path)
+        df["participant_id"] = participant_id_from_file(csv_path, df)
+
+        missing = sorted(required_cols - set(df.columns))
+        if missing:
+            raise ValueError(f"{csv_path} is missing required columns: {missing}")
+
+        for col in [
+            "episode_index",
+            "round_in_episode",
+            "dishes_served",
+            "human_steps",
+            "ai_steps",
+            "team_reward_score",
+            "human_reward_score",
+            "ai_reward_score",
+            "mental_demand",
+            "performance_score",
+        ]:
+            if col in df.columns:
+                df[col] = safe_numeric(df[col])
+
+        if not include_skipped and "skipped_episode" in df.columns:
+            skipped = (
+                df["skipped_episode"]
+                .astype(str)
+                .str.lower()
+                .isin(["true", "1", "yes"])
+            )
+            df = df.loc[~skipped].copy()
+
+        frames.append(df)
+
+    return pd.concat(frames, ignore_index=True)
+
+
+# ============================================================
+# POLICY NAME NORMALIZATION
+# ============================================================
+
+def strip_policy_prefix(
+    policy_name: str,
+    policy_prefix: str | None = None,
+) -> str:
     """
-    Normalize policy names so matching works whether policy_id is stored as:
+    Normalize policy names so comparisons work whether the name is stored as:
 
         a0sp_0_helping0_True_gamma0.8
 
@@ -181,100 +213,16 @@ def is_valid_policy(policy_short: str) -> bool:
     return p not in {"", "nan", "none", "null", "solo", "no_ai"}
 
 
-def episode_label(values: Iterable[int | float]) -> str:
-    """
-    Create compact labels for one policy used in one or more episodes.
-
-    Examples:
-        [13] -> E13
-        [13, 17] -> E13/E17
-    """
-    cleaned = []
-    for v in values:
-        if pd.notna(v):
-            cleaned.append(int(v))
-
-    cleaned = sorted(set(cleaned))
-
-    if not cleaned:
-        return ""
-
-    return "/".join(f"E{v}" for v in cleaned)
-
-
 # ============================================================
-# LOAD ROUND SUMMARY DATA
-# ============================================================
-
-def load_round_summaries(
-    data_root: Path,
-    include_skipped: bool = False,
-) -> pd.DataFrame:
-    """Load and concatenate all participant round_summary.csv files."""
-    files = find_round_summary_files(data_root)
-
-    if not files:
-        raise FileNotFoundError(f"No round_summary.csv files found under: {data_root}")
-
-    frames = []
-
-    required = {
-        "episode_index",
-        "episode_phase",
-        "dishes_served",
-        "human_steps",
-        "policy_id",
-    }
-
-    for csv_path in files:
-        df = pd.read_csv(csv_path)
-        df["participant_id"] = participant_id_from_file(csv_path, df)
-
-        missing = sorted(required - set(df.columns))
-        if missing:
-            raise ValueError(f"{csv_path} is missing required columns: {missing}")
-
-        numeric_cols = [
-            "episode_index",
-            "round_in_episode",
-            "dishes_served",
-            "human_steps",
-            "ai_steps",
-            "team_reward_score",
-            "human_reward_score",
-            "ai_reward_score",
-            "mental_demand",
-            "performance_score",
-        ]
-
-        for col in numeric_cols:
-            if col in df.columns:
-                df[col] = safe_numeric(df[col])
-
-        if not include_skipped and "skipped_episode" in df.columns:
-            skipped = (
-                df["skipped_episode"]
-                .astype(str)
-                .str.lower()
-                .isin(["true", "1", "yes"])
-            )
-            df = df.loc[~skipped].copy()
-
-        frames.append(df)
-
-    return pd.concat(frames, ignore_index=True)
-
-
-# ============================================================
-# LOAD POLICY EMBEDDING
+# EMBEDDING LOADING AND NEAREST-POLICY SEARCH
 # ============================================================
 
 def infer_embedding_columns(df: pd.DataFrame) -> tuple[str, str, str]:
     """
     Infer:
-        - policy name column
-        - x coordinate column
-        - y coordinate column
+        - policy-name column
+        - x embedding column
+        - y embedding column
     """
     name_candidates = [
         "policy",
@@ -293,11 +241,13 @@ def infer_embedding_columns(df: pd.DataFrame) -> tuple[str, str, str]:
             c for c in df.columns
             if not pd.api.types.is_numeric_dtype(df[c])
         ]
+
         if not non_numeric:
             raise ValueError(
                 "Could not infer policy-name column in embedding CSV. "
                 f"Columns found: {list(df.columns)}"
             )
+
         name_col = non_numeric[0]
 
     xy_candidates = [
@@ -310,9 +260,9 @@ def infer_embedding_columns(df: pd.DataFrame) -> tuple[str, str, str]:
         ("0", "1"),
     ]
 
-    for x_col, y_col in xy_candidates:
-        if x_col in df.columns and y_col in df.columns:
-            return name_col, x_col, y_col
+    for candidate_x, candidate_y in xy_candidates:
+        if candidate_x in df.columns and candidate_y in df.columns:
+            return name_col, candidate_x, candidate_y
 
     numeric_cols = [
         c for c in df.columns
@@ -328,7 +278,7 @@ def infer_embedding_columns(df: pd.DataFrame) -> tuple[str, str, str]:
     return name_col, numeric_cols[0], numeric_cols[1]
 
 
-def load_embedding(
+def load_policy_embedding(
     embedding_csv: Path,
     policy_prefix: str | None,
 ) -> pd.DataFrame:
@@ -345,26 +295,29 @@ def load_embedding(
     out = out.rename(
         columns={
             name_col: "policy_id_raw",
-            x_col: "emb_x",
-            y_col: "emb_y",
+            x_col: "embedding_x",
+            y_col: "embedding_y",
         }
     )
 
-    out["policy_id_raw"] = out["policy_id_raw"].astype(str).str.strip()
+    out["policy_id_raw"] = out["policy_id_raw"].astype(str)
     out["policy_short"] = out["policy_id_raw"].apply(
         lambda p: strip_policy_prefix(p, policy_prefix)
     )
 
-    out["emb_x"] = safe_numeric(out["emb_x"])
-    out["emb_y"] = safe_numeric(out["emb_y"])
+    out["embedding_x"] = pd.to_numeric(out["embedding_x"], errors="coerce")
+    out["embedding_y"] = pd.to_numeric(out["embedding_y"], errors="coerce")
 
     out = out.loc[
         out["policy_short"].apply(is_valid_policy)
-        & out["emb_x"].notna()
-        & out["emb_y"].notna()
+        & out["embedding_x"].notna()
+        & out["embedding_y"].notna()
     ].copy()
 
-    out = out.drop_duplicates(subset=["policy_short"], keep="first").reset_index(drop=True)
+    out = out.drop_duplicates(
+        subset=["policy_short"],
+        keep="first",
+    ).reset_index(drop=True)
 
     if out.empty:
         raise ValueError(f"No valid policies found in embedding CSV: {embedding_csv}")
@@ -372,19 +325,49 @@ def load_embedding(
     return out
 
 
+def policy_distances_from_best(
+    embedding: pd.DataFrame,
+    best_policy_short: str,
+) -> pd.DataFrame:
+    """Compute Euclidean distance from the Best-policy to every other policy."""
+    best_policy_short = str(best_policy_short).strip()
+
+    best_rows = embedding.loc[embedding["policy_short"] == best_policy_short]
+
+    if best_rows.empty:
+        sample = embedding["policy_short"].head(10).tolist()
+        raise ValueError(
+            f"Best-policy '{best_policy_short}' was not found in embedding CSV. "
+            f"Sample available policies: {sample}"
+        )
+
+    best_x = float(best_rows.iloc[0]["embedding_x"])
+    best_y = float(best_rows.iloc[0]["embedding_y"])
+
+    distances = embedding.copy()
+    distances["policy_distance"] = np.sqrt(
+        (distances["embedding_x"].astype(float) - best_x) ** 2
+        + (distances["embedding_y"].astype(float) - best_y) ** 2
+    )
+
+    return distances[
+        ["policy_short", "policy_distance", "embedding_x", "embedding_y"]
+    ].copy()
+
+
 # ============================================================
-# EPISODE SUMMARY
+# EPISODE-LEVEL METRICS
 # ============================================================
 
 def summarize_episodes(
     rounds: pd.DataFrame,
-    metric: str,
     policy_prefix: str | None,
 ) -> pd.DataFrame:
     """
-    Produce one row per participant and episode.
+    Produce one row per participant, episode, phase, and policy.
 
-    Each episode corresponds to one played policy.
+    human_steps_per_dish is computed as:
+        total human steps / total dishes
     """
     df = rounds.copy()
 
@@ -414,517 +397,532 @@ def summarize_episodes(
         total_dishes = float(g["dishes_served"].sum(skipna=True))
         total_human_steps = float(g["human_steps"].sum(skipna=True))
 
-        if metric == "mean_dishes_per_round":
-            metric_value = float(g["dishes_served"].mean(skipna=True))
-
-        elif metric == "human_steps_per_dish":
-            metric_value = (
-                total_human_steps / total_dishes
-                if total_dishes > 0
-                else np.nan
-            )
-
-        elif metric in g.columns:
-            metric_value = float(g[metric].mean(skipna=True))
-
-        else:
-            raise ValueError(
-                f"Unsupported metric: {metric}. "
-                "Use mean_dishes_per_round, human_steps_per_dish, "
-                "or a numeric column present in round_summary.csv."
-            )
-
         row = {
             "participant_id": participant_id,
-            "episode_index": int(episode_index) if pd.notna(episode_index) else np.nan,
+            "episode_index": episode_index,
             "episode_phase": episode_phase,
             "policy_id": policy_id,
             "policy_short": policy_short,
-            "metric_value": metric_value,
-            "total_dishes": total_dishes,
-            "total_human_steps": total_human_steps,
             "n_rounds": int(len(g)),
+            "total_dishes": total_dishes,
+            "mean_dishes_per_round": float(g["dishes_served"].mean(skipna=True)),
+            "total_human_steps": total_human_steps,
+            "human_steps_per_dish": (
+                total_human_steps / total_dishes
+                if total_dishes > 0
+                else np.nan
+            ),
         }
 
         for optional_col in [
+            "ai_steps",
             "team_reward_score",
             "human_reward_score",
             "ai_reward_score",
             "mental_demand",
             "performance_score",
-            "ai_steps",
         ]:
             if optional_col in g.columns:
                 row[optional_col] = float(g[optional_col].mean(skipna=True))
 
         rows.append(row)
 
-    out = pd.DataFrame(rows)
-    out = out.dropna(subset=["metric_value"])
-    out = out.sort_values(["participant_id", "episode_index"]).reset_index(drop=True)
+    summary = pd.DataFrame(rows)
 
-    return out
+    return summary.sort_values(
+        ["participant_id", "episode_index", "episode_phase"]
+    ).reset_index(drop=True)
 
 
-# ============================================================
-# PLOT DATA HELPERS
-# ============================================================
-
-def make_policy_point_summary(plot_df: pd.DataFrame) -> pd.DataFrame:
+def select_best_and_closest_played_policies(
+    episode_summary: pd.DataFrame,
+    embedding: pd.DataFrame,
+    n_closest: int = 3,
+    unique_policies: bool = True,
+) -> pd.DataFrame:
     """
-    Collapse multiple episodes using the same policy/coordinate into one dot.
-
-    Example:
-        If E13 and E17 use the same policy, the label becomes E13/E17.
+    For each participant:
+        1. find Best-policy episode from bo_replay_best
+        2. compute distances from this policy in embedding space
+        3. restrict to policies actually played by the participant
+        4. select the nearest n_closest policies, excluding the Best-policy itself
     """
     rows = []
 
-    group_cols = ["policy_short", "emb_x", "emb_y"]
+    for participant_id, p_df in episode_summary.groupby("participant_id", sort=True):
+        best_rows = p_df.loc[p_df["episode_phase"] == BEST_PHASE].copy()
 
-    for keys, g in plot_df.groupby(group_cols, sort=False):
-        policy_short, emb_x, emb_y = keys
+        if best_rows.empty:
+            print(f"[WARN] {participant_id}: no {BEST_PHASE} episode found. Skipping.")
+            continue
 
-        episodes = sorted(g["episode_index"].dropna().astype(int).unique().tolist())
-        phases = sorted(g["episode_phase"].dropna().astype(str).unique().tolist())
+        best_rows = best_rows.sort_values("episode_index")
+        best = best_rows.iloc[0]
 
-        rows.append(
-            {
-                "policy_short": policy_short,
-                "emb_x": float(emb_x),
-                "emb_y": float(emb_y),
-                "metric_value": float(g["metric_value"].mean(skipna=True)),
-                "episode_indices": episodes,
-                "episode_label": episode_label(episodes),
-                "episode_phases": phases,
+        best_policy_short = str(best["policy_short"])
+
+        try:
+            distances = policy_distances_from_best(
+                embedding=embedding,
+                best_policy_short=best_policy_short,
+            )
+        except ValueError as e:
+            print(f"[WARN] {participant_id}: {e}. Skipping.")
+            continue
+
+        candidates = p_df.copy()
+
+        candidates = candidates.loc[
+            candidates["policy_short"].apply(is_valid_policy)
+            & (candidates["policy_short"] != best_policy_short)
+        ].copy()
+
+        if candidates.empty:
+            print(f"[WARN] {participant_id}: no non-best played policies found.")
+            continue
+
+        candidates = candidates.merge(
+            distances,
+            on="policy_short",
+            how="left",
+        )
+
+        candidates = candidates.loc[candidates["policy_distance"].notna()].copy()
+
+        if candidates.empty:
+            print(
+                f"[WARN] {participant_id}: none of the played non-best policies "
+                "were found in the embedding CSV."
+            )
+            continue
+
+        candidates = candidates.sort_values(
+            ["policy_distance", "episode_index"],
+            ascending=[True, True],
+        ).reset_index(drop=True)
+
+        if unique_policies:
+            candidates = candidates.drop_duplicates(
+                subset=["policy_short"],
+                keep="first",
+            ).reset_index(drop=True)
+
+        closest = candidates.head(int(n_closest)).copy()
+
+        if len(closest) < int(n_closest):
+            print(
+                f"[WARN] {participant_id}: only found {len(closest)} closest "
+                f"played policies, requested {n_closest}."
+            )
+
+        for rank, (_, candidate) in enumerate(closest.iterrows(), start=1):
+            out = {
+                "participant_id": participant_id,
+
+                "best_episode_index": best["episode_index"],
+                "best_episode_phase": best["episode_phase"],
+                "best_policy_id": best["policy_id"],
+                "best_policy_short": best["policy_short"],
+                "best_n_rounds": best["n_rounds"],
+
+                "closest_rank": rank,
+                "closest_episode_index": candidate["episode_index"],
+                "closest_episode_phase": candidate["episode_phase"],
+                "closest_policy_id": candidate["policy_id"],
+                "closest_policy_short": candidate["policy_short"],
+                "closest_policy_distance": candidate["policy_distance"],
+                "closest_n_rounds": candidate["n_rounds"],
             }
+
+            for metric in [
+                "mean_dishes_per_round",
+                "human_steps_per_dish",
+                "total_dishes",
+                "total_human_steps",
+                "team_reward_score",
+                "mental_demand",
+                "performance_score",
+            ]:
+                if metric in best.index:
+                    out[f"best_{metric}"] = best[metric]
+                if metric in candidate.index:
+                    out[f"closest_{metric}"] = candidate[metric]
+
+            rows.append(out)
+
+    selected = pd.DataFrame(rows)
+
+    if selected.empty:
+        raise ValueError(
+            "No Best-policy vs closest-policy rows were created. "
+            "Check that policy IDs in round_summary.csv match the embedding CSV."
         )
 
-    return pd.DataFrame(rows)
-
-
-def find_best_episode_row(
-    plot_df: pd.DataFrame,
-    best_episode_index: int,
-) -> pd.Series | None:
-    """Find the row corresponding to the requested Best-policy episode, usually E13."""
-    rows = plot_df.loc[plot_df["episode_index"] == int(best_episode_index)].copy()
-
-    if rows.empty:
-        return None
-
-    return rows.sort_values("episode_index").iloc[0]
-
-
-def find_worst_episode_row(
-    plot_df: pd.DataFrame,
-    metric: str,
-) -> pd.Series:
-    """Find the worst episode according to the selected metric."""
-    higher_is_better = metric not in LOWER_IS_BETTER_METRICS
-
-    if higher_is_better:
-        worst_idx = plot_df["metric_value"].idxmin()
-    else:
-        worst_idx = plot_df["metric_value"].idxmax()
-
-    return plot_df.loc[worst_idx]
-
-
-def build_legend_handles() -> list[Line2D]:
-    return [
-        Line2D(
-            [0],
-            [0],
-            marker="o",
-            linestyle="None",
-            markerfacecolor="#D6D6D6",
-            markeredgecolor="#D6D6D6",
-            markersize=5.5,
-            label="Policy pool",
-        ),
-        Line2D(
-            [0],
-            [0],
-            marker="o",
-            linestyle="None",
-            markerfacecolor="#FFFFFF",
-            markeredgecolor="#666666",
-            markeredgewidth=0.9,
-            markersize=6,
-            label="Played policy",
-        ),
-        Line2D(
-            [0],
-            [0],
-            marker="o",
-            linestyle="None",
-            markerfacecolor="#222222",
-            markeredgecolor="white",
-            markeredgewidth=0.9,
-            markersize=7,
-            label="Episode 13",
-        ),
-        Line2D(
-            [0],
-            [0],
-            marker="o",
-            linestyle="None",
-            markerfacecolor="#B00020",
-            markeredgecolor="white",
-            markeredgewidth=0.9,
-            markersize=7,
-            label="Worst episode",
-        ),
-    ]
+    return selected.sort_values(
+        ["participant_id", "closest_rank"]
+    ).reset_index(drop=True)
 
 
 # ============================================================
-# PLOTTING
+# PLOTTING — FAN-OUT: BEST VS C1/C2/C3
 # ============================================================
 
-def draw_metric_heatmap(
-    ax,
-    policy_points: pd.DataFrame,
-    cmap,
-    metric: str,
-):
-    """
-    Draw interpolated heatmap from observed policy points.
-
-    This uses matplotlib tricontourf, so the color represents the metric value
-    rather than just point density.
-    """
-    surface_df = policy_points.dropna(subset=["emb_x", "emb_y", "metric_value"]).copy()
-
-    can_draw_surface = (
-        len(surface_df) >= 3
-        and surface_df["emb_x"].nunique() > 1
-        and surface_df["emb_y"].nunique() > 1
-        and surface_df["metric_value"].nunique() > 1
-    )
-
-    if not can_draw_surface:
-        return None
-
-    try:
-        contour = ax.tricontourf(
-            surface_df["emb_x"].to_numpy(dtype=float),
-            surface_df["emb_y"].to_numpy(dtype=float),
-            surface_df["metric_value"].to_numpy(dtype=float),
-            levels=HEATMAP_LEVELS,
-            cmap=cmap,
-            alpha=0.92,
-            zorder=2,
-        )
-        return contour
-
-    except Exception as e:
-        print(f"[WARN] Could not draw tricontourf heatmap: {e}")
-        return None
-
-
-def plot_participant_policy_pool_map(
-    participant_episodes: pd.DataFrame,
-    pool_df: pd.DataFrame,
+def plot_best_vs_closest_metric(
+    selected: pd.DataFrame,
     metric: str,
     output_path: Path,
     formats: Iterable[str],
-    best_episode_index: int,
+    n_closest: int,
 ) -> None:
-    """Create one policy-pool heatmap for one participant."""
-    participant_id = str(participant_episodes["participant_id"].iloc[0])
-    cmap = build_cubehelix_cmap()
+    """
+    Create fan-out paired plot:
+        Best-policy -> three closest policies
 
-    plot_df = participant_episodes.dropna(
-        subset=["emb_x", "emb_y", "metric_value", "episode_index"]
-    ).copy()
+    Visual rules:
+        - one color per participant
+        - all closest policies are on the same x-column
+        - participant colors are shown in the legend
+        - closest-policy episode numbers are written near endpoints
+    """
+    best_col = f"best_{metric}"
+    closest_col = f"closest_{metric}"
 
-    if plot_df.empty:
-        raise ValueError(f"No valid plotted episodes for {participant_id}")
+    if best_col not in selected.columns or closest_col not in selected.columns:
+        raise ValueError(f"Metric '{metric}' is not available in selected summary.")
 
-    policy_points = make_policy_point_summary(plot_df)
+    fig, ax = plt.subplots(figsize=FIGSIZE_WIDE)
 
-    best_row = find_best_episode_row(
-        plot_df=plot_df,
-        best_episode_index=best_episode_index,
-    )
+    x_best = 0.0
+    x_closest = 1.0
 
-    if best_row is None:
-        print(
-            f"[WARN] {participant_id}: episode {best_episode_index} not found. "
-            "No black E13 dot will be drawn for this participant."
+    x_closest_by_rank = {
+        rank: x_closest
+        for rank in range(1, int(n_closest) + 1)
+    }
+
+    participant_handles = []
+
+    for i, (participant_id, p_df) in enumerate(selected.groupby("participant_id", sort=True)):
+        color = get_participant_color(participant_id, fallback_index=i)
+        participant_label = str(participant_id).replace("Thinpath_", "")
+
+        participant_handles.append(
+            Line2D(
+                [0],
+                [0],
+                color=color,
+                label=participant_label,
+                **LINE_MARKER_KWS,
+            )
         )
 
-    worst_row = find_worst_episode_row(
-        plot_df=plot_df,
-        metric=metric,
-    )
+        best_values = p_df[best_col].dropna()
 
-    fig, ax = plt.subplots(figsize=(7.4, 5.6))
-
-    # --------------------------------------------------------
-    # Background: full policy pool
-    # --------------------------------------------------------
-    ax.scatter(
-        pool_df["emb_x"],
-        pool_df["emb_y"],
-        s=14,
-        color="#D6D6D6",
-        alpha=0.30,
-        linewidth=0.0,
-        zorder=1,
-    )
-
-    # --------------------------------------------------------
-    # Heatmap: where the metric is high/low
-    # --------------------------------------------------------
-    mappable = draw_metric_heatmap(
-        ax=ax,
-        policy_points=policy_points,
-        cmap=cmap,
-        metric=metric,
-    )
-
-    # Fallback mappable for colorbar if contour cannot be drawn.
-    if mappable is None:
-        mappable = ax.scatter(
-            policy_points["emb_x"],
-            policy_points["emb_y"],
-            c=policy_points["metric_value"],
-            cmap=cmap,
-            s=0.1,
-            alpha=0.0,
-            zorder=0,
-        )
-
-    # --------------------------------------------------------
-    # Played policy dots
-    # --------------------------------------------------------
-    ax.scatter(
-        policy_points["emb_x"],
-        policy_points["emb_y"],
-        s=54,
-        facecolor="#FFFFFF",
-        edgecolor="#666666",
-        linewidth=0.9,
-        alpha=0.95,
-        zorder=4,
-    )
-
-    # Worst episode = red dot.
-    ax.scatter(
-        [worst_row["emb_x"]],
-        [worst_row["emb_y"]],
-        s=92,
-        marker="o",
-        color="#B00020",
-        edgecolor="white",
-        linewidth=1.0,
-        zorder=8,
-    )
-
-    # Episode 13 = black dot.
-    if best_row is not None:
-        # If E13 is also the worst episode, keep it black but give it a red edge.
-        same_as_worst = (
-            float(best_row["emb_x"]) == float(worst_row["emb_x"])
-            and float(best_row["emb_y"]) == float(worst_row["emb_y"])
-        )
-
-        ax.scatter(
-            [best_row["emb_x"]],
-            [best_row["emb_y"]],
-            s=96,
-            marker="o",
-            color="#222222",
-            edgecolor="#B00020" if same_as_worst else "white",
-            linewidth=1.4 if same_as_worst else 1.0,
-            zorder=9,
-        )
-
-    # --------------------------------------------------------
-    # Episode labels next to every played policy dot
-    # --------------------------------------------------------
-    for _, row in policy_points.iterrows():
-        label = row["episode_label"]
-
-        if not label:
+        if best_values.empty:
             continue
 
-        is_e13_policy = int(best_episode_index) in row["episode_indices"]
-        is_worst_policy = int(worst_row["episode_index"]) in row["episode_indices"]
+        best_y = float(best_values.iloc[0])
 
-        if is_e13_policy:
-            text_color = "#222222"
-            dx, dy = 6, 6
-            z = 10
-        elif is_worst_policy:
-            text_color = "#B00020"
-            dx, dy = 6, -6
-            z = 10
-        else:
-            text_color = "#333333"
-            dx, dy = 5, 5
-            z = 7
+        for _, row in p_df.iterrows():
+            closest_y = row[closest_col]
 
-        ax.annotate(
-            label,
-            xy=(row["emb_x"], row["emb_y"]),
-            xytext=(dx, dy),
-            textcoords="offset points",
-            fontsize=EPISODE_LABEL_FONT_SIZE,
-            color=text_color,
+            if pd.isna(closest_y):
+                continue
+
+            rank = int(row["closest_rank"])
+            x_end = x_closest_by_rank.get(rank, x_closest)
+
+            ax.plot(
+                [x_best, x_end],
+                [best_y, float(closest_y)],
+                color=color,
+                alpha=ALPHA_LINE,
+                label="_nolegend_",
+                **LINE_MARKER_KWS,
+            )
+
+            episode_index = row.get("closest_episode_index", np.nan)
+
+            if pd.notna(episode_index):
+                episode_label = f"E{int(episode_index)}"
+            else:
+                episode_label = f"C{rank}"
+
+            ax.text(
+                x_end + 0.035,
+                float(closest_y),
+                episode_label,
+                va="center",
+                ha="left",
+                fontsize=8.0,
+                color=color,
+            )
+
+    # Group mean overlay.
+    best_mean_by_participant = (
+        selected.groupby("participant_id")[best_col]
+        .first()
+        .dropna()
+    )
+
+    group_mean_plotted = False
+
+    if not best_mean_by_participant.empty:
+        group_best_y = float(best_mean_by_participant.mean())
+
+        for rank in range(1, int(n_closest) + 1):
+            rank_values = selected.loc[
+                selected["closest_rank"] == rank,
+                closest_col,
+            ].dropna()
+
+            if rank_values.empty:
+                continue
+
+            group_closest_y = float(rank_values.mean())
+
+            ax.plot(
+                [x_best, x_closest],
+                [group_best_y, group_closest_y],
+                color=COLORS["group_mean"],
+                label="_nolegend_",
+                zorder=20,
+                **LINE_MARKER_KWS,
+            )
+
+            group_mean_plotted = True
+
+    ax.set_xticks([x_best, x_closest])
+    ax.set_xticklabels(["Best-policy", "Closest policies\nC1 / C2 / C3"])
+    ax.set_xlim(-0.25, 1.45)
+
+    ax.set_ylabel(metric_label(metric))
+    ax.set_xlabel("")
+    ax.set_title(metric_label(metric))
+
+    if metric == "human_steps_per_dish":
+        ax.text(
+            0.01,
+            0.98,
+            "lower is better",
+            transform=ax.transAxes,
+            va="top",
             ha="left",
-            va="bottom" if dy >= 0 else "top",
-            zorder=z,
+            fontsize=9,
+            color=COLORS["text"],
         )
 
-    # --------------------------------------------------------
-    # Axes and limits
-    # --------------------------------------------------------
-    x_pad = 0.05 * (pool_df["emb_x"].max() - pool_df["emb_x"].min())
-    y_pad = 0.05 * (pool_df["emb_y"].max() - pool_df["emb_y"].min())
+    ax.margins(x=0.05, y=0.08)
+    clean_axis(ax, grid_axis="y")
 
-    ax.set_xlim(pool_df["emb_x"].min() - x_pad, pool_df["emb_x"].max() + x_pad)
-    ax.set_ylim(pool_df["emb_y"].min() - y_pad, pool_df["emb_y"].max() + y_pad)
+    legend_handles = participant_handles
 
-    ax.set_xlabel("Policy embedding x", fontsize=AXIS_LABEL_FONT_SIZE)
-    ax.set_ylabel("Policy embedding y", fontsize=AXIS_LABEL_FONT_SIZE)
-    ax.set_title(
-        f"{participant_id} — {metric_label(metric)}",
-        fontsize=TITLE_FONT_SIZE,
-        pad=8,
-    )
+    if group_mean_plotted:
+        legend_handles.append(
+            Line2D(
+                [0],
+                [0],
+                color=COLORS["group_mean"],
+                label="Group mean",
+                **LINE_MARKER_KWS,
+            )
+        )
 
-    ax.tick_params(axis="both", labelsize=TICK_FONT_SIZE)
-
-    ax.set_facecolor("#FFFFFF")
-    ax.grid(False)
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-
-    # --------------------------------------------------------
-    # Colorbar and legend
-    # --------------------------------------------------------
-    cbar = fig.colorbar(mappable, ax=ax, pad=0.025)
-    cbar.set_label(metric_label(metric), fontsize=COLORBAR_FONT_SIZE)
-    cbar.ax.tick_params(labelsize=TICK_FONT_SIZE)
-
-    fig.legend(
-        handles=build_legend_handles(),
-        loc="lower center",
-        bbox_to_anchor=(0.5, -0.005),
-        ncol=4,
+    ax.legend(
+        handles=legend_handles,
+        title="Participant",
+        loc="upper left",
+        bbox_to_anchor=(1.02, 1.0),
         frameon=False,
-        fontsize=LEGEND_FONT_SIZE,
-        columnspacing=1.4,
-        handletextpad=0.45,
+        borderaxespad=0.0,
     )
 
-    fig.tight_layout(rect=[0, 0.10, 1, 1])
+    fig.tight_layout()
+    save_figure(fig, output_path, formats=formats, close=True)
+
+
+# ============================================================
+# PLOTTING — CLEAN VERSION: BEST VS C1 ONLY
+# ============================================================
+
+def plot_best_vs_single_closest_metric(
+    selected: pd.DataFrame,
+    metric: str,
+    output_path: Path,
+    formats: Iterable[str],
+) -> None:
+    """
+    Create cleaner paired plot:
+        Best-policy -> closest played policy only, C1
+    """
+    best_col = f"best_{metric}"
+    closest_col = f"closest_{metric}"
+
+    if best_col not in selected.columns or closest_col not in selected.columns:
+        raise ValueError(f"Metric '{metric}' is not available in selected summary.")
+
+    plot_df = selected.loc[selected["closest_rank"] == 1].copy()
+
+    if plot_df.empty:
+        raise ValueError("No closest_rank == 1 rows found. Cannot create single-closest plot.")
+
+    fig, ax = plt.subplots(figsize=FIGSIZE_WIDE)
+
+    x_best = 0.0
+    x_closest = 1.0
+
+    participant_handles = []
+
+    for i, (participant_id, p_df) in enumerate(plot_df.groupby("participant_id", sort=True)):
+        color = get_participant_color(participant_id, fallback_index=i)
+        participant_label = str(participant_id).replace("Thinpath_", "")
+
+        participant_handles.append(
+            Line2D(
+                [0],
+                [0],
+                color=color,
+                label=participant_label,
+                **LINE_MARKER_KWS,
+            )
+        )
+
+        row = p_df.iloc[0]
+
+        best_y = row[best_col]
+        closest_y = row[closest_col]
+
+        if pd.isna(best_y) or pd.isna(closest_y):
+            continue
+
+        ax.plot(
+            [x_best, x_closest],
+            [float(best_y), float(closest_y)],
+            color=color,
+            alpha=ALPHA_LINE,
+            label="_nolegend_",
+            **LINE_MARKER_KWS,
+        )
+
+        episode_index = row.get("closest_episode_index", np.nan)
+
+        if pd.notna(episode_index):
+            episode_label = f"E{int(episode_index)}"
+        else:
+            episode_label = "C1"
+
+        ax.text(
+            x_closest + 0.035,
+            float(closest_y),
+            episode_label,
+            va="center",
+            ha="left",
+            fontsize=8.0,
+            color=color,
+        )
+
+    # Group mean overlay.
+    paired = plot_df[[best_col, closest_col]].dropna()
+
+    group_mean_plotted = False
+
+    if not paired.empty:
+        group_best_y = float(paired[best_col].mean())
+        group_closest_y = float(paired[closest_col].mean())
+
+        ax.plot(
+            [x_best, x_closest],
+            [group_best_y, group_closest_y],
+            color=COLORS["group_mean"],
+            label="_nolegend_",
+            zorder=20,
+            **LINE_MARKER_KWS,
+        )
+
+        group_mean_plotted = True
+
+    ax.set_xticks([x_best, x_closest])
+    ax.set_xticklabels(["Best-policy", "Closest policy\nC1"])
+    ax.set_xlim(-0.18, 1.35)
+
+    ax.set_ylabel(metric_label(metric))
+    ax.set_xlabel("")
+    ax.set_title(metric_label(metric))
+
+    if metric == "human_steps_per_dish":
+        ax.text(
+            0.01,
+            0.98,
+            "lower is better",
+            transform=ax.transAxes,
+            va="top",
+            ha="left",
+            fontsize=9,
+            color=COLORS["text"],
+        )
+
+    ax.margins(x=0.05, y=0.08)
+    clean_axis(ax, grid_axis="y")
+
+    legend_handles = participant_handles
+
+    if group_mean_plotted:
+        legend_handles.append(
+            Line2D(
+                [0],
+                [0],
+                color=COLORS["group_mean"],
+                label="Group mean",
+                **LINE_MARKER_KWS,
+            )
+        )
+
+    ax.legend(
+        handles=legend_handles,
+        title="Participant",
+        loc="upper left",
+        bbox_to_anchor=(1.02, 1.0),
+        frameon=False,
+        borderaxespad=0.0,
+    )
+
+    fig.tight_layout()
     save_figure(fig, output_path, formats=formats, close=True)
 
 
 def make_all_plots(
-    episode_summary_with_coords: pd.DataFrame,
-    pool_df: pd.DataFrame,
-    metric: str,
+    selected: pd.DataFrame,
     output_dir: Path,
     formats: list[str],
-    best_episode_index: int,
+    n_closest: int,
 ) -> list[Path]:
-    """Create one policy-pool heatmap per participant."""
     output_dir.mkdir(parents=True, exist_ok=True)
-
     created = []
 
-    for participant_id, p_df in episode_summary_with_coords.groupby("participant_id", sort=True):
-        safe_id = str(participant_id).replace("/", "_").replace("\\", "_")
-        stem = f"policy_pool_heatmap_{safe_id}_{metric}"
-
-        plot_participant_policy_pool_map(
-            participant_episodes=p_df.copy(),
-            pool_df=pool_df,
+    # Fan-out plots: Best-policy vs C1/C2/C3.
+    for stem, metric in PLOT_SPECS:
+        plot_best_vs_closest_metric(
+            selected=selected,
             metric=metric,
             output_path=output_dir / stem,
             formats=formats,
-            best_episode_index=best_episode_index,
+            n_closest=n_closest,
+        )
+
+        created.extend(output_dir / f"{stem}.{fmt}" for fmt in formats)
+
+    # Cleaner plots: Best-policy vs C1 only.
+    for stem, metric in SINGLE_CLOSEST_SPECS:
+        plot_best_vs_single_closest_metric(
+            selected=selected,
+            metric=metric,
+            output_path=output_dir / stem,
+            formats=formats,
         )
 
         created.extend(output_dir / f"{stem}.{fmt}" for fmt in formats)
 
     return created
-
-
-# ============================================================
-# SUMMARY CSV
-# ============================================================
-
-def build_best_worst_summary(
-    episode_summary_with_coords: pd.DataFrame,
-    metric: str,
-    best_episode_index: int,
-) -> pd.DataFrame:
-    rows = []
-
-    for participant_id, p_df in episode_summary_with_coords.groupby("participant_id", sort=True):
-        p_df = p_df.dropna(subset=["metric_value", "emb_x", "emb_y"]).copy()
-
-        if p_df.empty:
-            continue
-
-        best_row = find_best_episode_row(
-            plot_df=p_df,
-            best_episode_index=best_episode_index,
-        )
-
-        worst_row = find_worst_episode_row(
-            plot_df=p_df,
-            metric=metric,
-        )
-
-        out = {
-            "participant_id": participant_id,
-            "best_episode_index_requested": best_episode_index,
-            "worst_episode_index": worst_row["episode_index"],
-            "worst_episode_phase": worst_row["episode_phase"],
-            "worst_policy_id": worst_row["policy_id"],
-            "worst_policy_short": worst_row["policy_short"],
-            "worst_metric_value": worst_row["metric_value"],
-            "worst_emb_x": worst_row["emb_x"],
-            "worst_emb_y": worst_row["emb_y"],
-        }
-
-        if best_row is not None:
-            out.update(
-                {
-                    "best_episode_found": True,
-                    "best_episode_index": best_row["episode_index"],
-                    "best_episode_phase": best_row["episode_phase"],
-                    "best_policy_id": best_row["policy_id"],
-                    "best_policy_short": best_row["policy_short"],
-                    "best_metric_value": best_row["metric_value"],
-                    "best_emb_x": best_row["emb_x"],
-                    "best_emb_y": best_row["emb_y"],
-                }
-            )
-        else:
-            out.update(
-                {
-                    "best_episode_found": False,
-                    "best_episode_index": np.nan,
-                    "best_episode_phase": "",
-                    "best_policy_id": "",
-                    "best_policy_short": "",
-                    "best_metric_value": np.nan,
-                    "best_emb_x": np.nan,
-                    "best_emb_y": np.nan,
-                }
-            )
-
-        rows.append(out)
-
-    return pd.DataFrame(rows)
 
 
 # ============================================================
@@ -934,8 +932,8 @@ def build_best_worst_summary(
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Create policy-pool heatmaps with episode labels, "
-            "Episode 13 highlighted, and worst episode highlighted."
+            "Create Graph 3: Best-policy vs closest played policies "
+            "in policy space."
         )
     )
 
@@ -956,18 +954,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=Path("figures/policy_pool_heatmap"),
-        help="Where to save figures and summary CSVs.",
-    )
-
-    parser.add_argument(
-        "--metric",
-        type=str,
-        default="mean_dishes_per_round",
-        help=(
-            "Metric to visualize. Examples: mean_dishes_per_round, "
-            "human_steps_per_dish, team_reward_score, mental_demand."
-        ),
+        default=Path("figures/best_vs_closest_policies"),
+        help="Where to save figures and summary CSV.",
     )
 
     parser.add_argument(
@@ -978,30 +966,35 @@ def parse_args() -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "--n-closest",
+        type=int,
+        default=3,
+        help="Number of closest played policies to compare against Best-policy.",
+    )
+
+    parser.add_argument(
         "--policy-prefix",
         type=str,
         default=DEFAULT_POLICY_PREFIX,
-        help="Policy prefix to strip when matching policy IDs.",
+        help=(
+            "Policy prefix to strip when matching policy IDs. "
+            "Default is the thinpath coplay prefix."
+        ),
     )
 
     parser.add_argument(
         "--include-skipped",
         action="store_true",
-        help="Include skipped episodes. By default they are excluded.",
+        help="Include rows marked as skipped_episode. By default they are excluded.",
     )
 
     parser.add_argument(
-        "--best-episode-index",
-        type=int,
-        default=DEFAULT_BEST_EPISODE_INDEX,
-        help="Episode to highlight in black. Default: 13.",
-    )
-
-    parser.add_argument(
-        "--font-scale",
-        type=float,
-        default=0.75,
-        help="Font scale passed to plot_style.apply_plot_style(). Default: 0.75.",
+        "--allow-duplicate-policies",
+        action="store_true",
+        help=(
+            "Allow the same non-best policy to appear more than once if played "
+            "in multiple episodes. By default, each closest policy is unique."
+        ),
     )
 
     return parser.parse_args()
@@ -1009,81 +1002,49 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-
-    apply_plot_style(font_scale=args.font_scale)
-    apply_heatmap_text_style()
+    apply_plot_style()
 
     rounds = load_round_summaries(
         data_root=args.data_root,
         include_skipped=args.include_skipped,
     )
 
-    pool_df = load_embedding(
+    embedding = load_policy_embedding(
         embedding_csv=args.embedding_csv,
         policy_prefix=args.policy_prefix,
     )
 
     episode_summary = summarize_episodes(
         rounds=rounds,
-        metric=args.metric,
         policy_prefix=args.policy_prefix,
     )
 
-    merged = episode_summary.merge(
-        pool_df[["policy_short", "emb_x", "emb_y"]],
-        how="left",
-        on="policy_short",
-        validate="many_to_one",
+    selected = select_best_and_closest_played_policies(
+        episode_summary=episode_summary,
+        embedding=embedding,
+        n_closest=args.n_closest,
+        unique_policies=not args.allow_duplicate_policies,
     )
-
-    missing_coords = merged["emb_x"].isna() | merged["emb_y"].isna()
-
-    if missing_coords.any():
-        missing_policies = sorted(
-            merged.loc[missing_coords, "policy_short"]
-            .astype(str)
-            .unique()
-            .tolist()
-        )
-
-        print(
-            "[WARN] Some played policies were not found in the embedding CSV. "
-            "They will be skipped."
-        )
-        print(f"[WARN] Missing policy_short values: {missing_policies}")
-
-        merged = merged.loc[~missing_coords].copy()
-
-    if merged.empty:
-        raise ValueError("No participant episodes could be matched to embedding coordinates.")
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
-    episode_csv = args.output_dir / f"episode_policy_pool_summary_{args.metric}.csv"
-    best_worst_csv = args.output_dir / f"episode13_and_worst_summary_{args.metric}.csv"
+    episode_summary_csv = args.output_dir / "episode_policy_metrics_summary.csv"
+    selected_csv = args.output_dir / "best_vs_closest_policies_summary.csv"
 
-    merged.to_csv(episode_csv, index=False)
-
-    best_worst_summary = build_best_worst_summary(
-        episode_summary_with_coords=merged,
-        metric=args.metric,
-        best_episode_index=args.best_episode_index,
-    )
-    best_worst_summary.to_csv(best_worst_csv, index=False)
+    episode_summary.to_csv(episode_summary_csv, index=False)
+    selected.to_csv(selected_csv, index=False)
 
     created = make_all_plots(
-        episode_summary_with_coords=merged,
-        pool_df=pool_df,
-        metric=args.metric,
+        selected=selected,
         output_dir=args.output_dir,
         formats=list(args.formats),
-        best_episode_index=args.best_episode_index,
+        n_closest=args.n_closest,
     )
 
-    print(f"Loaded participants: {merged['participant_id'].nunique()}")
-    print(f"Embedding policies: {pool_df['policy_short'].nunique()}")
-    print(f"Saved episode summary: {episode_csv}")
-    print(f"Saved E13/Worst summary: {best_worst_csv}")
+    print(f"Loaded participants: {episode_summary['participant_id'].nunique()}")
+    print(f"Embedding policies: {embedding['policy_short'].nunique()}")
+    print(f"Saved episode summary: {episode_summary_csv}")
+    print(f"Saved selected closest-policy summary: {selected_csv}")
 
     for path in created:
         print(f"Saved figure: {path}")
